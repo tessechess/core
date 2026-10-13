@@ -11,10 +11,10 @@ import (
 func TestParseBBPPairingsOutput(t *testing.T) {
 	// Build a minimal TRF with 4 players and 1 completed round,
 	// then append a second round produced by the engine.
-	p1 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
-	p2 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
-	p3 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 3, Name: "C, C", FIDERating: 2300}
-	p4 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 4, Name: "D, D", FIDERating: 2200}
+	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
+	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
+	p3 := trf.PlayerData[string]{ID: newID(), StartingRank: 3, Name: "C, C", FIDERating: 2300}
+	p4 := trf.PlayerData[string]{ID: newID(), StartingRank: 4, Name: "D, D", FIDERating: 2200}
 
 	win := result.WhiteWins
 
@@ -26,8 +26,8 @@ func TestParseBBPPairingsOutput(t *testing.T) {
 			{
 				RoundNumber: 1,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: p1.RegistrationID, BlackRegID: &p2.RegistrationID, Result: &win},
-					{WhiteRegID: p3.RegistrationID, BlackRegID: &p4.RegistrationID, Result: &win},
+					{White: p1.ID, Black: &p2.ID, Result: &win},
+					{White: p3.ID, Black: &p4.ID, Result: &win},
 				},
 			},
 		},
@@ -85,9 +85,9 @@ func TestParseBBPPairingsOutput(t *testing.T) {
 
 func TestParseBBPPairingsOutput_WithBye(t *testing.T) {
 	// 3 players, round 1 completed. Engine output for round 2 has a bye.
-	p1 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
-	p2 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
-	p3 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 3, Name: "C, C", FIDERating: 2300}
+	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
+	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
+	p3 := trf.PlayerData[string]{ID: newID(), StartingRank: 3, Name: "C, C", FIDERating: 2300}
 
 	win := result.WhiteWins
 	halfBye := result.WhiteHalf
@@ -100,8 +100,8 @@ func TestParseBBPPairingsOutput_WithBye(t *testing.T) {
 			{
 				RoundNumber: 1,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: p1.RegistrationID, BlackRegID: &p2.RegistrationID, Result: &win},
-					{WhiteRegID: p3.RegistrationID, BlackRegID: nil, Result: &halfBye},
+					{White: p1.ID, Black: &p2.ID, Result: &win},
+					{White: p3.ID, Black: nil, Result: &halfBye},
 				},
 			},
 		},

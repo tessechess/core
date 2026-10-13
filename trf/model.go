@@ -24,15 +24,15 @@ type GeneratorInput[ID comparable] struct {
 
 // PlayerData holds one player's details for TRF generation.
 type PlayerData[ID comparable] struct {
-	RegistrationID ID
-	StartingRank   int    // pre-assigned starting rank number from registration
-	Name           string // "Lastname, Firstname"
-	Title          string // "GM", "IM", "FM", "WGM", "WIM", "WFM", ""
-	FIDERating     int    // 0 if unrated
-	Federation     string // 3-letter code
-	FIDENumber     string
-	BirthDate      string // "YYYY/MM/DD"
-	Sex            string // "m", "w", ""
+	ID           ID
+	StartingRank int    // pre-assigned starting rank (pairing number), must be > 0
+	Name         string // "Lastname, Firstname"
+	Title        string // "GM", "IM", "FM", "WGM", "WIM", "WFM", ""
+	FIDERating   int    // 0 if unrated
+	Federation   string // 3-letter code
+	FIDENumber   string
+	BirthDate    string // "YYYY/MM/DD"
+	Sex          string // "m", "w", ""
 }
 
 // RoundData holds the pairings for one completed round.
@@ -43,15 +43,15 @@ type RoundData[ID comparable] struct {
 
 // PairingData holds one pairing from a completed round.
 type PairingData[ID comparable] struct {
-	WhiteRegID ID
-	BlackRegID *ID          // nil for byes
-	Result     *result.Code // nil = not yet played
+	White  ID
+	Black  *ID          // nil for byes
+	Result *result.Code // nil = not yet played
 }
 
 // PlayerMapping provides bidirectional lookup between TRF starting ranks and player IDs.
 type PlayerMapping[ID comparable] struct {
-	RankToRegID map[int]ID
-	RegIDToRank map[ID]int
+	RankToID map[int]ID
+	IDToRank map[ID]int
 }
 
 // RoundSettings holds arbiter-configured pairing settings translated to TRF terms.

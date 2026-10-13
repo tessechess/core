@@ -27,9 +27,9 @@ func TestGenerate_HeadersAndPlayerCount(t *testing.T) {
 		TimeControl:    "90/40+30+30",
 		TotalRounds:    7,
 		Players: []trf.PlayerData[string]{
-			{RegistrationID: newID(), StartingRank: 1, Name: "Rated, A", FIDERating: 2400},
-			{RegistrationID: newID(), StartingRank: 2, Name: "Unrated, B", FIDERating: 0},
-			{RegistrationID: newID(), StartingRank: 3, Name: "Rated, C", FIDERating: 1800},
+			{ID: newID(), StartingRank: 1, Name: "Rated, A", FIDERating: 2400},
+			{ID: newID(), StartingRank: 2, Name: "Unrated, B", FIDERating: 0},
+			{ID: newID(), StartingRank: 3, Name: "Rated, C", FIDERating: 1800},
 		},
 	}
 
@@ -56,9 +56,9 @@ func TestGenerate_HeadersAndPlayerCount(t *testing.T) {
 }
 
 func TestGenerate_MappingUsesStartingRank(t *testing.T) {
-	p1 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 1, Name: "Alpha, A", FIDERating: 2000}
-	p2 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 2, Name: "Bravo, B", FIDERating: 2500}
-	p3 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 3, Name: "Charlie, C", FIDERating: 2000}
+	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "Alpha, A", FIDERating: 2000}
+	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "Bravo, B", FIDERating: 2500}
+	p3 := trf.PlayerData[string]{ID: newID(), StartingRank: 3, Name: "Charlie, C", FIDERating: 2000}
 
 	input := &trf.GeneratorInput[string]{
 		TournamentName: "T",
@@ -73,15 +73,15 @@ func TestGenerate_MappingUsesStartingRank(t *testing.T) {
 
 	// Mapping must use the pre-assigned StartingRank, not re-sort.
 	wantRanks := map[string]int{
-		p1.RegistrationID: 1,
-		p2.RegistrationID: 2,
-		p3.RegistrationID: 3,
+		p1.ID: 1,
+		p2.ID: 2,
+		p3.ID: 3,
 	}
 	for id, want := range wantRanks {
-		if got := mapping.RegIDToRank[id]; got != want {
+		if got := mapping.IDToRank[id]; got != want {
 			t.Errorf("rank for %s: got %d, want %d", id, got, want)
 		}
-		if mapping.RankToRegID[want] != id {
+		if mapping.RankToID[want] != id {
 			t.Errorf("reverse mapping for rank %d broken", want)
 		}
 	}
@@ -93,15 +93,15 @@ func TestGenerate_PlayerLineFixedWidth(t *testing.T) {
 		TotalRounds:    5,
 		Players: []trf.PlayerData[string]{
 			{
-				RegistrationID: newID(),
-				StartingRank:   1,
-				Name:           "Carlsen, Magnus",
-				Title:          "GM",
-				FIDERating:     2830,
-				Federation:     "NOR",
-				FIDENumber:     "1503014",
-				BirthDate:      "1990/11/30",
-				Sex:            "m",
+				ID:           newID(),
+				StartingRank: 1,
+				Name:         "Carlsen, Magnus",
+				Title:        "GM",
+				FIDERating:   2830,
+				Federation:   "NOR",
+				FIDENumber:   "1503014",
+				BirthDate:    "1990/11/30",
+				Sex:          "m",
 			},
 		},
 	}
@@ -150,9 +150,9 @@ func TestGenerate_PlayerLineFixedWidth(t *testing.T) {
 }
 
 func TestGenerate_RoundDataAndPoints(t *testing.T) {
-	p1 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
-	p2 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
-	p3 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 3, Name: "C, C", FIDERating: 2300}
+	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
+	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
+	p3 := trf.PlayerData[string]{ID: newID(), StartingRank: 3, Name: "C, C", FIDERating: 2300}
 
 	win := result.WhiteWins
 	draw := result.Draw
@@ -166,15 +166,15 @@ func TestGenerate_RoundDataAndPoints(t *testing.T) {
 			{
 				RoundNumber: 1,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: p1.RegistrationID, BlackRegID: &p2.RegistrationID, Result: &win},
-					{WhiteRegID: p3.RegistrationID, BlackRegID: nil, Result: &halfBye},
+					{White: p1.ID, Black: &p2.ID, Result: &win},
+					{White: p3.ID, Black: nil, Result: &halfBye},
 				},
 			},
 			{
 				RoundNumber: 2,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: p2.RegistrationID, BlackRegID: &p3.RegistrationID, Result: &draw},
-					{WhiteRegID: p1.RegistrationID, BlackRegID: nil, Result: &halfBye},
+					{White: p2.ID, Black: &p3.ID, Result: &draw},
+					{White: p1.ID, Black: nil, Result: &halfBye},
 				},
 			},
 		},
@@ -206,8 +206,8 @@ func TestGenerate_RoundDataAndPoints(t *testing.T) {
 }
 
 func TestGenerate_VoidPairingsSkipped(t *testing.T) {
-	p1 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2000}
-	p2 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 1900}
+	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2000}
+	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 1900}
 
 	input := &trf.GeneratorInput[string]{
 		TournamentName: "T",
@@ -217,7 +217,7 @@ func TestGenerate_VoidPairingsSkipped(t *testing.T) {
 			{
 				RoundNumber: 1,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: p1.RegistrationID, BlackRegID: &p2.RegistrationID, Result: codePtr(result.Void)},
+					{White: p1.ID, Black: &p2.ID, Result: codePtr(result.Void)},
 				},
 			},
 		},
@@ -238,8 +238,8 @@ func TestGenerate_VoidPairingsSkipped(t *testing.T) {
 }
 
 func TestGenerate_MissingPlayerInHistoricalPairing(t *testing.T) {
-	p1 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
-	p2 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
+	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
+	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
 	ghost := newID() // player who was paired but is no longer in input.Players
 
 	win := result.WhiteWins
@@ -252,7 +252,7 @@ func TestGenerate_MissingPlayerInHistoricalPairing(t *testing.T) {
 				RoundNumber: 1,
 				Pairings: []trf.PairingData[string]{
 					// ghost was the black player in round 1 but is no longer confirmed
-					{WhiteRegID: p1.RegistrationID, BlackRegID: &ghost, Result: &win},
+					{White: p1.ID, Black: &ghost, Result: &win},
 				},
 			},
 		},
@@ -271,23 +271,23 @@ func TestGenerate_Errors(t *testing.T) {
 	}
 	// Zero total rounds.
 	if _, _, err := trf.Generate(&trf.GeneratorInput[string]{
-		Players: []trf.PlayerData[string]{{RegistrationID: newID(), StartingRank: 1, Name: "A, A"}},
+		Players: []trf.PlayerData[string]{{ID: newID(), StartingRank: 1, Name: "A, A"}},
 	}); err == nil {
 		t.Error("expected error for zero total rounds")
 	}
 	// Missing starting rank.
 	if _, _, err := trf.Generate(&trf.GeneratorInput[string]{
 		TotalRounds: 5,
-		Players:     []trf.PlayerData[string]{{RegistrationID: newID(), Name: "A, A"}},
+		Players:     []trf.PlayerData[string]{{ID: newID(), Name: "A, A"}},
 	}); err == nil {
 		t.Error("expected error for missing starting rank")
 	}
 }
 
 func TestGenerate_WithdrawnPlayersGetZeroBye(t *testing.T) {
-	p1 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
-	p2 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
-	p3 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 3, Name: "C, C", FIDERating: 2300}
+	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
+	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
+	p3 := trf.PlayerData[string]{ID: newID(), StartingRank: 3, Name: "C, C", FIDERating: 2300}
 
 	win := result.WhiteWins
 	input := &trf.GeneratorInput[string]{
@@ -298,13 +298,13 @@ func TestGenerate_WithdrawnPlayersGetZeroBye(t *testing.T) {
 			{
 				RoundNumber: 1,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: p1.RegistrationID, BlackRegID: &p2.RegistrationID, Result: &win},
-					{WhiteRegID: p3.RegistrationID, BlackRegID: nil, Result: codePtr(result.WhiteHalf)},
+					{White: p1.ID, Black: &p2.ID, Result: &win},
+					{White: p3.ID, Black: nil, Result: codePtr(result.WhiteHalf)},
 				},
 			},
 		},
 		Settings: &trf.RoundSettings[string]{
-			WithdrawnPlayers: []string{p3.RegistrationID},
+			WithdrawnPlayers: []string{p3.ID},
 		},
 	}
 
@@ -326,8 +326,8 @@ func TestGenerate_WithdrawnPlayersGetZeroBye(t *testing.T) {
 }
 
 func TestGenerate_HalfPointByes(t *testing.T) {
-	p1 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
-	p2 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
+	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
+	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
 
 	win := result.WhiteWins
 	input := &trf.GeneratorInput[string]{
@@ -338,12 +338,12 @@ func TestGenerate_HalfPointByes(t *testing.T) {
 			{
 				RoundNumber: 1,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: p1.RegistrationID, BlackRegID: &p2.RegistrationID, Result: &win},
+					{White: p1.ID, Black: &p2.ID, Result: &win},
 				},
 			},
 		},
 		Settings: &trf.RoundSettings[string]{
-			HalfPointByes: []string{p2.RegistrationID},
+			HalfPointByes: []string{p2.ID},
 		},
 	}
 
@@ -361,8 +361,8 @@ func TestGenerate_HalfPointByes(t *testing.T) {
 }
 
 func TestGenerate_FirstPlayerColor(t *testing.T) {
-	p1 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
-	p2 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
+	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
+	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
 
 	input := &trf.GeneratorInput[string]{
 		TournamentName: "T",
@@ -394,9 +394,9 @@ func TestGenerate_FirstPlayerColor(t *testing.T) {
 }
 
 func TestGenerate_ForbiddenPairings(t *testing.T) {
-	p1 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
-	p2 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
-	p3 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 3, Name: "C, C", FIDERating: 2300}
+	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
+	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
+	p3 := trf.PlayerData[string]{ID: newID(), StartingRank: 3, Name: "C, C", FIDERating: 2300}
 
 	input := &trf.GeneratorInput[string]{
 		TournamentName: "T",
@@ -404,7 +404,7 @@ func TestGenerate_ForbiddenPairings(t *testing.T) {
 		Players:        []trf.PlayerData[string]{p1, p2, p3},
 		Settings: &trf.RoundSettings[string]{
 			ForbiddenPairings: []trf.ForbiddenPairTRF[string]{
-				{Player1: p1.RegistrationID, Player2: p3.RegistrationID},
+				{Player1: p1.ID, Player2: p3.ID},
 			},
 		},
 	}
@@ -420,9 +420,9 @@ func TestGenerate_ForbiddenPairings(t *testing.T) {
 }
 
 func TestGenerate_LateEntries(t *testing.T) {
-	p1 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
-	p2 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
-	p3 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 3, Name: "Late, Player", FIDERating: 2200}
+	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
+	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
+	p3 := trf.PlayerData[string]{ID: newID(), StartingRank: 3, Name: "Late, Player", FIDERating: 2200}
 
 	win := result.WhiteWins
 	input := &trf.GeneratorInput[string]{
@@ -433,20 +433,20 @@ func TestGenerate_LateEntries(t *testing.T) {
 			{
 				RoundNumber: 1,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: p1.RegistrationID, BlackRegID: &p2.RegistrationID, Result: &win},
+					{White: p1.ID, Black: &p2.ID, Result: &win},
 					// p3 not paired in round 1 (joined late)
 				},
 			},
 			{
 				RoundNumber: 2,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: p3.RegistrationID, BlackRegID: &p1.RegistrationID, Result: &win},
-					{WhiteRegID: p2.RegistrationID, BlackRegID: nil, Result: codePtr(result.WhiteHalf)},
+					{White: p3.ID, Black: &p1.ID, Result: &win},
+					{White: p2.ID, Black: nil, Result: codePtr(result.WhiteHalf)},
 				},
 			},
 		},
 		Settings: &trf.RoundSettings[string]{
-			LateEntries: []string{p3.RegistrationID},
+			LateEntries: []string{p3.ID},
 		},
 	}
 
@@ -465,7 +465,7 @@ func TestGenerate_LateEntries(t *testing.T) {
 }
 
 func TestGenerate_MissingWhitePlayerInHistoricalPairing(t *testing.T) {
-	p2 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
+	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
 	ghost := newID() // was white in round 1, no longer confirmed
 
 	win := result.WhiteWins
@@ -477,7 +477,7 @@ func TestGenerate_MissingWhitePlayerInHistoricalPairing(t *testing.T) {
 			{
 				RoundNumber: 1,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: ghost, BlackRegID: &p2.RegistrationID, Result: &win},
+					{White: ghost, Black: &p2.ID, Result: &win},
 				},
 			},
 		},
@@ -490,7 +490,7 @@ func TestGenerate_MissingWhitePlayerInHistoricalPairing(t *testing.T) {
 }
 
 func TestGenerate_VoidPairingWithMissingPlayerNoError(t *testing.T) {
-	p1 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
+	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
 	ghost := newID() // missing player, but pairing is voided
 
 	input := &trf.GeneratorInput[string]{
@@ -501,7 +501,7 @@ func TestGenerate_VoidPairingWithMissingPlayerNoError(t *testing.T) {
 			{
 				RoundNumber: 1,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: p1.RegistrationID, BlackRegID: &ghost, Result: codePtr(result.Void)},
+					{White: p1.ID, Black: &ghost, Result: codePtr(result.Void)},
 				},
 			},
 		},
@@ -514,8 +514,8 @@ func TestGenerate_VoidPairingWithMissingPlayerNoError(t *testing.T) {
 }
 
 func TestGenerate_MissingPlayerErrorContainsRoundNumber(t *testing.T) {
-	p1 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
-	p2 := trf.PlayerData[string]{RegistrationID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
+	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
+	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
 	ghost := newID()
 
 	win := result.WhiteWins
@@ -527,13 +527,13 @@ func TestGenerate_MissingPlayerErrorContainsRoundNumber(t *testing.T) {
 			{
 				RoundNumber: 1,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: p1.RegistrationID, BlackRegID: &p2.RegistrationID, Result: &win},
+					{White: p1.ID, Black: &p2.ID, Result: &win},
 				},
 			},
 			{
 				RoundNumber: 2,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: p1.RegistrationID, BlackRegID: &ghost, Result: &win},
+					{White: p1.ID, Black: &ghost, Result: &win},
 				},
 			},
 		},
@@ -554,12 +554,12 @@ func TestGenerate_ByePairingWithMissingWhitePlayerNoError(t *testing.T) {
 	input := &trf.GeneratorInput[string]{
 		TournamentName: "T",
 		TotalRounds:    5,
-		Players:        []trf.PlayerData[string]{{RegistrationID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2000}},
+		Players:        []trf.PlayerData[string]{{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2000}},
 		Rounds: []trf.RoundData[string]{
 			{
 				RoundNumber: 1,
 				Pairings: []trf.PairingData[string]{
-					{WhiteRegID: ghost, BlackRegID: nil, Result: codePtr(result.WhiteWins)},
+					{White: ghost, Black: nil, Result: codePtr(result.WhiteWins)},
 				},
 			},
 		},

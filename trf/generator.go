@@ -41,14 +41,14 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 		return ranked[i].StartingRank < ranked[j].StartingRank
 	})
 
-	// Build bidirectional mapping: starting rank <-> registration UUID.
+	// Build bidirectional mapping: starting rank <-> player ID.
 	mapping := &PlayerMapping[ID]{
-		RankToRegID: make(map[int]ID, len(ranked)),
-		RegIDToRank: make(map[ID]int, len(ranked)),
+		RankToID: make(map[int]ID, len(ranked)),
+		IDToRank: make(map[ID]int, len(ranked)),
 	}
 	for _, p := range ranked {
-		mapping.RankToRegID[p.StartingRank] = p.RegistrationID
-		mapping.RegIDToRank[p.RegistrationID] = p.StartingRank
+		mapping.RankToID[p.StartingRank] = p.ID
+		mapping.IDToRank[p.ID] = p.StartingRank
 	}
 
 	// Build per-player round results from completed rounds.
@@ -60,11 +60,11 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 				continue
 			}
 
-			ensureMap(playerRounds, pd.WhiteRegID)
+			ensureMap(playerRounds, pd.White)
 
-			if pd.BlackRegID == nil {
+			if pd.Black == nil {
 				// Bye — white is the bye recipient.
-				playerRounds[pd.WhiteRegID][rd.RoundNumber] = roundResult{
+				playerRounds[pd.White][rd.RoundNumber] = roundResult{
 					opponentRank: 0,
 					color:        '-',
 					resultCode:   resultToTRFBye(pd.Result),
@@ -72,22 +72,22 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 				continue
 			}
 
-			blackRank, ok := mapping.RegIDToRank[*pd.BlackRegID]
+			blackRank, ok := mapping.IDToRank[*pd.Black]
 			if !ok {
-				return "", nil, fmt.Errorf("round %d: black player %v not found in player mapping", rd.RoundNumber, *pd.BlackRegID)
+				return "", nil, fmt.Errorf("round %d: black player %v not found in player mapping", rd.RoundNumber, *pd.Black)
 			}
-			whiteRank, ok := mapping.RegIDToRank[pd.WhiteRegID]
+			whiteRank, ok := mapping.IDToRank[pd.White]
 			if !ok {
-				return "", nil, fmt.Errorf("round %d: white player %v not found in player mapping", rd.RoundNumber, pd.WhiteRegID)
+				return "", nil, fmt.Errorf("round %d: white player %v not found in player mapping", rd.RoundNumber, pd.White)
 			}
-			ensureMap(playerRounds, *pd.BlackRegID)
+			ensureMap(playerRounds, *pd.Black)
 
-			playerRounds[pd.WhiteRegID][rd.RoundNumber] = roundResult{
+			playerRounds[pd.White][rd.RoundNumber] = roundResult{
 				opponentRank: blackRank,
 				color:        'w',
 				resultCode:   resultToTRFWhite(pd.Result),
 			}
-			playerRounds[*pd.BlackRegID][rd.RoundNumber] = roundResult{
+			playerRounds[*pd.Black][rd.RoundNumber] = roundResult{
 				opponentRank: whiteRank,
 				color:        'b',
 				resultCode:   resultToTRFBlack(pd.Result),
@@ -100,9 +100,9 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 		nextRound := len(input.Rounds) + 1
 
 		// Withdrawn players get a zero-point bye (Z) in the upcoming round.
-		for _, regID := range input.Settings.WithdrawnPlayers {
-			ensureMap(playerRounds, regID)
-			playerRounds[regID][nextRound] = roundResult{
+		for _, id := range input.Settings.WithdrawnPlayers {
+			ensureMap(playerRounds, id)
+			playerRounds[id][nextRound] = roundResult{
 				opponentRank: 0,
 				color:        '-',
 				resultCode:   'Z',
@@ -110,9 +110,9 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 		}
 
 		// Half-point byes in the upcoming round.
-		for _, regID := range input.Settings.HalfPointByes {
-			ensureMap(playerRounds, regID)
-			playerRounds[regID][nextRound] = roundResult{
+		for _, id := range input.Settings.HalfPointByes {
+			ensureMap(playerRounds, id)
+			playerRounds[id][nextRound] = roundResult{
 				opponentRank: 0,
 				color:        '-',
 				resultCode:   'H',
@@ -124,12 +124,12 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 		for _, rd := range input.Rounds {
 			completedRoundNumbers[rd.RoundNumber] = true
 		}
-		for _, regID := range input.Settings.LateEntries {
-			ensureMap(playerRounds, regID)
+		for _, id := range input.Settings.LateEntries {
+			ensureMap(playerRounds, id)
 			for rn := 1; rn <= len(input.Rounds); rn++ {
 				if completedRoundNumbers[rn] {
-					if _, exists := playerRounds[regID][rn]; !exists {
-						playerRounds[regID][rn] = roundResult{
+					if _, exists := playerRounds[id][rn]; !exists {
+						playerRounds[id][rn] = roundResult{
 							opponentRank: 0,
 							color:        '-',
 							resultCode:   'Z',
@@ -142,12 +142,12 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 
 	// Calculate cumulative points per player.
 	playerPoints := make(map[ID]float64, len(ranked))
-	for regID, rounds := range playerRounds {
+	for id, rounds := range playerRounds {
 		var pts float64
 		for _, rr := range rounds {
 			pts += trfResultPoints(rr.resultCode)
 		}
-		playerPoints[regID] = pts
+		playerPoints[id] = pts
 	}
 
 	// Count rated players.
@@ -194,8 +194,8 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 
 		// XXF — forbidden pairings (one line per pair with starting rank numbers).
 		for _, fp := range input.Settings.ForbiddenPairings {
-			rank1, ok1 := mapping.RegIDToRank[fp.Player1]
-			rank2, ok2 := mapping.RegIDToRank[fp.Player2]
+			rank1, ok1 := mapping.IDToRank[fp.Player1]
+			rank2, ok2 := mapping.IDToRank[fp.Player2]
 			if ok1 && ok2 {
 				sb.WriteString("XXF " + strconv.Itoa(rank1) + " " + strconv.Itoa(rank2) + "\n")
 			}
@@ -210,7 +210,7 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 		roundColumns = len(input.Rounds) + 1
 	}
 	for _, p := range ranked {
-		line := buildPlayerLine(p.StartingRank, &p, playerPoints[p.RegistrationID], playerRounds[p.RegistrationID], roundColumns)
+		line := buildPlayerLine(p.StartingRank, &p, playerPoints[p.ID], playerRounds[p.ID], roundColumns)
 		sb.WriteString(line + "\n")
 	}
 

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/ValkoM28/tournamentessentials/core/engine"
+	"github.com/ValkoM28/tournamentessentials/core/trf"
 )
 
 // writeMockScript creates an executable shell script in a temp dir and returns its path.
@@ -33,34 +34,18 @@ XXR 3
 `
 
 func TestBBPPairings_Success(t *testing.T) {
-	// Mock bbpPairings: copies input to output and appends a round column to each 001 line.
+	// Mock bbpPairings: like the real binary (v6.0.0), -p writes the simple pair
+	// list ("count\nwhite black\n..."), not a TRF.
 	mock := writeMockScript(t, "bbpPairings", `
-INPUT=""
 OUTPUT=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --dutch) shift ;;
         -p) OUTPUT="$2"; shift 2 ;;
-        *) INPUT="$1"; shift ;;
+        *) shift ;;
     esac
 done
-# Copy input and append round data to player lines
-while IFS= read -r line; do
-    case "$line" in
-        001*)
-            # Pad to 99 chars, add round 1 data
-            printf "%-91s" "$line" >> "$OUTPUT"
-            # Alternate: first player gets white vs 2, second gets black vs 1
-            rank=$(echo "$line" | cut -c5-8 | tr -d ' ')
-            if [ "$rank" = "1" ]; then
-                printf "   2 w 1\n" >> "$OUTPUT"
-            else
-                printf "   1 b 0\n" >> "$OUTPUT"
-            fi
-            ;;
-        *) echo "$line" >> "$OUTPUT" ;;
-    esac
-done < "$INPUT"
+printf "1\n1 2\n" > "$OUTPUT"
 `)
 
 	eng := engine.NewBBPPairings(mock, 10*time.Second)
@@ -68,8 +53,8 @@ done < "$INPUT"
 	if eng.Name() != "bbppairings" {
 		t.Errorf("Name() = %q, want %q", eng.Name(), "bbppairings")
 	}
-	if eng.OutputFormat() != engine.OutputTRF {
-		t.Errorf("OutputFormat() = %q, want %q", eng.OutputFormat(), engine.OutputTRF)
+	if eng.OutputFormat() != engine.OutputSimplePairs {
+		t.Errorf("OutputFormat() = %q, want %q", eng.OutputFormat(), engine.OutputSimplePairs)
 	}
 
 	output, err := eng.GeneratePairings(context.Background(), sampleTRF)
@@ -77,13 +62,12 @@ done < "$INPUT"
 		t.Fatalf("GeneratePairings error: %v", err)
 	}
 
-	if output == "" {
-		t.Fatal("expected non-empty output")
+	parsed, err := trf.ParseJaVaFoOutput(output)
+	if err != nil {
+		t.Fatalf("output is not a simple pair list: %v (output %q)", err, output)
 	}
-
-	// Output should contain player lines with round data.
-	if !containsSubstring(output, "001") {
-		t.Error("output missing 001 player lines")
+	if len(parsed) != 1 || parsed[0].WhiteRank != 1 || parsed[0].BlackRank != 2 {
+		t.Errorf("parsed = %+v, want one board 1 vs 2", parsed)
 	}
 }
 

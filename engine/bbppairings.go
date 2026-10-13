@@ -22,7 +22,9 @@ func NewBBPPairings(binaryPath string, timeout time.Duration) PairingEngine {
 
 func (b *BBPPairings) Name() string { return "bbppairings" }
 
-func (b *BBPPairings) OutputFormat() OutputFormat { return OutputTRF }
+// OutputFormat is OutputSimplePairs: with -p, bbpPairings writes the pair list
+// ("count\nwhite black\n..."), the same format as JaVaFo, not a TRF.
+func (b *BBPPairings) OutputFormat() OutputFormat { return OutputSimplePairs }
 
 func (b *BBPPairings) GeneratePairings(ctx context.Context, trfInput string) (string, error) {
 	if _, err := os.Stat(b.BinaryPath); err != nil {

@@ -16,6 +16,7 @@ Module path: `github.com/ValkoM28/tournamentessentials/core` (placeholder; may b
 | Package | Contents |
 |---|---|
 | `result` | Game result codes (`1-0`, `0-1`, `0.5-0.5`, forfeits, byes, `*`, `void`) and the points each side receives |
+| `engine` | `PairingEngine` interface, bbpPairings and JaVaFo wrappers, and the runner (temp files, timeout; on Unix a timeout kills the whole process group). Callers supply the binary/jar paths |
 | `trf` | FIDE TRF 1.6 generator for pairing engines and parsers for bbpPairings / JaVaFo output. Player IDs are a type parameter (`Generate[ID comparable]`) |
 
 ## Licence

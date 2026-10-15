@@ -36,3 +36,14 @@ func TestTitleFIDE(t *testing.T) {
 		}
 	}
 }
+
+func TestSexValid(t *testing.T) {
+	for s, want := range map[player.Sex]bool{
+		player.SexMale: true, player.SexFemale: true,
+		player.SexUnknown: false, "x": false, "m": false, "male": false,
+	} {
+		if got := s.Valid(); got != want {
+			t.Errorf("Sex(%q).Valid() = %v, want %v", s, got, want)
+		}
+	}
+}

@@ -1,4 +1,4 @@
-// Package category holds the rules for player categories (age, gender and
+// Package category holds the rules for player categories (age, sex and
 // rating groups such as "U12" or "Women"): which players a category matches,
 // assigning categories to players, and ranking a category's players for its
 // prize list.
@@ -13,19 +13,11 @@ import (
 	"github.com/ValkoM28/tournamentessentials/core/player"
 )
 
-// Gender restricts a category to one sex.
-type Gender string
-
-const (
-	GenderMale   Gender = "male"
-	GenderFemale Gender = "female"
-)
-
 // Criteria is the rule data of a category. Every non-nil condition must hold.
 type Criteria struct {
-	BirthdayAfter  *time.Time // player must be born strictly after this date
-	BirthdayBefore *time.Time // player must be born strictly before this date
-	Gender         *Gender
+	BirthdayAfter  *time.Time  // player must be born strictly after this date
+	BirthdayBefore *time.Time  // player must be born strictly before this date
+	Sex            *player.Sex // player must have this sex (player.SexMale or player.SexFemale)
 	MinRating      *int
 	MaxRating      *int
 	ManualOnly     bool // never assigned automatically (see Assign)
@@ -42,7 +34,9 @@ type Candidate struct {
 
 // Matches reports whether p satisfies every non-nil condition of c.
 // A birthday condition with an unknown birthday does not match, nor does a
-// gender condition with an unknown sex. ManualOnly is not checked here.
+// sex condition with an unknown sex. ManualOnly is not checked here, and
+// neither is the validity of c (see Validate); a sex condition that is not a
+// valid sex matches nobody.
 func (c Criteria) Matches(p Candidate) bool {
 	// Rating conditions
 	if c.MinRating != nil && p.Rating < *c.MinRating {
@@ -66,32 +60,26 @@ func (c Criteria) Matches(p Candidate) bool {
 		}
 	}
 
-	if c.Gender != nil {
-		switch p.Sex {
-		case player.SexFemale:
-			if *c.Gender == GenderMale {
-				return false
-			}
-		case player.SexMale:
-			if *c.Gender == GenderFemale {
-				return false
-			}
-		default:
-			return false
-		}
+	if c.Sex != nil && (!c.Sex.Valid() || p.Sex != *c.Sex) {
+		return false
 	}
 
 	return true
 }
 
 // Validate checks that the conditions are consistent: MinRating not above
-// MaxRating, BirthdayAfter before BirthdayBefore.
+// MaxRating, BirthdayAfter before BirthdayBefore, and Sex (if set) valid
+// (player.Sex.Valid). Checks run in that order and the first failure is
+// returned. Check criteria with Validate before using them: Matches does not.
 func (c Criteria) Validate() error {
 	if c.MinRating != nil && c.MaxRating != nil && *c.MinRating > *c.MaxRating {
 		return ErrInvalidRatingRange
 	}
 	if c.BirthdayAfter != nil && c.BirthdayBefore != nil && !c.BirthdayAfter.Before(*c.BirthdayBefore) {
 		return ErrInvalidDateRange
+	}
+	if c.Sex != nil && !c.Sex.Valid() {
+		return ErrInvalidSex
 	}
 	return nil
 }

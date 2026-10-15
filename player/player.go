@@ -15,6 +15,10 @@ const (
 	SexFemale  Sex = "F"
 )
 
+// Valid reports whether s is SexMale or SexFemale. SexUnknown is not valid: it
+// means "not recorded", not a third value.
+func (s Sex) Valid() bool { return s == SexMale || s == SexFemale }
+
 // Title is a player's chess title.
 type Title string
 

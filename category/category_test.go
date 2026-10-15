@@ -15,7 +15,7 @@ func date(y int, m time.Month, d int) *time.Time {
 	t := time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
 	return &t
 }
-func gender(g category.Gender) *category.Gender { return &g }
+func sex(s player.Sex) *player.Sex { return &s }
 
 func TestMatches(t *testing.T) {
 	born2015 := date(2015, 6, 1)
@@ -43,17 +43,19 @@ func TestMatches(t *testing.T) {
 		{"unknown birthday fails birthday condition", category.Criteria{BirthdayAfter: date(2014, 1, 1)}, category.Candidate{}, false},
 		{"unknown birthday is fine without birthday condition", category.Criteria{MaxRating: intPtr(2000)}, category.Candidate{Rating: 1500}, true},
 
-		// Gender × sex
-		{"female in women's category", category.Criteria{Gender: gender(category.GenderFemale)}, category.Candidate{Sex: player.SexFemale}, true},
-		{"male in women's category", category.Criteria{Gender: gender(category.GenderFemale)}, category.Candidate{Sex: player.SexMale}, false},
-		{"male in men's category", category.Criteria{Gender: gender(category.GenderMale)}, category.Candidate{Sex: player.SexMale}, true},
-		{"female in men's category", category.Criteria{Gender: gender(category.GenderMale)}, category.Candidate{Sex: player.SexFemale}, false},
-		{"unknown sex fails gender condition", category.Criteria{Gender: gender(category.GenderFemale)}, category.Candidate{}, false},
+		// Category sex × player sex
+		{"female in women's category", category.Criteria{Sex: sex(player.SexFemale)}, category.Candidate{Sex: player.SexFemale}, true},
+		{"male in women's category", category.Criteria{Sex: sex(player.SexFemale)}, category.Candidate{Sex: player.SexMale}, false},
+		{"male in men's category", category.Criteria{Sex: sex(player.SexMale)}, category.Candidate{Sex: player.SexMale}, true},
+		{"female in men's category", category.Criteria{Sex: sex(player.SexMale)}, category.Candidate{Sex: player.SexFemale}, false},
+		{"invalid criteria sex matches nobody", category.Criteria{Sex: sex("x")}, category.Candidate{Sex: player.SexFemale}, false},
+		{"invalid criteria sex does not match unknown sex either", category.Criteria{Sex: sex("")}, category.Candidate{}, false},
+		{"unknown sex fails sex condition", category.Criteria{Sex: sex(player.SexFemale)}, category.Candidate{}, false},
 
 		// Combined
-		{"U16 girls under 1600", category.Criteria{BirthdayAfter: date(2010, 1, 1), Gender: gender(category.GenderFemale), MaxRating: intPtr(1600)},
+		{"U16 girls under 1600", category.Criteria{BirthdayAfter: date(2010, 1, 1), Sex: sex(player.SexFemale), MaxRating: intPtr(1600)},
 			category.Candidate{Birthday: born2015, Sex: player.SexFemale, Rating: 1450}, true},
-		{"U16 girls under 1600, rating too high", category.Criteria{BirthdayAfter: date(2010, 1, 1), Gender: gender(category.GenderFemale), MaxRating: intPtr(1600)},
+		{"U16 girls under 1600, rating too high", category.Criteria{BirthdayAfter: date(2010, 1, 1), Sex: sex(player.SexFemale), MaxRating: intPtr(1600)},
 			category.Candidate{Birthday: born2015, Sex: player.SexFemale, Rating: 1700}, false},
 		{"ManualOnly is not checked by Matches", category.Criteria{ManualOnly: true}, category.Candidate{}, true},
 	}
@@ -80,6 +82,13 @@ func TestValidate(t *testing.T) {
 		{"dates reversed", category.Criteria{BirthdayAfter: date(2012, 1, 1), BirthdayBefore: date(2010, 1, 1)}, category.ErrInvalidDateRange},
 		{"rating checked before dates", category.Criteria{MinRating: intPtr(2), MaxRating: intPtr(1),
 			BirthdayAfter: date(2012, 1, 1), BirthdayBefore: date(2010, 1, 1)}, category.ErrInvalidRatingRange},
+		{"male sex", category.Criteria{Sex: sex(player.SexMale)}, nil},
+		{"female sex", category.Criteria{Sex: sex(player.SexFemale)}, nil},
+		{"unknown sex value", category.Criteria{Sex: sex("x")}, category.ErrInvalidSex},
+		{"empty sex value", category.Criteria{Sex: sex(player.SexUnknown)}, category.ErrInvalidSex},
+		{"old gender encoding", category.Criteria{Sex: sex("male")}, category.ErrInvalidSex},
+		{"sex checked after rating and dates", category.Criteria{Sex: sex("x"),
+			MinRating: intPtr(2), MaxRating: intPtr(1)}, category.ErrInvalidRatingRange},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -94,12 +103,15 @@ func TestValidate(t *testing.T) {
 	if got := category.ErrInvalidDateRange.Error(); got != "birthday_after must be before birthday_before" {
 		t.Errorf("date message changed: %q", got)
 	}
+	if got := category.ErrInvalidSex.Error(); got != "sex must be 'M' or 'F'" {
+		t.Errorf("sex message changed: %q", got)
+	}
 }
 
 func TestAssign(t *testing.T) {
 	rules := []category.Rule[string]{
 		{ID: "u1600", Criteria: category.Criteria{MaxRating: intPtr(1600)}},
-		{ID: "women", Criteria: category.Criteria{Gender: gender(category.GenderFemale)}},
+		{ID: "women", Criteria: category.Criteria{Sex: sex(player.SexFemale)}},
 		{ID: "manual", Criteria: category.Criteria{ManualOnly: true}},
 		{ID: "all", Criteria: category.Criteria{}},
 		{ID: "o2000", Criteria: category.Criteria{MinRating: intPtr(2000)}},

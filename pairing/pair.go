@@ -155,6 +155,7 @@ func toTRFSettings[ID comparable](s Settings[ID]) *trf.RoundSettings[ID] {
 		HalfPointByes:    s.HalfPointByes,
 		FirstPlayerColor: s.FirstPlayerColor,
 		LateEntries:      s.LateEntries,
+		// TODO(#377): emit acceleration (XXA lines) from s.Acceleration.
 	}
 	for _, fp := range s.ForbiddenPairings {
 		rs.ForbiddenPairings = append(rs.ForbiddenPairings, trf.ForbiddenPairTRF[ID]{

@@ -3,6 +3,12 @@ package pairing
 import "errors"
 
 var (
+	// ErrInvalidSettings indicates invalid pairing settings (see Settings.Validate).
+	ErrInvalidSettings = errors.New("invalid pairing settings")
+
+	// ErrPlayerConflict indicates a player appears in conflicting settings lists.
+	ErrPlayerConflict = errors.New("player appears in conflicting settings lists")
+
 	// ErrTRFGeneration indicates a failure generating the TRF input.
 	ErrTRFGeneration = errors.New("failed to generate TRF input")
 

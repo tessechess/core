@@ -48,7 +48,8 @@ type Player[ID comparable] struct {
 	FixedBoard   *int // player-level fixed board; a round-level FixedBoard for the same player wins
 }
 
-// Settings are the arbiter's settings for the round being paired.
+// Settings are the arbiter's settings for the round being paired. Check them
+// with Validate before storing or pairing.
 type Settings[ID comparable] struct {
 	WithdrawnPlayers  []ID   // zero-point bye this round
 	HalfPointByes     []ID   // half-point bye this round
@@ -56,6 +57,10 @@ type Settings[ID comparable] struct {
 	FirstPlayerColor  string // "white" or "black"; round 1 only
 	ForbiddenPairings []ForbiddenPair[ID]
 	FixedBoards       []FixedBoard[ID]
+
+	// Acceleration is "none", "baku", "dutch" or "" (round 1 only).
+	// TODO(#377): validated, but not written to the TRF yet, so Pair ignores it.
+	Acceleration string
 }
 
 // ForbiddenPair is two players who must not be paired together.

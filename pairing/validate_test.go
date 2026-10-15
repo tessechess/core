@@ -22,8 +22,9 @@ func TestValidate_ValidSettings(t *testing.T) {
 			ForbiddenPairings: []pairing.ForbiddenPair[string]{{Player1: "c", Player2: "d"}},
 			FixedBoards:       []pairing.FixedBoard[string]{{BoardNumber: 1, Player: "d"}, {BoardNumber: 3, Player: "e"}},
 		},
-		"explicit none values": {FirstPlayerColor: "", Acceleration: "none"},
-		"white and dutch":      {FirstPlayerColor: "white", Acceleration: "dutch"},
+		"explicit none values": {FirstPlayerColor: "", Acceleration: pairing.AccelerationNone},
+		"white and dutch":      {FirstPlayerColor: "white", Acceleration: pairing.AccelerationDutch},
+		"baku constant":        {Acceleration: pairing.AccelerationBaku},
 	}
 	for name, s := range cases {
 		if err := s.Validate(); err != nil {

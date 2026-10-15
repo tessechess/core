@@ -15,7 +15,7 @@ func (s Settings[ID]) Validate() error {
 	if s.FirstPlayerColor != "" && s.FirstPlayerColor != round.ColorWhite && s.FirstPlayerColor != round.ColorBlack {
 		return fmt.Errorf("%w: first_player_color must be 'white' or 'black'", ErrInvalidSettings)
 	}
-	if s.Acceleration != "" && s.Acceleration != "none" && s.Acceleration != "baku" && s.Acceleration != "dutch" {
+	if s.Acceleration != "" && s.Acceleration != AccelerationNone && s.Acceleration != AccelerationBaku && s.Acceleration != AccelerationDutch {
 		return fmt.Errorf("%w: acceleration must be 'none', 'baku', or 'dutch'", ErrInvalidSettings)
 	}
 

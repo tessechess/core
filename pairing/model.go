@@ -78,11 +78,24 @@ type Settings[ID comparable] struct {
 	ForbiddenPairings []ForbiddenPair[ID]
 	FixedBoards       []FixedBoard[ID]
 
-	// Acceleration is "none", "baku", "dutch" or "" (round 1 only). It is
-	// validated but currently has no effect: it is not written to the TRF, so
-	// Pair ignores it (#377).
-	Acceleration string
+	// Acceleration is the acceleration method for round 1; empty means none.
+	// It is validated but currently has no effect: it is not written to the
+	// TRF, so Pair ignores it (#377).
+	Acceleration Acceleration
 }
+
+// Acceleration is a pairing acceleration method, used in round 1. The empty
+// value means "not set" and behaves like AccelerationNone.
+type Acceleration string
+
+const (
+	// AccelerationNone pairs without acceleration.
+	AccelerationNone Acceleration = "none"
+	// AccelerationBaku is Baku acceleration (FIDE C.04.5).
+	AccelerationBaku Acceleration = "baku"
+	// AccelerationDutch is the third option offered by the dashboard.
+	AccelerationDutch Acceleration = "dutch"
+)
 
 // ForbiddenPair is two players who must not be paired together.
 type ForbiddenPair[ID comparable] struct {

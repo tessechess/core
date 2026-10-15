@@ -16,7 +16,7 @@ var _ PairingEngine = (*BBPPairings)(nil)
 // then be set, because a zero Timeout makes every run time out immediately.
 type BBPPairings struct {
 	BinaryPath string        // path to the bbpPairings executable
-	Timeout    time.Duration // longest a single run may take
+	Timeout    time.Duration // longest a single run may take; see the package docs on child processes
 }
 
 // NewBBPPairings returns an engine that runs the bbpPairings binary at

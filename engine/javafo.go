@@ -18,7 +18,7 @@ var _ PairingEngine = (*JaVaFo)(nil)
 type JaVaFo struct {
 	JavaPath string        // the java executable ("java" to use the one on PATH)
 	JarPath  string        // path to the JaVaFo jar
-	Timeout  time.Duration // longest a single run may take
+	Timeout  time.Duration // longest a single run may take; see the package docs on child processes
 }
 
 // NewJaVaFo returns an engine that runs the jar at jarPath with the Java

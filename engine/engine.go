@@ -6,6 +6,18 @@
 // Other engines plug in by implementing PairingEngine. The two built-in ones
 // write the pair list (OutputSimplePairs); an engine that returns the input TRF
 // with the new round appended reports OutputTRF.
+//
+// # Timeouts and child processes
+//
+// A run is limited by the engine's Timeout and by the deadline of the context.
+// On Unix the engine runs in its own process group and a timeout kills the
+// whole group. On other platforms only the engine process is killed: if the
+// configured executable is a wrapper that starts the real engine as a child
+// (a shell script, a launcher), that child may survive, and while it keeps the
+// engine's output pipe open GeneratePairings can return later than Timeout (on
+// Unix too, for a child that leaves the process group). Point BinaryPath and
+// JavaPath at the real executable, not at a wrapper. Known limitation, see
+// https://github.com/ValkoM28/TournamentEssentials/issues/382.
 package engine
 
 import "context"

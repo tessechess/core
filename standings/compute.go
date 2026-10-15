@@ -55,6 +55,16 @@ type CrosstableRow[ID comparable] struct {
 	Rounds []RoundResult // one per round, ordered by round number
 }
 
+// CrosstableResult is a ranking crosstable: one row per player and the number
+// of rounds the rows' Rounds cover.
+type CrosstableResult[ID comparable] struct {
+	// TotalRounds is the highest round number among the games; every row has
+	// that many round cells (rounds without games are marked not played).
+	TotalRounds int
+	// Rows has one row per player, in standings order.
+	Rows []CrosstableRow[ID]
+}
+
 // Scores returns every player's points, tiebreaks and rating info, in no
 // particular order. Direct Encounter is left at 0 here; Rank fills it in.
 func Scores[ID comparable](in Input[ID]) []*PlayerScore[ID] {
@@ -69,9 +79,9 @@ func Rank[ID comparable](in Input[ID]) []*Standing[ID] {
 	return standings
 }
 
-// Crosstable returns the number of rounds (the highest round number among the
-// games) and one row per player in standings order.
-func Crosstable[ID comparable](in Input[ID]) (int, []CrosstableRow[ID]) {
+// Crosstable returns the ranking crosstable: one row per player in standings
+// order, each with one cell per round.
+func Crosstable[ID comparable](in Input[ID]) CrosstableResult[ID] {
 	standings, allInfo := rankWithInfo(in)
 
 	rankMap := make(map[ID]int, len(standings))
@@ -97,7 +107,7 @@ func Crosstable[ID comparable](in Input[ID]) (int, []CrosstableRow[ID]) {
 			Rounds: buildRoundResults(id, allInfo[id], rankMap, totalRounds),
 		}
 	}
-	return totalRounds, rows
+	return CrosstableResult[ID]{TotalRounds: totalRounds, Rows: rows}
 }
 
 func scoresWithInfo[ID comparable](in Input[ID]) ([]*PlayerScore[ID], map[ID]*playerPairingInfo[ID]) {

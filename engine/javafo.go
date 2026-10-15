@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"time"
 )
 
@@ -40,7 +41,8 @@ func (j *JaVaFo) OutputFormat() OutputFormat { return OutputSimplePairs }
 
 // GeneratePairings pairs the next round of the TRF in trfInput and returns the
 // engine's pair list. It returns ErrEngineNotFound if JarPath does not
-// exist, ErrEngineTimeout if the run exceeds Timeout (or the deadline of ctx
+// exist or JavaPath is not an executable (looked up on PATH if it has no
+// directory part), ErrEngineTimeout if the run exceeds Timeout (or the deadline of ctx
 // passes first) and ErrEngineExecution, with the engine's output, if it exits
 // with an error.
 func (j *JaVaFo) GeneratePairings(ctx context.Context, trfInput string) (string, error) {
@@ -48,10 +50,15 @@ func (j *JaVaFo) GeneratePairings(ctx context.Context, trfInput string) (string,
 		return "", fmt.Errorf("%w: %s", ErrEngineNotFound, j.JarPath)
 	}
 
+	javaPath, err := exec.LookPath(j.JavaPath)
+	if err != nil {
+		return "", fmt.Errorf("%w: %s", ErrEngineNotFound, j.JavaPath)
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, j.Timeout)
 	defer cancel()
 
-	return runEngine(ctx, j.JavaPath, func(inputPath, outputPath string) []string {
+	return runEngine(ctx, javaPath, func(inputPath, outputPath string) []string {
 		return []string{"-jar", j.JarPath, inputPath, "-p", outputPath}
 	}, trfInput)
 }

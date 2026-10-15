@@ -2,6 +2,10 @@
 // TRF input and returns their raw output; parse it with the matching parser in
 // core/trf (see OutputFormat). Callers supply the binary or jar paths: the
 // programs themselves are not part of core as per their licenses.
+//
+// Other engines plug in by implementing PairingEngine. The two built-in ones
+// write the pair list (OutputSimplePairs); an engine that returns the input TRF
+// with the new round appended reports OutputTRF.
 package engine
 
 import "context"
@@ -10,7 +14,10 @@ import "context"
 type OutputFormat string
 
 const (
-	// OutputTRF means the engine outputs a modified TRF with a new round appended.
+	// OutputTRF means the engine outputs the input TRF with a new round column
+	// appended to each player line; parse with trf.ParseTRFRound. It is for
+	// engines that return a TRF: neither built-in engine does, but pairing
+	// supports it for custom PairingEngine implementations.
 	OutputTRF OutputFormat = "trf"
 	// OutputSimplePairs means the engine outputs "count\nwhite black\n..."
 	// (bbpPairings and JaVaFo with -p); parse with trf.ParseSimplePairs.

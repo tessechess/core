@@ -170,6 +170,26 @@ func TestEngine_JaVaFo_JarNotFound(t *testing.T) {
 	}
 }
 
+func TestEngine_JaVaFo_JavaNotFound(t *testing.T) {
+	// The jar exists, the java executable does not.
+	jarPath := filepath.Join(t.TempDir(), "javafo.jar")
+	if err := os.WriteFile(jarPath, []byte("fake"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	eng := engine.NewJaVaFo("/nonexistent/java", jarPath, 5*time.Second)
+	_, err := eng.GeneratePairings(context.Background(), sampleTRF)
+	if err == nil {
+		t.Fatal("expected error for missing java")
+	}
+	if !errors.Is(err, engine.ErrEngineNotFound) {
+		t.Errorf("expected ErrEngineNotFound, got: %v", err)
+	}
+	if !containsSubstring(err.Error(), "/nonexistent/java") {
+		t.Errorf("error should name the java path, got: %v", err)
+	}
+}
+
 func TestEngine_Timeout(t *testing.T) {
 	mock := writeMockScript(t, "slow-engine", "sleep 30 &\nwait")
 	eng := engine.NewBBPPairings(mock, 200*time.Millisecond)

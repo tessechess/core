@@ -16,12 +16,9 @@ Module path: `github.com/ValkoM28/tournamentessentials/core` (placeholder; may b
 | Package | Contents |
 |---|---|
 | `result` | Game result codes (`1-0`, `0-1`, `0.5-0.5`, forfeits, byes, `*`, `void`) and the points each side receives |
+| `round` | `Game` — one game or bye of a round (`Round`, `Board`, `White`, `Black`, `Result`), with `IsBye` and `Points`. The shared game type of `trf`, `pairing` and `standings`. Generic over the player ID |
 | `category` | Category rules: `Criteria.Matches` / `Validate` (rating, birthday, gender conditions; unrated counts as under any max rating), `Assign` (players → categories, `ManualOnly` skipped) and `RankWithin` (category prize order by section rank). Generic over category and player IDs |
 | `engine` | `PairingEngine` interface, bbpPairings and JaVaFo wrappers, and the runner (temp files, timeout; on Unix a timeout kills the whole process group). Callers supply the binary/jar paths |
-| `pairing` | Pairs the next round: `Prepare` (merges player-level fixed boards, builds the TRF) and `Prepared.Run` (runs an engine, parses its output by format, maps ranks to IDs, applies fixed boards); `Pair` does both. `ApplyFixedBoards`. `Settings.Validate` / `ReferencedPlayers` check the arbiter settings. `StartingOrder` / `TitleOrder` give starting ranks in FIDE initial-ranking order (rating, title, name; arena titles count as untitled). Generic over the player ID |
-| `standings` | FIDE tiebreaks (Buchholz and variants, Sonneborn-Berger, Koya, DE, ARO, TPR, PTP, APRO, APPO, wins, …), the tiebreak registry (`IsTiebreakKey`, `SupportsCut`, `SupportsThreshold`, `TiebreakKeys`), and standings: `Scores`, `Rank`, `Crosstable`, `BuildRoundResults`. Generic over the player ID |
-| `trf` | FIDE TRF 1.6 generator for pairing engines and parsers for bbpPairings / JaVaFo output. Player IDs are a type parameter (`Generate[ID comparable]`) |
-
-## Licence
-
-Not decided yet (MIT or Apache-2.0). The repository is private; add a LICENSE file before publishing.
+| `pairing` | Pairs the next round: `Prepare` (merges player-level fixed boards, builds the TRF) and `Prepared.Run` (runs an engine, parses its output by format, maps ranks to IDs, applies fixed boards); `Pair` does both. History in and new boards out are `round.Game`s. `ApplyFixedBoards`. `Settings.Validate` / `ReferencedPlayers` check the arbiter settings. `StartingOrder` / `TitleOrder` give starting ranks in FIDE initial-ranking order (rating, title, name; arena titles count as untitled). Generic over the player ID |
+| `standings` | FIDE tiebreaks (Buchholz and variants, Sonneborn-Berger, Koya, DE, ARO, TPR, PTP, APRO, APPO, wins, …), the tiebreak registry (`IsTiebreakKey`, `SupportsCut`, `SupportsThreshold`, `TiebreakKeys`), and standings: `Scores`, `Rank`, `Crosstable`, `BuildRoundResults`, computed from `round.Game`s. Generic over the player ID |
+| `trf` | FIDE TRF 1.6 generator for pairing engines and parsers for bbpPairings / JaVaFo output. Player IDs are a type parameter (`Generate[ID comparable]`); completed rounds are passed as `round.Game`s + `CompletedRounds` |

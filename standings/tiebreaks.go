@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/ValkoM28/tournamentessentials/core/result"
+	"github.com/ValkoM28/tournamentessentials/core/round"
 )
 
 // ============================================================================
@@ -77,7 +78,7 @@ func ComputeDirectEncounter[ID comparable](
 				}
 			}
 
-			opponentGames[*opponentID] = append(opponentGames[*opponentID], pointsFor(playerID, p))
+			opponentGames[*opponentID] = append(opponentGames[*opponentID], p.Points(playerID))
 		}
 
 		// Sum contributions, averaging when players met more than once (Article 6.1.2).
@@ -268,7 +269,7 @@ func ComputeNumberOfWins[ID comparable](
 	}
 	var wins float64
 	for _, p := range info.pairings {
-		if pointsFor(playerID, p) == 1.0 {
+		if p.Points(playerID) == 1.0 {
 			wins++
 		}
 	}
@@ -296,7 +297,7 @@ func ComputeSumOfProgressiveScores[ID comparable](
 	// Collect the player's score earned in each round.
 	scoreByRound := make(map[int]float64)
 	for _, p := range info.pairings {
-		scoreByRound[p.Round] += pointsFor(playerID, p)
+		scoreByRound[p.Round] += p.Points(playerID)
 	}
 
 	// Walk every round 1..maxRound, accumulating the running total.
@@ -409,7 +410,7 @@ func ComputeKoyaSystem[ID comparable](
 		}
 
 		if rawScores[*opponentID] >= scoreThreshold {
-			total += pointsFor(playerID, p)
+			total += p.Points(playerID)
 		}
 	}
 	return total
@@ -470,7 +471,7 @@ func ComputeSonnebornBerger[ID comparable](
 	var total float64
 	for _, p := range info.pairings {
 		isWhite := p.White == playerID
-		pointsAgainstOpponent := pointsFor(playerID, p)
+		pointsAgainstOpponent := p.Points(playerID)
 
 		var opponentID *ID
 
@@ -620,13 +621,13 @@ func ComputeForeBuchholz[ID comparable](
 
 	// 2. Build simulated scores: copy rawScores, then add 0.5 to each player
 	//    involved in an unplayed real pairing in the final round.
-	//    Each *Game[ID] is shared between white and black in allInfo, so track
+	//    Each *round.Game[ID] is shared between white and black in allInfo, so track
 	//    visited pointers to avoid double-counting.
 	simScores := make(map[ID]float64, len(rawScores))
 	for id, s := range rawScores {
 		simScores[id] = s
 	}
-	visited := make(map[*Game[ID]]bool)
+	visited := make(map[*round.Game[ID]]bool)
 	for _, pInfo := range allInfo {
 		for _, p := range pInfo.pairings {
 			if visited[p] {
@@ -708,7 +709,7 @@ func ComputeTournamentPerformanceRating[ID comparable](
 		}
 		if r := ratings[oppID]; r > 0 {
 			ratingSum += r
-			points += pointsFor(playerID, p)
+			points += p.Points(playerID)
 			ratedCount++
 		}
 	}
@@ -749,7 +750,7 @@ func ComputeRatingChange[ID comparable](
 			oppID = p.White
 		}
 		we += expectedScore(float64(playerRating), float64(ratings[oppID]))
-		w += pointsFor(playerID, p)
+		w += p.Points(playerID)
 	}
 	// Round to one decimal place per FIDE rating regulations.
 	return math.Round(float64(kFactor)*(w-we)*10) / 10
@@ -795,7 +796,7 @@ func ComputePerfectTournamentPerformance[ID comparable](
 			oppID = p.White
 		}
 		oppRatings = append(oppRatings, ratings[oppID])
-		actual += pointsFor(playerID, p)
+		actual += p.Points(playerID)
 	}
 
 	// Binary search bounds.
@@ -919,7 +920,7 @@ func computeMatchPoints() { panic("not implemented") } // unexported until the i
 
 // BuildPlayerPairingInfo groups pairings by player and computes lastRealRound.
 // A "real" game is any pairing where Black is non-nil.
-func BuildPlayerPairingInfo[ID comparable](pairings []*Game[ID]) map[ID]*playerPairingInfo[ID] {
+func BuildPlayerPairingInfo[ID comparable](pairings []*round.Game[ID]) map[ID]*playerPairingInfo[ID] {
 	allInfo := make(map[ID]*playerPairingInfo[ID])
 
 	ensure := func(id ID) *playerPairingInfo[ID] {
@@ -1013,8 +1014,8 @@ func buchholzOpponentScores[ID comparable](
 // the board — real pairings (Black ≠ nil) with a played result (not a
 // forfeit, void, or unplayed round). This is the shared filter for all Type D
 // rating-based tiebreaks.
-func overTheBoardPairings[ID comparable](playerID ID, info *playerPairingInfo[ID]) []*Game[ID] {
-	var games []*Game[ID]
+func overTheBoardPairings[ID comparable](playerID ID, info *playerPairingInfo[ID]) []*round.Game[ID] {
+	var games []*round.Game[ID]
 	for _, p := range info.pairings {
 		var opponentID *ID
 		if p.White == playerID {

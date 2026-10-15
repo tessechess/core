@@ -11,15 +11,18 @@ package pairing
 import (
 	"time"
 
-	"github.com/ValkoM28/tournamentessentials/core/trf"
+	"github.com/ValkoM28/tournamentessentials/core/round"
 )
 
 // Input is everything needed to pair the next round.
 type Input[ID comparable] struct {
 	Tournament Tournament
-	Players    []Player[ID]        // confirmed players of the section
-	History    []trf.RoundData[ID] // completed rounds before the one being paired, with their games
-	Settings   *Settings[ID]       // arbiter settings for this round; nil = none
+	Players    []Player[ID]     // confirmed players of the section
+	History    []round.Game[ID] // games of the completed rounds, in round order
+	// CompletedRounds is the number of completed rounds; the round being paired
+	// is CompletedRounds+1.
+	CompletedRounds int
+	Settings        *Settings[ID] // arbiter settings for this round; nil = none
 }
 
 // Tournament holds the header data written to the TRF.
@@ -75,11 +78,4 @@ type ForbiddenPair[ID comparable] struct {
 type FixedBoard[ID comparable] struct {
 	BoardNumber int
 	Player      ID
-}
-
-// Board is one game of the paired round.
-type Board[ID comparable] struct {
-	Number int
-	White  ID
-	Black  *ID // nil for a bye
 }

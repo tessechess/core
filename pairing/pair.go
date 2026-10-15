@@ -6,11 +6,12 @@ import (
 	"sort"
 
 	"github.com/ValkoM28/tournamentessentials/core/engine"
+	"github.com/ValkoM28/tournamentessentials/core/round"
 	"github.com/ValkoM28/tournamentessentials/core/trf"
 )
 
 // Pair pairs the next round: Prepare followed by Run.
-func Pair[ID comparable](ctx context.Context, eng engine.PairingEngine, in Input[ID]) ([]Board[ID], error) {
+func Pair[ID comparable](ctx context.Context, eng engine.PairingEngine, in Input[ID]) ([]round.Game[ID], error) {
 	p, err := Prepare(in)
 	if err != nil {
 		return nil, err
@@ -22,7 +23,7 @@ func Pair[ID comparable](ctx context.Context, eng engine.PairingEngine, in Input
 type Prepared[ID comparable] struct {
 	trf         string
 	mapping     *trf.PlayerMapping[ID]
-	historyLen  int
+	completed   int
 	fixedBoards []FixedBoard[ID]
 }
 
@@ -76,16 +77,17 @@ func Prepare[ID comparable](in Input[ID]) (*Prepared[ID], error) {
 	}
 
 	input := &trf.GeneratorInput[ID]{
-		TournamentName: in.Tournament.Name,
-		City:           in.Tournament.City,
-		Federation:     in.Tournament.Federation,
-		StartDate:      in.Tournament.StartDate.Format("2006/01/02"),
-		EndDate:        in.Tournament.EndDate.Format("2006/01/02"),
-		TimeControl:    in.Tournament.TimeControl,
-		TotalRounds:    in.Tournament.TotalRounds,
-		Players:        players,
-		Rounds:         in.History,
-		Settings:       toTRFSettings(settings),
+		TournamentName:  in.Tournament.Name,
+		City:            in.Tournament.City,
+		Federation:      in.Tournament.Federation,
+		StartDate:       in.Tournament.StartDate.Format("2006/01/02"),
+		EndDate:         in.Tournament.EndDate.Format("2006/01/02"),
+		TimeControl:     in.Tournament.TimeControl,
+		TotalRounds:     in.Tournament.TotalRounds,
+		Players:         players,
+		Games:           in.History,
+		CompletedRounds: in.CompletedRounds,
+		Settings:        toTRFSettings(settings),
 	}
 
 	trfString, mapping, err := trf.Generate(input)
@@ -96,16 +98,18 @@ func Prepare[ID comparable](in Input[ID]) (*Prepared[ID], error) {
 	return &Prepared[ID]{
 		trf:         trfString,
 		mapping:     mapping,
-		historyLen:  len(in.History),
+		completed:   in.CompletedRounds,
 		fixedBoards: fixedBoards,
 	}, nil
 }
 
 // Run sends the TRF to the engine, parses its answer with the parser matching
 // eng.OutputFormat(), maps ranks back to player IDs and applies fixed boards.
+// The returned games are ordered by board, with Round set to the round being
+// paired and Result nil.
 // Engine errors are returned as they are; parse errors are wrapped with
 // ErrTRFParsing and unknown ranks with ErrUnknownEngineRank.
-func (p *Prepared[ID]) Run(ctx context.Context, eng engine.PairingEngine) ([]Board[ID], error) {
+func (p *Prepared[ID]) Run(ctx context.Context, eng engine.PairingEngine) ([]round.Game[ID], error) {
 	output, err := eng.GeneratePairings(ctx, p.trf)
 	if err != nil {
 		return nil, err
@@ -114,7 +118,7 @@ func (p *Prepared[ID]) Run(ctx context.Context, eng engine.PairingEngine) ([]Boa
 	var parsed []trf.ParsedPairing
 	switch eng.OutputFormat() {
 	case engine.OutputTRF:
-		parsed, err = trf.ParseBBPPairingsOutput(output, p.historyLen)
+		parsed, err = trf.ParseBBPPairingsOutput(output, p.completed)
 	case engine.OutputSimplePairs:
 		parsed, err = trf.ParseJaVaFoOutput(output)
 	default:
@@ -124,7 +128,7 @@ func (p *Prepared[ID]) Run(ctx context.Context, eng engine.PairingEngine) ([]Boa
 		return nil, fmt.Errorf("%w: %v", ErrTRFParsing, err)
 	}
 
-	boards := make([]Board[ID], 0, len(parsed))
+	boards := make([]round.Game[ID], 0, len(parsed))
 	for _, pp := range parsed {
 		white, ok := p.mapping.RankToID[pp.WhiteRank]
 		if !ok {
@@ -138,7 +142,7 @@ func (p *Prepared[ID]) Run(ctx context.Context, eng engine.PairingEngine) ([]Boa
 			}
 			black = &id
 		}
-		boards = append(boards, Board[ID]{Number: pp.BoardNumber, White: white, Black: black})
+		boards = append(boards, round.Game[ID]{Round: p.completed + 1, Board: pp.BoardNumber, White: white, Black: black})
 	}
 
 	if len(p.fixedBoards) > 0 {
@@ -169,7 +173,7 @@ func toTRFSettings[ID comparable](s Settings[ID]) *trf.RoundSettings[ID] {
 // ApplyFixedBoards moves designated players to their fixed board numbers.
 // For each FixedBoard, the player's game is moved to the target board number
 // and all other board numbers are re-assigned sequentially around them.
-func ApplyFixedBoards[ID comparable](boards []Board[ID], fixedBoards []FixedBoard[ID]) []Board[ID] {
+func ApplyFixedBoards[ID comparable](boards []round.Game[ID], fixedBoards []FixedBoard[ID]) []round.Game[ID] {
 	// Build a lookup: player -> target board.
 	playerToBoard := make(map[ID]int, len(fixedBoards))
 	for _, fb := range fixedBoards {
@@ -177,8 +181,8 @@ func ApplyFixedBoards[ID comparable](boards []Board[ID], fixedBoards []FixedBoar
 	}
 
 	// Separate fixed games from the rest.
-	var fixed []Board[ID]
-	var rest []Board[ID]
+	var fixed []round.Game[ID]
+	var rest []round.Game[ID]
 	for _, b := range boards {
 		if _, ok := playerToBoard[b.White]; ok {
 			fixed = append(fixed, b)
@@ -196,10 +200,10 @@ func ApplyFixedBoards[ID comparable](boards []Board[ID], fixedBoards []FixedBoar
 	// Assign target board numbers to fixed games.
 	for i := range fixed {
 		if board, ok := playerToBoard[fixed[i].White]; ok {
-			fixed[i].Number = board
+			fixed[i].Board = board
 		} else if fixed[i].Black != nil {
 			if board, ok := playerToBoard[*fixed[i].Black]; ok {
-				fixed[i].Number = board
+				fixed[i].Board = board
 			}
 		}
 	}
@@ -207,7 +211,7 @@ func ApplyFixedBoards[ID comparable](boards []Board[ID], fixedBoards []FixedBoar
 	// Collect taken board numbers.
 	taken := make(map[int]bool, len(fixed))
 	for _, b := range fixed {
-		taken[b.Number] = true
+		taken[b.Board] = true
 	}
 
 	// Re-number remaining games, filling gaps.
@@ -216,14 +220,14 @@ func ApplyFixedBoards[ID comparable](boards []Board[ID], fixedBoards []FixedBoar
 		for taken[board] {
 			board++
 		}
-		rest[i].Number = board
+		rest[i].Board = board
 		board++
 	}
 
 	// Merge and sort by board number.
 	all := append(fixed, rest...)
 	sort.Slice(all, func(i, j int) bool {
-		return all[i].Number < all[j].Number
+		return all[i].Board < all[j].Board
 	})
 	return all
 }

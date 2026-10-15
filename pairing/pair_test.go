@@ -10,7 +10,7 @@ import (
 	"github.com/ValkoM28/tournamentessentials/core/engine"
 	"github.com/ValkoM28/tournamentessentials/core/pairing"
 	"github.com/ValkoM28/tournamentessentials/core/result"
-	"github.com/ValkoM28/tournamentessentials/core/trf"
+	"github.com/ValkoM28/tournamentessentials/core/round"
 )
 
 // fakeEngine records the TRF it receives and returns a canned answer.
@@ -57,11 +57,11 @@ func fourPlayers() pairing.Input[string] {
 	}
 }
 
-func board(n int, white string, black *string) pairing.Board[string] {
-	return pairing.Board[string]{Number: n, White: white, Black: black}
+func board(n int, white string, black *string) round.Game[string] {
+	return round.Game[string]{Board: n, White: white, Black: black}
 }
 
-func assertBoards(t *testing.T, got []pairing.Board[string], want ...pairing.Board[string]) {
+func assertBoards(t *testing.T, got []round.Game[string], want ...round.Game[string]) {
 	t.Helper()
 	if len(got) != len(want) {
 		t.Fatalf("got %d boards %v, want %d %v", len(got), got, len(want), want)
@@ -69,8 +69,8 @@ func assertBoards(t *testing.T, got []pairing.Board[string], want ...pairing.Boa
 	for i := range want {
 		g, w := got[i], want[i]
 		blackOK := (g.Black == nil && w.Black == nil) || (g.Black != nil && w.Black != nil && *g.Black == *w.Black)
-		if g.Number != w.Number || g.White != w.White || !blackOK {
-			t.Errorf("board %d: got {%d %s %v}, want {%d %s %v}", i, g.Number, g.White, deref(g.Black), w.Number, w.White, deref(w.Black))
+		if g.Board != w.Board || g.White != w.White || !blackOK {
+			t.Errorf("board %d: got {%d %s %v}, want {%d %s %v}", i, g.Board, g.White, deref(g.Black), w.Board, w.White, deref(w.Black))
 		}
 	}
 }
@@ -158,10 +158,11 @@ func TestPrepare_TRFContents(t *testing.T) {
 
 func TestPrepare_ByeSettingsAndHistory(t *testing.T) {
 	in := fourPlayers()
-	in.History = []trf.RoundData[string]{{RoundNumber: 1, Pairings: []trf.PairingData[string]{
-		{White: "a", Black: strPtr("b"), Result: codePtr(result.WhiteWins)},
-		{White: "c", Black: strPtr("d"), Result: codePtr(result.Draw)},
-	}}}
+	in.History = []round.Game[string]{
+		{Round: 1, White: "a", Black: strPtr("b"), Result: codePtr(result.WhiteWins)},
+		{Round: 1, White: "c", Black: strPtr("d"), Result: codePtr(result.Draw)},
+	}
+	in.CompletedRounds = 1
 	in.Settings = &pairing.Settings[string]{
 		WithdrawnPlayers: []string{"c"},
 		HalfPointByes:    []string{"d"},
@@ -299,7 +300,7 @@ func TestPrepare_DoesNotModifyInputSettings(t *testing.T) {
 }
 
 func TestApplyFixedBoards_RenumbersAroundFixed(t *testing.T) {
-	boards := []pairing.Board[string]{
+	boards := []round.Game[string]{
 		board(1, "a", strPtr("b")),
 		board(2, "c", strPtr("d")),
 		board(3, "e", strPtr("f")),
@@ -315,7 +316,7 @@ func TestApplyFixedBoards_RenumbersAroundFixed(t *testing.T) {
 }
 
 func TestApplyFixedBoards_NoFixedPlayersPresent(t *testing.T) {
-	boards := []pairing.Board[string]{board(1, "a", strPtr("b")), board(2, "c", nil)}
+	boards := []round.Game[string]{board(1, "a", strPtr("b")), board(2, "c", nil)}
 	got := pairing.ApplyFixedBoards(boards, []pairing.FixedBoard[string]{{BoardNumber: 1, Player: "zz"}})
 	assertBoards(t, got, board(1, "a", strPtr("b")), board(2, "c", nil))
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/ValkoM28/tournamentessentials/core/engine"
 	"github.com/ValkoM28/tournamentessentials/core/result"
+	"github.com/ValkoM28/tournamentessentials/core/round"
 	"github.com/ValkoM28/tournamentessentials/core/trf"
 )
 
@@ -52,25 +53,27 @@ func pairWithRealEngine(t *testing.T, eng engine.PairingEngine) {
 	}
 	win, draw := result.WhiteWins, result.Draw
 	b, c := "b", "c"
-	round1 := trf.RoundData[string]{RoundNumber: 1, Pairings: []trf.PairingData[string]{
-		{White: "a", Black: &c, Result: &win},
-		{White: "d", Black: &b, Result: &draw},
-	}}
+	round1 := []round.Game[string]{
+		{Round: 1, White: "a", Black: &c, Result: &win},
+		{Round: 1, White: "d", Black: &b, Result: &draw},
+	}
 
 	cases := []struct {
-		name   string
-		rounds []trf.RoundData[string]
+		name      string
+		games     []round.Game[string]
+		completed int
 	}{
-		{"round 1", nil},
-		{"round 2", []trf.RoundData[string]{round1}},
+		{"round 1", nil, 0},
+		{"round 2", round1, 1},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			input := &trf.GeneratorInput[string]{
-				TournamentName: "Real engine test",
-				TotalRounds:    3,
-				Players:        players,
-				Rounds:         tc.rounds,
+				TournamentName:  "Real engine test",
+				TotalRounds:     3,
+				Players:         players,
+				Games:           tc.games,
+				CompletedRounds: tc.completed,
 				// bbpPairings refuses round 1 without an initial colour (XXC).
 				Settings: &trf.RoundSettings[string]{FirstPlayerColor: "white"},
 			}
@@ -87,7 +90,7 @@ func pairWithRealEngine(t *testing.T, eng engine.PairingEngine) {
 			var parsed []trf.ParsedPairing
 			switch eng.OutputFormat() {
 			case engine.OutputTRF:
-				parsed, err = trf.ParseBBPPairingsOutput(out, len(tc.rounds))
+				parsed, err = trf.ParseBBPPairingsOutput(out, tc.completed)
 			case engine.OutputSimplePairs:
 				parsed, err = trf.ParseJaVaFoOutput(out)
 			default:

@@ -9,23 +9,15 @@ package standings
 import (
 	"fmt"
 
-	"github.com/ValkoM28/tournamentessentials/core/result"
+	"github.com/ValkoM28/tournamentessentials/core/round"
 )
-
-// Game is one pairing of a round, as seen by the standings calculation.
-type Game[ID comparable] struct {
-	Round  int
-	White  ID
-	Black  *ID          // nil for a bye
-	Result *result.Code // nil if not yet played
-}
 
 // playerPairingInfo holds all games for one player and a derived field
 // used for the FIDE Article 16.3.2 withdrawal adjustment.
 type playerPairingInfo[ID comparable] struct {
 	// pairings is every round this player appears in (as white or black),
 	// in arbitrary order.
-	pairings []*Game[ID]
+	pairings []*round.Game[ID]
 
 	// lastRealRound is the highest round number where this player faced a
 	// non-nil opponent. -1 if the player has never played a real game.

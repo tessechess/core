@@ -6,7 +6,7 @@
 // returned PlayerMapping translates between the two.
 package trf
 
-import "github.com/ValkoM28/tournamentessentials/core/result"
+import "github.com/ValkoM28/tournamentessentials/core/round"
 
 // GeneratorInput contains all data needed to produce a TRF 1.6 file.
 type GeneratorInput[ID comparable] struct {
@@ -18,8 +18,13 @@ type GeneratorInput[ID comparable] struct {
 	TimeControl    string
 	TotalRounds    int
 	Players        []PlayerData[ID]
-	Rounds         []RoundData[ID]    // completed rounds only, ordered by number
-	Settings       *RoundSettings[ID] // nil = no special settings for the upcoming round
+	// Games of the completed rounds, in round order. Each game's Round places
+	// it in the TRF; voided games are skipped.
+	Games []round.Game[ID]
+	// CompletedRounds is the number of completed rounds (1..CompletedRounds);
+	// the round being paired is CompletedRounds+1.
+	CompletedRounds int
+	Settings        *RoundSettings[ID] // nil = no special settings for the upcoming round
 }
 
 // PlayerData holds one player's details for TRF generation.
@@ -33,19 +38,6 @@ type PlayerData[ID comparable] struct {
 	FIDENumber   string
 	BirthDate    string // "YYYY/MM/DD"
 	Sex          string // "m", "w", ""
-}
-
-// RoundData holds the pairings for one completed round.
-type RoundData[ID comparable] struct {
-	RoundNumber int
-	Pairings    []PairingData[ID]
-}
-
-// PairingData holds one pairing from a completed round.
-type PairingData[ID comparable] struct {
-	White  ID
-	Black  *ID          // nil for byes
-	Result *result.Code // nil = not yet played
 }
 
 // PlayerMapping provides bidirectional lookup between TRF starting ranks and player IDs.

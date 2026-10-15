@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ValkoM28/tournamentessentials/core/result"
+	"github.com/ValkoM28/tournamentessentials/core/round"
 	"github.com/ValkoM28/tournamentessentials/core/standings"
 )
 
@@ -16,8 +17,8 @@ var idSeq atomic.Int64
 func newID() string { return fmt.Sprintf("p%07d", idSeq.Add(1)) }
 
 // Helper to create a PairingRow
-func makePairing(roundNum int, whiteID string, blackID *string, res *result.Code) *standings.Game[string] {
-	return &standings.Game[string]{
+func makePairing(roundNum int, whiteID string, blackID *string, res *result.Code) *round.Game[string] {
+	return &round.Game[string]{
 		Round:  roundNum,
 		White:  whiteID,
 		Black:  blackID,
@@ -42,7 +43,7 @@ func TestComputeBuchholz_BasicCalculation(t *testing.T) {
 
 	t.Logf("Player IDs: P1=%s, P2=%s, P3=%s, P4=%s", p1[:8], p2[:8], p3[:8], p4[:8])
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 beats P2, P3 beats P4
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)), // P1: 1, P2: 0
 		makePairing(1, p3, &p4, codePtr(result.WhiteWins)), // P3: 1, P4: 0
@@ -126,7 +127,7 @@ func TestComputeBuchholz_CutLowest(t *testing.T) {
 	p3 := newID()
 	p4 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, &p4, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
@@ -179,7 +180,7 @@ func TestComputeBuchholz_Median(t *testing.T) {
 	p3 := newID()
 	p4 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, &p4, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
@@ -220,7 +221,7 @@ func TestComputeBuchholz_InsufficientRounds(t *testing.T) {
 	p1 := newID()
 	p2 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
 
@@ -262,7 +263,7 @@ func TestComputeBuchholz_WithBye(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 beats P2, P3 gets bye (1 point)
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, nil, codePtr(result.WhiteWins)),
@@ -327,7 +328,7 @@ func TestComputeBuchholz_WithWithdrawal(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 beats P2, P3 gets bye
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, nil, codePtr(result.WhiteWins)),
@@ -375,7 +376,7 @@ func TestComputeBuchholz_NoPlayer(t *testing.T) {
 	p2 := newID()
 	nonExistent := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
 
@@ -404,7 +405,7 @@ func TestComputeBuchholz_MultipleWithdrawals(t *testing.T) {
 	p1 := newID()
 	p2 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 beats P2
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		// Round 2: P2 withdraws
@@ -459,7 +460,7 @@ func TestComputeBuchholz_ComplexScenario(t *testing.T) {
 	p4 := newID()
 	p5 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, &p4, codePtr(result.Draw)),
@@ -544,7 +545,7 @@ func TestComputeBuchholz_ComplexScenario(t *testing.T) {
 // ============================================================================
 
 // pointsFor returns the points a player scored in a pairing
-func pointsFor(playerID string, p *standings.Game[string]) float64 {
+func pointsFor(playerID string, p *round.Game[string]) float64 {
 	if p.Result == nil {
 		return 0
 	}
@@ -579,7 +580,7 @@ func TestComputeSonnebornBerger_BasicCalculation(t *testing.T) {
 
 	t.Logf("Player IDs: P1=%s, P2=%s, P3=%s, P4=%s", p1[:8], p2[:8], p3[:8], p4[:8])
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 beats P2, P3 beats P4
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)), // P1: 1, P2: 0
 		makePairing(1, p3, &p4, codePtr(result.WhiteWins)), // P3: 1, P4: 0
@@ -670,7 +671,7 @@ func TestComputeSonnebornBerger_WithBye(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 beats P2, P3 gets bye (1 point)
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, nil, codePtr(result.WhiteWins)),
@@ -736,7 +737,7 @@ func TestComputeSonnebornBerger_WithWithdrawal(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 beats P2, P3 gets bye
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, nil, codePtr(result.WhiteWins)),
@@ -784,7 +785,7 @@ func TestComputeSonnebornBerger_MultipleWithdrawals(t *testing.T) {
 	p1 := newID()
 	p2 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 beats P2
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		// Round 2: P2 withdraws
@@ -838,7 +839,7 @@ func TestComputeSonnebornBerger_WithDraws(t *testing.T) {
 	p3 := newID()
 	p4 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 draws P2, P3 draws P4
 		makePairing(1, p1, &p2, codePtr(result.Draw)),
 		makePairing(1, p3, &p4, codePtr(result.Draw)),
@@ -896,7 +897,7 @@ func TestComputeSonnebornBerger_NoPlayer(t *testing.T) {
 	p2 := newID()
 	nonExistent := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
 
@@ -929,7 +930,7 @@ func TestComputeSonnebornBerger_ComplexScenario(t *testing.T) {
 	p4 := newID()
 	p5 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, &p4, codePtr(result.Draw)),
@@ -1031,7 +1032,7 @@ func TestComputeSonnebornBerger_HalfPointBye(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 beats P2, P3 gets half-point bye
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, nil, codePtr(result.Draw)), // half-point bye
@@ -1083,7 +1084,7 @@ func TestComputeKoyaSystem_Basic(t *testing.T) {
 	p3 := newID()
 	p4 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 beats P2, P3 beats P4
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, &p4, codePtr(result.WhiteWins)),
@@ -1172,7 +1173,7 @@ func TestComputeKoyaSystem_ExplicitThreshold(t *testing.T) {
 	p3 := newID()
 	p4 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, &p4, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
@@ -1224,7 +1225,7 @@ func TestComputeKoyaSystem_ByesIgnored(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 beats P2, P3 gets full-point bye
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, nil, codePtr(result.WhiteWins)),
@@ -1275,7 +1276,7 @@ func TestComputeKoyaSystem_NoPlayer(t *testing.T) {
 	p2 := newID()
 	ghost := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
 	allInfo := standings.BuildPlayerPairingInfo(pairings)
@@ -1302,7 +1303,7 @@ func TestForeBuchholz_AllPlayed(t *testing.T) {
 	p3 := newID()
 	p4 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, &p4, codePtr(result.WhiteWins)),
@@ -1333,7 +1334,7 @@ func TestForeBuchholz_OneUnplayed(t *testing.T) {
 
 	// Round 1: P1 beats P2, P3 has no game (bye)
 	// Round 2: P1 vs P3 — UNPLAYED (nil result)
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, nil), // unplayed
 	}
@@ -1367,7 +1368,7 @@ func TestForeBuchholz_ByeNotSimulated(t *testing.T) {
 
 	// Round 1: P1 beats P2
 	// Round 2: P1 gets a bye (nil black)
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, nil, codePtr(result.WhiteWins)), // full-point bye
 	}
@@ -1395,7 +1396,7 @@ func TestForeBuchholz_ResultUnplayed(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.Unplayed)), // "*"
 	}
@@ -1406,7 +1407,7 @@ func TestForeBuchholz_ResultUnplayed(t *testing.T) {
 	fbNil := standings.ComputeForeBuchholz(p1, allInfo, rawScores, 0, 0)
 
 	// Replace nil with "*" for the same pairing and verify same FB value
-	pairings2 := []*standings.Game[string]{
+	pairings2 := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, nil),
 	}
@@ -1429,7 +1430,7 @@ func TestForeBuchholz_CutVariants(t *testing.T) {
 	p3 := newID()
 	p4 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 		makePairing(3, p1, &p4, codePtr(result.WhiteWins)),
@@ -1459,7 +1460,7 @@ func TestComputeAPPO_SingleOpponent(t *testing.T) {
 	p1 := newID()
 	p2 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
 
@@ -1487,7 +1488,7 @@ func TestComputeAPPO_RoundRobin(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 		makePairing(3, p2, &p3, codePtr(result.WhiteWins)),
@@ -1513,7 +1514,7 @@ func TestComputeAPPO_CompareWithAPRO(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 		makePairing(3, p2, &p3, codePtr(result.WhiteWins)),
@@ -1539,7 +1540,7 @@ func TestComputeAPPO_ByeExcluded(t *testing.T) {
 	p1 := newID()
 	p2 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)), // bye
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)), // real game
 	}
@@ -1560,7 +1561,7 @@ func TestComputeAPPO_NoGames(t *testing.T) {
 	t.Log("=== Testing APPO: no OTB games → 0 ===")
 
 	p1 := newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)),
 	}
 	allInfo := standings.BuildPlayerPairingInfo(pairings)
@@ -1586,7 +1587,7 @@ func TestComputeAPRO_SingleOpponent(t *testing.T) {
 	p1 := newID()
 	p2 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
 
@@ -1614,7 +1615,7 @@ func TestComputeAPRO_RoundRobin(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)), // P1 beats P2
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)), // P1 beats P3
 		makePairing(3, p2, &p3, codePtr(result.WhiteWins)), // P2 beats P3
@@ -1638,7 +1639,7 @@ func TestComputeAPRO_ByeExcluded(t *testing.T) {
 	p1 := newID()
 	p2 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)), // bye
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)), // real game
 	}
@@ -1670,7 +1671,7 @@ func TestComputeAPRO_Rounding(t *testing.T) {
 	pa := newID()
 	pb := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)), // P1 beats P2
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)), // P1 beats P3
 		makePairing(3, p2, &pa, codePtr(result.Draw)),      // P2 draws Pa
@@ -1706,7 +1707,7 @@ func TestComputeAPRO_ForfeitInOpponentRecordExcluded(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),    // P1 beats P2 (real)
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),    // P1 beats P3 (real)
 		makePairing(3, p3, &p2, codePtr(result.WhiteForfeit)), // P3 beats P2 by forfeit
@@ -1732,7 +1733,7 @@ func TestComputeAPRO_NoGames(t *testing.T) {
 	t.Log("=== Testing APRO: no OTB games → 0 ===")
 
 	p1 := newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)),
 	}
 	allInfo := standings.BuildPlayerPairingInfo(pairings)
@@ -1759,7 +1760,7 @@ func TestComputePTP_Symmetric(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p3, &p1, codePtr(result.WhiteWins)), // P1 loses
 	}
@@ -1782,7 +1783,7 @@ func TestComputePTP_DrawEqualsOpponent(t *testing.T) {
 	p1 := newID()
 	p2 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.Draw)),
 	}
 
@@ -1806,7 +1807,7 @@ func TestComputePTP_KnownValue(t *testing.T) {
 	p3 := newID()
 	p4 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 		makePairing(3, p4, &p1, codePtr(result.WhiteWins)), // P1 loses
@@ -1836,7 +1837,7 @@ func TestComputePTP_GreaterThanTPRAbove50Pct(t *testing.T) {
 	p3 := newID()
 	p4 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 		makePairing(3, p4, &p1, codePtr(result.WhiteWins)), // P1 loses
@@ -1866,7 +1867,7 @@ func TestComputePTP_PerfectScore(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 	}
@@ -1891,7 +1892,7 @@ func TestComputePTP_ZeroScore(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.BlackWins)), // P1 loses
 		makePairing(2, p1, &p3, codePtr(result.BlackWins)), // P1 loses
 	}
@@ -1915,7 +1916,7 @@ func TestComputePTP_ByeExcluded(t *testing.T) {
 	p2 := newID()
 
 	// Round 1: bye; Round 2: draw vs 1800
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)), // bye
 		makePairing(2, p1, &p2, codePtr(result.Draw)),
 	}
@@ -1936,7 +1937,7 @@ func TestComputePTP_NoGames(t *testing.T) {
 	t.Log("=== Testing PTP: no OTB games → 0 ===")
 
 	p1 := newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)),
 	}
 	allInfo := standings.BuildPlayerPairingInfo(pairings)
@@ -1963,7 +1964,7 @@ func TestComputeTPR_FiftyPercent(t *testing.T) {
 	p3 := newID()
 
 	// P1: wins vs P2, loses to P3 → 1 point from 2 games = 50%
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p3, &p1, codePtr(result.WhiteWins)), // P3 wins as white
 	}
@@ -1986,7 +1987,7 @@ func TestComputeTPR_PerfectScore(t *testing.T) {
 	p1 := newID()
 	p2 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
 
@@ -2008,7 +2009,7 @@ func TestComputeTPR_ZeroScore(t *testing.T) {
 	p1 := newID()
 	p2 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.BlackWins)), // P1 loses
 	}
 
@@ -2033,7 +2034,7 @@ func TestComputeTPR_KnownValue(t *testing.T) {
 	p3 := newID()
 	p4 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)), // +1
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)), // +1
 		makePairing(3, p4, &p1, codePtr(result.WhiteWins)), // 0 (P1 loses)
@@ -2060,7 +2061,7 @@ func TestComputeTPR_ByeExcluded(t *testing.T) {
 	p1 := newID()
 	p2 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)), // full-point bye
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)), // real game
 	}
@@ -2081,7 +2082,7 @@ func TestComputeTPR_NoGames(t *testing.T) {
 	t.Log("=== Testing TPR: no OTB games → 0 ===")
 
 	p1 := newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)), // bye only
 	}
 	allInfo := standings.BuildPlayerPairingInfo(pairings)
@@ -2101,7 +2102,7 @@ func TestComputeTPR_UnratedOpponentExcluded(t *testing.T) {
 	p2 := newID() // rated 1500
 	p3 := newID() // unrated
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)), // win vs rated
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)), // win vs unrated
 	}
@@ -2133,7 +2134,7 @@ func TestComputeARO_Basic(t *testing.T) {
 
 	// Round 1: P1 beats P2
 	// Round 2: P1 beats P3
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 		makePairing(2, p2, &p3, codePtr(result.BlackWins)),
@@ -2177,7 +2178,7 @@ func TestComputeARO_Rounding(t *testing.T) {
 	p3 := newID()
 
 	// Ratings 1800 and 1801 → average = 1800.5 → should round to 1801
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 	}
@@ -2205,7 +2206,7 @@ func TestComputeARO_ByeExcluded(t *testing.T) {
 
 	// Round 1: P1 gets a full-point bye (nil black)
 	// Round 2: P1 beats P2
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)), // bye
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)),
 	}
@@ -2234,7 +2235,7 @@ func TestComputeARO_ForfeitExcluded(t *testing.T) {
 
 	// Round 1: P1 wins by forfeit over P2 (P2 didn't show up)
 	// Round 2: P1 beats P3 over the board
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteForfeit)), // forfeit win
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),    // real game
 	}
@@ -2260,7 +2261,7 @@ func TestComputeARO_AllByes(t *testing.T) {
 
 	p1 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)), // full-point bye
 		makePairing(2, p1, nil, codePtr(result.WhiteHalf)), // half-point bye
 	}
@@ -2280,7 +2281,7 @@ func TestComputeARO_UnknownPlayer(t *testing.T) {
 	t.Log("=== Testing ARO: unknown player returns 0 ===")
 
 	ghost := newID()
-	allInfo := standings.BuildPlayerPairingInfo([]*standings.Game[string]{})
+	allInfo := standings.BuildPlayerPairingInfo([]*round.Game[string]{})
 	ratings := map[string]int{}
 
 	aro := standings.ComputeAverageRatingOfOpponents(ghost, allInfo, ratings)
@@ -2297,7 +2298,7 @@ func TestComputeARO_UnratedOpponentExcluded(t *testing.T) {
 	p2 := newID() // rated
 	p3 := newID() // unrated
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 	}
@@ -2322,7 +2323,7 @@ func TestComputeARO_UnratedOpponentExcluded(t *testing.T) {
 // TestComputeNumberOfWins_AllWins — player wins every round over the board.
 func TestComputeNumberOfWins_AllWins(t *testing.T) {
 	p1, p2, p3, p4 := newID(), newID(), newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 		makePairing(3, p1, &p4, codePtr(result.WhiteWins)),
@@ -2340,7 +2341,7 @@ func TestComputeNumberOfWins_AllWins(t *testing.T) {
 // TestComputeNumberOfWins_Mixed — wins, draw, loss, full-point bye, half-point bye.
 func TestComputeNumberOfWins_Mixed(t *testing.T) {
 	p1, p2, p3 := newID(), newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),  // win → counts
 		makePairing(2, p1, &p3, codePtr(result.Draw)),        // draw → no
 		makePairing(3, p1, &p2, codePtr(result.BlackWins)),   // loss → no
@@ -2360,7 +2361,7 @@ func TestComputeNumberOfWins_Mixed(t *testing.T) {
 // TestComputeNumberOfWins_ForfeitWin — forfeit win counts (player is awarded 1.0).
 func TestComputeNumberOfWins_ForfeitWin(t *testing.T) {
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// p2 forfeited; white (p1) wins by forfeit
 		makePairing(1, p1, &p2, codePtr(result.WhiteForfeit)),
 	}
@@ -2377,7 +2378,7 @@ func TestComputeNumberOfWins_ForfeitWin(t *testing.T) {
 // TestComputeNumberOfWins_ZeroPointBye — zero-point bye gives 0.0, not counted.
 func TestComputeNumberOfWins_ZeroPointBye(t *testing.T) {
 	p1 := newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.ZeroPointBye)),
 	}
 	allInfo := standings.BuildPlayerPairingInfo(pairings)
@@ -2406,7 +2407,7 @@ func TestComputeNumberOfWins_NonExistentPlayer(t *testing.T) {
 // TestComputeNumberOfGamesWon_OTBOnly — only real board wins count.
 func TestComputeNumberOfGamesWon_OTBOnly(t *testing.T) {
 	p1, p2, p3, p4 := newID(), newID(), newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),  // OTB win as white → counts
 		makePairing(2, p3, &p1, codePtr(result.BlackWins)),  // OTB win as black → counts
 		makePairing(3, p1, &p4, codePtr(result.Draw)),       // draw → no
@@ -2426,7 +2427,7 @@ func TestComputeNumberOfGamesWon_OTBOnly(t *testing.T) {
 // TestComputeNumberOfGamesWon_ForfeitWinExcluded — forfeit wins do not count.
 func TestComputeNumberOfGamesWon_ForfeitWinExcluded(t *testing.T) {
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// p2 didn't show; p1 wins by forfeit
 		makePairing(1, p1, &p2, codePtr(result.WhiteForfeit)),
 	}
@@ -2455,7 +2456,7 @@ func TestComputeNumberOfGamesWon_NonExistentPlayer(t *testing.T) {
 // TestComputeNumberOfPlayedGamesBlack_CountsBlackGames — counts only games as Black.
 func TestComputeNumberOfPlayedGamesBlack_CountsBlackGames(t *testing.T) {
 	p1, p2, p3 := newID(), newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p2, &p1, codePtr(result.BlackWins)),  // p1 is Black, win → counts
 		makePairing(2, p3, &p1, codePtr(result.WhiteWins)),  // p1 is Black, loss → counts
 		makePairing(3, p3, &p1, codePtr(result.Draw)),       // p1 is Black, draw → counts
@@ -2475,7 +2476,7 @@ func TestComputeNumberOfPlayedGamesBlack_CountsBlackGames(t *testing.T) {
 // TestComputeNumberOfPlayedGamesBlack_ForfeitCounts — forfeit games still count (player was assigned Black).
 func TestComputeNumberOfPlayedGamesBlack_ForfeitCounts(t *testing.T) {
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// p1 is Black, p2 (White) forfeited → result is ResultBlackForfeit
 		makePairing(1, p2, &p1, codePtr(result.BlackForfeit)),
 		// p1 is Black, p1 forfeited → result is ResultWhiteForfeit
@@ -2494,7 +2495,7 @@ func TestComputeNumberOfPlayedGamesBlack_ForfeitCounts(t *testing.T) {
 // TestComputeNumberOfPlayedGamesBlack_UnplayedExcluded — nil result and void excluded.
 func TestComputeNumberOfPlayedGamesBlack_UnplayedExcluded(t *testing.T) {
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p2, &p1, nil),                               // nil result → no
 		makePairing(2, p2, &p1, codePtr(result.Unplayed)),    // "*" → no
 		makePairing(3, p2, &p1, codePtr(result.Void)),        // "void" → no
@@ -2525,7 +2526,7 @@ func TestComputeNumberOfPlayedGamesBlack_NonExistentPlayer(t *testing.T) {
 // TestComputeNumberOfGamesWonBlack_OTBOnly — only ResultBlackWins counts.
 func TestComputeNumberOfGamesWonBlack_OTBOnly(t *testing.T) {
 	p1, p2, p3 := newID(), newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p2, &p1, codePtr(result.BlackWins)),   // OTB win as Black → counts
 		makePairing(2, p3, &p1, codePtr(result.Draw)),        // draw as Black → no
 		makePairing(3, p2, &p1, codePtr(result.WhiteWins)),   // loss as Black → no
@@ -2544,7 +2545,7 @@ func TestComputeNumberOfGamesWonBlack_OTBOnly(t *testing.T) {
 // TestComputeNumberOfGamesWonBlack_ForfeitWinExcluded — forfeit win as Black does not count.
 func TestComputeNumberOfGamesWonBlack_ForfeitWinExcluded(t *testing.T) {
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// p2 (White) forfeited; p1 (Black) wins by forfeit → ResultBlackForfeit
 		makePairing(1, p2, &p1, codePtr(result.BlackForfeit)),
 	}
@@ -2561,7 +2562,7 @@ func TestComputeNumberOfGamesWonBlack_ForfeitWinExcluded(t *testing.T) {
 // TestComputeNumberOfGamesWonBlack_WhiteWinIgnored — wins as White are not counted.
 func TestComputeNumberOfGamesWonBlack_WhiteWinIgnored(t *testing.T) {
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)),
 	}
@@ -2593,7 +2594,7 @@ func TestComputeSumOfProgressiveScores_EarlyWinsScoreHigher(t *testing.T) {
 	// p1 scores in round 1 → running: 1,1,1 → PS = 3
 	// p2 scores in round 2 → running: 0,1,1 → PS = 2
 	p1, p2, p3, p4 := newID(), newID(), newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: p1 beats p2; p3 beats p4
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, &p4, codePtr(result.WhiteWins)),
@@ -2628,7 +2629,7 @@ func TestComputeSumOfProgressiveScores_EarlyWinsScoreHigher(t *testing.T) {
 func TestComputeSumOfProgressiveScores_WithDraw(t *testing.T) {
 	// Scores per round: 1, 0.5, 0  → running: 1, 1.5, 1.5 → PS = 4.0
 	p1, p2, p3 := newID(), newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.Draw)),
 		makePairing(3, p1, &p2, codePtr(result.BlackWins)), // loss
@@ -2647,7 +2648,7 @@ func TestComputeSumOfProgressiveScores_WithDraw(t *testing.T) {
 func TestComputeSumOfProgressiveScores_HalfPointBye(t *testing.T) {
 	// Scores: 0.5 (half-point bye), 1 (win) → running: 0.5, 1.5 → PS = 2.0
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteHalf)),
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)),
 	}
@@ -2676,7 +2677,7 @@ func TestComputeSumOfProgressiveScores_NonExistentPlayer(t *testing.T) {
 // TestComputeGamesOneElectedToPlay_AllRealGames — no deductions when all rounds are real games.
 func TestComputeGamesOneElectedToPlay_AllRealGames(t *testing.T) {
 	p1, p2, p3 := newID(), newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.Draw)),
 		makePairing(3, p2, &p1, codePtr(result.BlackWins)),
@@ -2694,7 +2695,7 @@ func TestComputeGamesOneElectedToPlay_AllRealGames(t *testing.T) {
 // TestComputeGamesOneElectedToPlay_HalfPointByeDeducted — half-point bye is deducted.
 func TestComputeGamesOneElectedToPlay_HalfPointByeDeducted(t *testing.T) {
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, nil, codePtr(result.WhiteHalf)),  // half-point bye → deducted
 		makePairing(3, p1, &p2, codePtr(result.Draw)),
@@ -2712,7 +2713,7 @@ func TestComputeGamesOneElectedToPlay_HalfPointByeDeducted(t *testing.T) {
 // TestComputeGamesOneElectedToPlay_ZeroPointByeDeducted — zero-point bye is deducted.
 func TestComputeGamesOneElectedToPlay_ZeroPointByeDeducted(t *testing.T) {
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, nil, codePtr(result.ZeroPointBye)), // withdrawal → deducted
 		makePairing(3, p1, &p2, codePtr(result.Draw)),
@@ -2730,7 +2731,7 @@ func TestComputeGamesOneElectedToPlay_ZeroPointByeDeducted(t *testing.T) {
 // TestComputeGamesOneElectedToPlay_ForfeitLossDeducted — forfeit loss by the player is deducted.
 func TestComputeGamesOneElectedToPlay_ForfeitLossDeducted(t *testing.T) {
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		// p1 is White and forfeits: black wins "-/+"
 		makePairing(2, p1, &p2, codePtr(result.BlackForfeit)),
@@ -2750,7 +2751,7 @@ func TestComputeGamesOneElectedToPlay_ForfeitLossDeducted(t *testing.T) {
 // TestComputeGamesOneElectedToPlay_FullPointByeNotDeducted — full-point bye is NOT deducted.
 func TestComputeGamesOneElectedToPlay_FullPointByeNotDeducted(t *testing.T) {
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, nil, codePtr(result.WhiteWins)), // full-point bye → NOT deducted
 		makePairing(3, p1, &p2, codePtr(result.Draw)),
@@ -2768,7 +2769,7 @@ func TestComputeGamesOneElectedToPlay_FullPointByeNotDeducted(t *testing.T) {
 // TestComputeGamesOneElectedToPlay_ForfeitWinNotDeducted — opponent's forfeit (player showed up) is NOT deducted.
 func TestComputeGamesOneElectedToPlay_ForfeitWinNotDeducted(t *testing.T) {
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// p2 didn't show; p1 (White) wins by forfeit "+/-"
 		makePairing(1, p1, &p2, codePtr(result.WhiteForfeit)),
 		makePairing(2, p1, &p2, codePtr(result.Draw)),
@@ -2798,7 +2799,7 @@ func TestComputeGamesOneElectedToPlay_NonExistentPlayer(t *testing.T) {
 // TestComputeSumOfProgressiveScores_AllWins — wins every round, PS = sum 1+2+3+4 = 10.
 func TestComputeSumOfProgressiveScores_AllWins(t *testing.T) {
 	p1, p2, p3, p4, p5 := newID(), newID(), newID(), newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 		makePairing(3, p1, &p4, codePtr(result.WhiteWins)),
@@ -2829,7 +2830,7 @@ func TestComputeSumOfProgressiveScores_AbsentRound(t *testing.T) {
 	// Round 3: win (+1) → running = 2
 	// PS = 1 + 1 + 2 = 4
 	p1, p2, p3 := newID(), newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(3, p1, &p3, codePtr(result.WhiteWins)),
 		// give p2 and p3 a round-2 pairing so maxRound reaches 3
@@ -2848,7 +2849,7 @@ func TestComputeSumOfProgressiveScores_AbsentRound(t *testing.T) {
 // TestComputeSumOfProgressiveScores_SingleRound — PS equals the score in that one round.
 func TestComputeSumOfProgressiveScores_SingleRound(t *testing.T) {
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.Draw)),
 	}
 	allInfo := standings.BuildPlayerPairingInfo(pairings)
@@ -2865,7 +2866,7 @@ func TestComputeSumOfProgressiveScores_SingleRound(t *testing.T) {
 func TestComputeGamesOneElectedToPlay_MixedDeductions(t *testing.T) {
 	// 5 rounds: win, half-point bye, zero-point bye, forfeit loss as white, real game → GE = 5-3 = 2
 	p1, p2 := newID(), newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),    // real win → no deduction
 		makePairing(2, p1, nil, codePtr(result.WhiteHalf)),    // half-point bye → deducted
 		makePairing(3, p1, nil, codePtr(result.ZeroPointBye)), // zero-point bye → deducted
@@ -2908,7 +2909,7 @@ func TestComputeAOB_Basic(t *testing.T) {
 
 	p1, p2, p3 := newID(), newID(), newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 		makePairing(3, p2, &p3, codePtr(result.WhiteWins)),
@@ -2934,7 +2935,7 @@ func TestComputeAOB_ByeExcluded(t *testing.T) {
 	// R1: P1 gets a full-point bye
 	// R2: P1 beats P2
 	// R3: (P2 has a bye)
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)),  // bye
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(3, p2, nil, codePtr(result.WhiteWins)),  // P2 bye
@@ -2962,7 +2963,7 @@ func TestComputeAOB_ForfeitExcluded(t *testing.T) {
 
 	// R1: P1 wins by forfeit over P2 (not OTB)
 	// R2: P1 beats P3 OTB
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteForfeit)), // forfeit
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 		makePairing(3, p2, &p3, codePtr(result.Draw)),
@@ -2986,7 +2987,7 @@ func TestComputeAOB_NoGames(t *testing.T) {
 	t.Log("=== Testing AOB: player with only byes returns 0 ===")
 
 	p1 := newID()
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)),
 		makePairing(2, p1, nil, codePtr(result.WhiteHalf)),
 	}
@@ -3006,7 +3007,7 @@ func TestComputeAOB_UnknownPlayer(t *testing.T) {
 	t.Log("=== Testing AOB: unknown player returns 0 ===")
 
 	ghost := newID()
-	allInfo := standings.BuildPlayerPairingInfo([]*standings.Game[string]{})
+	allInfo := standings.BuildPlayerPairingInfo([]*round.Game[string]{})
 	rawScores := map[string]float64{}
 
 	got := standings.ComputeAverageOpponentBuchholz(ghost, allInfo, rawScores, 0, 0)
@@ -3028,7 +3029,7 @@ func TestComputeAOB_WithdrawalAdjustment(t *testing.T) {
 	// R1: P1 beats P2  /  P3 beats someone (represented as bye below for simplicity)
 	// R2: P1 beats P3  /  P3 withdraws (zero-point bye)
 	// R3: P2 has a bye
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p1, &p3, codePtr(result.WhiteWins)), // duplicate round ok for test
 		makePairing(2, p3, nil, codePtr(result.ZeroPointBye)), // withdrawal
@@ -3062,7 +3063,7 @@ func TestComputeRatingChange_WinVsEqualRating(t *testing.T) {
 	player := newID()
 	opp := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, player, &opp, codePtr(result.WhiteWins)),
 	}
 	allInfo := standings.BuildPlayerPairingInfo(pairings)
@@ -3082,7 +3083,7 @@ func TestComputeRatingChange_DrawVsEqualRating(t *testing.T) {
 	player := newID()
 	opp := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, player, &opp, codePtr(result.Draw)),
 	}
 	allInfo := standings.BuildPlayerPairingInfo(pairings)
@@ -3102,7 +3103,7 @@ func TestComputeRatingChange_LossVsEqualRating(t *testing.T) {
 	player := newID()
 	opp := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, opp, &player, codePtr(result.WhiteWins)), // player is black, loses
 	}
 	allInfo := standings.BuildPlayerPairingInfo(pairings)
@@ -3122,7 +3123,7 @@ func TestComputeRatingChange_WinVsStrongerOpponent(t *testing.T) {
 	player := newID()
 	opp := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, player, &opp, codePtr(result.WhiteWins)),
 	}
 	allInfo := standings.BuildPlayerPairingInfo(pairings)
@@ -3142,7 +3143,7 @@ func TestComputeRatingChange_LossVsWeakerOpponent(t *testing.T) {
 	player := newID()
 	opp := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, opp, &player, codePtr(result.WhiteWins)), // player is black, loses
 	}
 	allInfo := standings.BuildPlayerPairingInfo(pairings)
@@ -3162,7 +3163,7 @@ func TestComputeRatingChange_MultipleGames(t *testing.T) {
 	player := newID()
 	opp1, opp2 := newID(), newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, player, &opp1, codePtr(result.WhiteWins)), // win
 		makePairing(2, opp2, &player, codePtr(result.Draw)),      // draw as black
 	}
@@ -3183,7 +3184,7 @@ func TestComputeRatingChange_ByeDoesNotCount(t *testing.T) {
 	player := newID()
 	opp := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, player, &opp, codePtr(result.WhiteWins)), // OTB win
 		makePairing(2, player, nil, codePtr(result.WhiteWins)),  // full-point bye
 	}
@@ -3203,7 +3204,7 @@ func TestComputeRatingChange_ByeDoesNotCount(t *testing.T) {
 func TestComputeRatingChange_NoGames(t *testing.T) {
 	player := newID()
 
-	allInfo := standings.BuildPlayerPairingInfo([]*standings.Game[string]{})
+	allInfo := standings.BuildPlayerPairingInfo([]*round.Game[string]{})
 	ratings := map[string]int{player: 1500}
 
 	got := standings.ComputeRatingChange(player, allInfo, ratings, 1500, 40)
@@ -3219,7 +3220,7 @@ func TestComputeRatingChange_KFactorScalesResult(t *testing.T) {
 	player := newID()
 	opp := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, player, &opp, codePtr(result.WhiteWins)),
 	}
 	allInfo := standings.BuildPlayerPairingInfo(pairings)

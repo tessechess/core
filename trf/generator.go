@@ -53,51 +53,49 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 
 	// Build per-player round results from completed rounds.
 	playerRounds := make(map[ID]map[int]roundResult, len(ranked))
-	for _, rd := range input.Rounds {
-		for _, pd := range rd.Pairings {
-			// Skip voided pairings.
-			if pd.Result != nil && *pd.Result == result.Void {
-				continue
-			}
+	for _, g := range input.Games {
+		// Skip voided pairings.
+		if g.Result != nil && *g.Result == result.Void {
+			continue
+		}
 
-			ensureMap(playerRounds, pd.White)
+		ensureMap(playerRounds, g.White)
 
-			if pd.Black == nil {
-				// Bye — white is the bye recipient.
-				playerRounds[pd.White][rd.RoundNumber] = roundResult{
-					opponentRank: 0,
-					color:        '-',
-					resultCode:   resultToTRFBye(pd.Result),
-				}
-				continue
+		if g.Black == nil {
+			// Bye — white is the bye recipient.
+			playerRounds[g.White][g.Round] = roundResult{
+				opponentRank: 0,
+				color:        '-',
+				resultCode:   resultToTRFBye(g.Result),
 			}
+			continue
+		}
 
-			blackRank, ok := mapping.IDToRank[*pd.Black]
-			if !ok {
-				return "", nil, fmt.Errorf("round %d: black player %v not found in player mapping", rd.RoundNumber, *pd.Black)
-			}
-			whiteRank, ok := mapping.IDToRank[pd.White]
-			if !ok {
-				return "", nil, fmt.Errorf("round %d: white player %v not found in player mapping", rd.RoundNumber, pd.White)
-			}
-			ensureMap(playerRounds, *pd.Black)
+		blackRank, ok := mapping.IDToRank[*g.Black]
+		if !ok {
+			return "", nil, fmt.Errorf("round %d: black player %v not found in player mapping", g.Round, *g.Black)
+		}
+		whiteRank, ok := mapping.IDToRank[g.White]
+		if !ok {
+			return "", nil, fmt.Errorf("round %d: white player %v not found in player mapping", g.Round, g.White)
+		}
+		ensureMap(playerRounds, *g.Black)
 
-			playerRounds[pd.White][rd.RoundNumber] = roundResult{
-				opponentRank: blackRank,
-				color:        'w',
-				resultCode:   resultToTRFWhite(pd.Result),
-			}
-			playerRounds[*pd.Black][rd.RoundNumber] = roundResult{
-				opponentRank: whiteRank,
-				color:        'b',
-				resultCode:   resultToTRFBlack(pd.Result),
-			}
+		playerRounds[g.White][g.Round] = roundResult{
+			opponentRank: blackRank,
+			color:        'w',
+			resultCode:   resultToTRFWhite(g.Result),
+		}
+		playerRounds[*g.Black][g.Round] = roundResult{
+			opponentRank: whiteRank,
+			color:        'b',
+			resultCode:   resultToTRFBlack(g.Result),
 		}
 	}
 
 	// Apply round settings: inject virtual byes for the upcoming round.
 	if input.Settings != nil {
-		nextRound := len(input.Rounds) + 1
+		nextRound := input.CompletedRounds + 1
 
 		// Withdrawn players get a zero-point bye (Z) in the upcoming round.
 		for _, id := range input.Settings.WithdrawnPlayers {
@@ -119,21 +117,15 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 			}
 		}
 
-		// Late entries: fill missed past rounds with zero-point byes (Z).
-		completedRoundNumbers := make(map[int]bool, len(input.Rounds))
-		for _, rd := range input.Rounds {
-			completedRoundNumbers[rd.RoundNumber] = true
-		}
+		// Late entries: fill missed completed rounds with zero-point byes (Z).
 		for _, id := range input.Settings.LateEntries {
 			ensureMap(playerRounds, id)
-			for rn := 1; rn <= len(input.Rounds); rn++ {
-				if completedRoundNumbers[rn] {
-					if _, exists := playerRounds[id][rn]; !exists {
-						playerRounds[id][rn] = roundResult{
-							opponentRank: 0,
-							color:        '-',
-							resultCode:   'Z',
-						}
+			for rn := 1; rn <= input.CompletedRounds; rn++ {
+				if _, exists := playerRounds[id][rn]; !exists {
+					playerRounds[id][rn] = roundResult{
+						opponentRank: 0,
+						color:        '-',
+						resultCode:   'Z',
 					}
 				}
 			}
@@ -205,9 +197,9 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 	// Player lines (001), emitted in starting rank order.
 	// If settings inject byes for the upcoming round (withdrawn / half-point-bye),
 	// extend columns so the engine sees those pre-assigned results.
-	roundColumns := len(input.Rounds)
+	roundColumns := input.CompletedRounds
 	if input.Settings != nil && (len(input.Settings.WithdrawnPlayers) > 0 || len(input.Settings.HalfPointByes) > 0) {
-		roundColumns = len(input.Rounds) + 1
+		roundColumns = input.CompletedRounds + 1
 	}
 	for _, p := range ranked {
 		line := buildPlayerLine(p.StartingRank, &p, playerPoints[p.ID], playerRounds[p.ID], roundColumns)

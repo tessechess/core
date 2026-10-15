@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/ValkoM28/tournamentessentials/core/result"
+	"github.com/ValkoM28/tournamentessentials/core/round"
 	"github.com/ValkoM28/tournamentessentials/core/standings"
 )
 
@@ -22,7 +23,7 @@ func TestBuildRoundResults_Basic(t *testing.T) {
 	p3 := newID()
 	p4 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 (white) beats P2, P3 (white) beats P4
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, &p4, codePtr(result.WhiteWins)),
@@ -97,7 +98,7 @@ func TestBuildRoundResults_Bye(t *testing.T) {
 	p2 := newID()
 	p3 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: P1 beats P2, P3 gets a full-point bye
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, nil, codePtr(result.WhiteWins)), // bye: black=nil, result=1-0
@@ -160,7 +161,7 @@ func TestBuildRoundResults_Forfeit(t *testing.T) {
 	p3 := newID()
 	p4 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		// Round 1: normal game
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(1, p3, &p4, codePtr(result.Draw)),
@@ -240,7 +241,7 @@ func TestBuildRoundResults_PartialRounds(t *testing.T) {
 	p2 := newID()
 
 	// Only rounds 1 and 2 (simulating upToRound = round 2)
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p2, &p1, codePtr(result.Draw)),
 	}
@@ -273,7 +274,7 @@ func TestBuildRoundResults_NoPairingInRound(t *testing.T) {
 	p3 := newID()
 
 	// 3 rounds, but P3 only plays in rounds 1 and 3 (skips round 2)
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p3, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p2, codePtr(result.Draw)),
 		makePairing(3, p3, &p2, codePtr(result.BlackWins)),
@@ -365,7 +366,7 @@ func TestBuildRoundResults_DrawResult(t *testing.T) {
 	p1 := newID()
 	p2 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.Draw)),
 	}
 
@@ -391,7 +392,7 @@ func TestBuildRoundResults_ZeroPointBye(t *testing.T) {
 
 	p1 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.ZeroPointBye)),
 	}
 
@@ -425,7 +426,7 @@ func TestBuildRoundResults_UnplayedResult(t *testing.T) {
 	p1 := newID()
 	p2 := newID()
 
-	pairings := []*standings.Game[string]{
+	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, nil), // paired but no result yet
 	}
 

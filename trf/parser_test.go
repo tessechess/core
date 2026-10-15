@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/ValkoM28/tournamentessentials/core/result"
+	"github.com/ValkoM28/tournamentessentials/core/round"
 	"github.com/ValkoM28/tournamentessentials/core/trf"
 )
 
@@ -22,15 +23,11 @@ func TestParseBBPPairingsOutput(t *testing.T) {
 		TournamentName: "T",
 		TotalRounds:    5,
 		Players:        []trf.PlayerData[string]{p1, p2, p3, p4},
-		Rounds: []trf.RoundData[string]{
-			{
-				RoundNumber: 1,
-				Pairings: []trf.PairingData[string]{
-					{White: p1.ID, Black: &p2.ID, Result: &win},
-					{White: p3.ID, Black: &p4.ID, Result: &win},
-				},
-			},
+		Games: []round.Game[string]{
+			{Round: 1, White: p1.ID, Black: &p2.ID, Result: &win},
+			{Round: 1, White: p3.ID, Black: &p4.ID, Result: &win},
 		},
+		CompletedRounds: 1,
 	}
 
 	generated, _, err := trf.Generate(input)
@@ -96,15 +93,11 @@ func TestParseBBPPairingsOutput_WithBye(t *testing.T) {
 		TournamentName: "T",
 		TotalRounds:    5,
 		Players:        []trf.PlayerData[string]{p1, p2, p3},
-		Rounds: []trf.RoundData[string]{
-			{
-				RoundNumber: 1,
-				Pairings: []trf.PairingData[string]{
-					{White: p1.ID, Black: &p2.ID, Result: &win},
-					{White: p3.ID, Black: nil, Result: &halfBye},
-				},
-			},
+		Games: []round.Game[string]{
+			{Round: 1, White: p1.ID, Black: &p2.ID, Result: &win},
+			{Round: 1, White: p3.ID, Black: nil, Result: &halfBye},
 		},
+		CompletedRounds: 1,
 	}
 
 	generated, _, err := trf.Generate(input)

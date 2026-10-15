@@ -4,13 +4,14 @@ import (
 	"sort"
 
 	"github.com/ValkoM28/tournamentessentials/core/result"
+	"github.com/ValkoM28/tournamentessentials/core/round"
 )
 
 // Input is everything needed to compute standings for one section.
 type Input[ID comparable] struct {
-	Games     []*Game[ID]
-	Ratings   map[ID]int  // rating per player; 0 or missing = unrated
-	KFactors  map[ID]*int // K-factor per player; nil or missing = no rating change
+	Games     []round.Game[ID] // games of the completed rounds
+	Ratings   map[ID]int       // rating per player; 0 or missing = unrated
+	KFactors  map[ID]*int      // K-factor per player; nil or missing = no rating change
 	Tiebreaks []TiebreakConfig
 }
 
@@ -100,8 +101,14 @@ func Crosstable[ID comparable](in Input[ID]) (int, []CrosstableRow[ID]) {
 }
 
 func scoresWithInfo[ID comparable](in Input[ID]) ([]*PlayerScore[ID], map[ID]*playerPairingInfo[ID]) {
-	rawScores := buildRawScores(in.Games)
-	allInfo := BuildPlayerPairingInfo(in.Games)
+	// The tiebreak code shares one *round.Game between both players' records;
+	// point into the caller's slice (read-only).
+	games := make([]*round.Game[ID], len(in.Games))
+	for i := range in.Games {
+		games[i] = &in.Games[i]
+	}
+	rawScores := buildRawScores(games)
+	allInfo := BuildPlayerPairingInfo(games)
 
 	var scores []*PlayerScore[ID]
 	for playerID, points := range rawScores {
@@ -175,7 +182,7 @@ func sortAndRank[ID comparable](scores []*PlayerScore[ID], tiebreakCfgs []Tiebre
 // BuildRoundResults produces a RoundResult for each round 1..totalRounds for a player.
 func BuildRoundResults[ID comparable](playerID ID, info *playerPairingInfo[ID], rankMap map[ID]int, totalRounds int) []RoundResult {
 	// Index pairings by round number for quick lookup.
-	byRound := make(map[int]*Game[ID])
+	byRound := make(map[int]*round.Game[ID])
 	if info != nil {
 		for _, p := range info.pairings {
 			byRound[p.Round] = p
@@ -199,7 +206,7 @@ func BuildRoundResults[ID comparable](playerID ID, info *playerPairingInfo[ID], 
 		rr := RoundResult{
 			Round:  r,
 			Result: res,
-			Points: pointsFor(playerID, p),
+			Points: p.Points(playerID),
 			Played: true,
 		}
 
@@ -268,29 +275,13 @@ func findDE(cfgs []TiebreakConfig) (string, bool) {
 	return "", false
 }
 
-func buildRawScores[ID comparable](games []*Game[ID]) map[ID]float64 {
+func buildRawScores[ID comparable](games []*round.Game[ID]) map[ID]float64 {
 	scores := make(map[ID]float64)
 	for _, p := range games {
-		scores[p.White] += pointsFor(p.White, p)
+		scores[p.White] += p.Points(p.White)
 		if p.Black != nil {
-			scores[*p.Black] += pointsFor(*p.Black, p)
+			scores[*p.Black] += p.Points(*p.Black)
 		}
 	}
 	return scores
-}
-
-// pointsFor returns the points playerID received in game p.
-func pointsFor[ID comparable](playerID ID, p *Game[ID]) float64 {
-	if p.Result == nil {
-		return 0
-	}
-	code := *p.Result
-	white, black := code.Points()
-	if p.White == playerID {
-		return white
-	}
-	if code == result.BlackWins && p.Black == nil {
-		return 0 // shouldn't occur; nil-black losses use ZeroPointBye
-	}
-	return black
 }

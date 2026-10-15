@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ValkoM28/tournamentessentials/core/result"
+	"github.com/ValkoM28/tournamentessentials/core/round"
 	"github.com/ValkoM28/tournamentessentials/core/trf"
 )
 
@@ -162,22 +163,13 @@ func TestGenerate_RoundDataAndPoints(t *testing.T) {
 		TournamentName: "T",
 		TotalRounds:    5,
 		Players:        []trf.PlayerData[string]{p1, p2, p3},
-		Rounds: []trf.RoundData[string]{
-			{
-				RoundNumber: 1,
-				Pairings: []trf.PairingData[string]{
-					{White: p1.ID, Black: &p2.ID, Result: &win},
-					{White: p3.ID, Black: nil, Result: &halfBye},
-				},
-			},
-			{
-				RoundNumber: 2,
-				Pairings: []trf.PairingData[string]{
-					{White: p2.ID, Black: &p3.ID, Result: &draw},
-					{White: p1.ID, Black: nil, Result: &halfBye},
-				},
-			},
+		Games: []round.Game[string]{
+			{Round: 1, White: p1.ID, Black: &p2.ID, Result: &win},
+			{Round: 1, White: p3.ID, Black: nil, Result: &halfBye},
+			{Round: 2, White: p2.ID, Black: &p3.ID, Result: &draw},
+			{Round: 2, White: p1.ID, Black: nil, Result: &halfBye},
 		},
+		CompletedRounds: 2,
 	}
 
 	out, _, err := trf.Generate(input)
@@ -213,14 +205,10 @@ func TestGenerate_VoidPairingsSkipped(t *testing.T) {
 		TournamentName: "T",
 		TotalRounds:    3,
 		Players:        []trf.PlayerData[string]{p1, p2},
-		Rounds: []trf.RoundData[string]{
-			{
-				RoundNumber: 1,
-				Pairings: []trf.PairingData[string]{
-					{White: p1.ID, Black: &p2.ID, Result: codePtr(result.Void)},
-				},
-			},
+		Games: []round.Game[string]{
+			{Round: 1, White: p1.ID, Black: &p2.ID, Result: codePtr(result.Void)},
 		},
+		CompletedRounds: 1,
 	}
 
 	out, _, err := trf.Generate(input)
@@ -247,15 +235,11 @@ func TestGenerate_MissingPlayerInHistoricalPairing(t *testing.T) {
 		TournamentName: "T",
 		TotalRounds:    5,
 		Players:        []trf.PlayerData[string]{p1, p2},
-		Rounds: []trf.RoundData[string]{
-			{
-				RoundNumber: 1,
-				Pairings: []trf.PairingData[string]{
-					// ghost was the black player in round 1 but is no longer confirmed
-					{White: p1.ID, Black: &ghost, Result: &win},
-				},
-			},
+		Games: []round.Game[string]{
+			// ghost was the black player in round 1 but is no longer confirmed
+			{Round: 1, White: p1.ID, Black: &ghost, Result: &win},
 		},
+		CompletedRounds: 1,
 	}
 
 	_, _, err := trf.Generate(input)
@@ -294,15 +278,11 @@ func TestGenerate_WithdrawnPlayersGetZeroBye(t *testing.T) {
 		TournamentName: "T",
 		TotalRounds:    5,
 		Players:        []trf.PlayerData[string]{p1, p2, p3},
-		Rounds: []trf.RoundData[string]{
-			{
-				RoundNumber: 1,
-				Pairings: []trf.PairingData[string]{
-					{White: p1.ID, Black: &p2.ID, Result: &win},
-					{White: p3.ID, Black: nil, Result: codePtr(result.WhiteHalf)},
-				},
-			},
+		Games: []round.Game[string]{
+			{Round: 1, White: p1.ID, Black: &p2.ID, Result: &win},
+			{Round: 1, White: p3.ID, Black: nil, Result: codePtr(result.WhiteHalf)},
 		},
+		CompletedRounds: 1,
 		Settings: &trf.RoundSettings[string]{
 			WithdrawnPlayers: []string{p3.ID},
 		},
@@ -334,14 +314,10 @@ func TestGenerate_HalfPointByes(t *testing.T) {
 		TournamentName: "T",
 		TotalRounds:    5,
 		Players:        []trf.PlayerData[string]{p1, p2},
-		Rounds: []trf.RoundData[string]{
-			{
-				RoundNumber: 1,
-				Pairings: []trf.PairingData[string]{
-					{White: p1.ID, Black: &p2.ID, Result: &win},
-				},
-			},
+		Games: []round.Game[string]{
+			{Round: 1, White: p1.ID, Black: &p2.ID, Result: &win},
 		},
+		CompletedRounds: 1,
 		Settings: &trf.RoundSettings[string]{
 			HalfPointByes: []string{p2.ID},
 		},
@@ -429,22 +405,13 @@ func TestGenerate_LateEntries(t *testing.T) {
 		TournamentName: "T",
 		TotalRounds:    5,
 		Players:        []trf.PlayerData[string]{p1, p2, p3},
-		Rounds: []trf.RoundData[string]{
-			{
-				RoundNumber: 1,
-				Pairings: []trf.PairingData[string]{
-					{White: p1.ID, Black: &p2.ID, Result: &win},
-					// p3 not paired in round 1 (joined late)
-				},
-			},
-			{
-				RoundNumber: 2,
-				Pairings: []trf.PairingData[string]{
-					{White: p3.ID, Black: &p1.ID, Result: &win},
-					{White: p2.ID, Black: nil, Result: codePtr(result.WhiteHalf)},
-				},
-			},
+		Games: []round.Game[string]{
+			{Round: 1, White: p1.ID, Black: &p2.ID, Result: &win},
+			// p3 not paired in round 1 (joined late)
+			{Round: 2, White: p3.ID, Black: &p1.ID, Result: &win},
+			{Round: 2, White: p2.ID, Black: nil, Result: codePtr(result.WhiteHalf)},
 		},
+		CompletedRounds: 2,
 		Settings: &trf.RoundSettings[string]{
 			LateEntries: []string{p3.ID},
 		},
@@ -473,14 +440,10 @@ func TestGenerate_MissingWhitePlayerInHistoricalPairing(t *testing.T) {
 		TournamentName: "T",
 		TotalRounds:    5,
 		Players:        []trf.PlayerData[string]{p2},
-		Rounds: []trf.RoundData[string]{
-			{
-				RoundNumber: 1,
-				Pairings: []trf.PairingData[string]{
-					{White: ghost, Black: &p2.ID, Result: &win},
-				},
-			},
+		Games: []round.Game[string]{
+			{Round: 1, White: ghost, Black: &p2.ID, Result: &win},
 		},
+		CompletedRounds: 1,
 	}
 
 	_, _, err := trf.Generate(input)
@@ -497,14 +460,10 @@ func TestGenerate_VoidPairingWithMissingPlayerNoError(t *testing.T) {
 		TournamentName: "T",
 		TotalRounds:    5,
 		Players:        []trf.PlayerData[string]{p1},
-		Rounds: []trf.RoundData[string]{
-			{
-				RoundNumber: 1,
-				Pairings: []trf.PairingData[string]{
-					{White: p1.ID, Black: &ghost, Result: codePtr(result.Void)},
-				},
-			},
+		Games: []round.Game[string]{
+			{Round: 1, White: p1.ID, Black: &ghost, Result: codePtr(result.Void)},
 		},
+		CompletedRounds: 1,
 	}
 
 	_, _, err := trf.Generate(input)
@@ -523,20 +482,11 @@ func TestGenerate_MissingPlayerErrorContainsRoundNumber(t *testing.T) {
 		TournamentName: "T",
 		TotalRounds:    5,
 		Players:        []trf.PlayerData[string]{p1, p2},
-		Rounds: []trf.RoundData[string]{
-			{
-				RoundNumber: 1,
-				Pairings: []trf.PairingData[string]{
-					{White: p1.ID, Black: &p2.ID, Result: &win},
-				},
-			},
-			{
-				RoundNumber: 2,
-				Pairings: []trf.PairingData[string]{
-					{White: p1.ID, Black: &ghost, Result: &win},
-				},
-			},
+		Games: []round.Game[string]{
+			{Round: 1, White: p1.ID, Black: &p2.ID, Result: &win},
+			{Round: 2, White: p1.ID, Black: &ghost, Result: &win},
 		},
+		CompletedRounds: 2,
 	}
 
 	_, _, err := trf.Generate(input)
@@ -555,14 +505,10 @@ func TestGenerate_ByePairingWithMissingWhitePlayerNoError(t *testing.T) {
 		TournamentName: "T",
 		TotalRounds:    5,
 		Players:        []trf.PlayerData[string]{{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2000}},
-		Rounds: []trf.RoundData[string]{
-			{
-				RoundNumber: 1,
-				Pairings: []trf.PairingData[string]{
-					{White: ghost, Black: nil, Result: codePtr(result.WhiteWins)},
-				},
-			},
+		Games: []round.Game[string]{
+			{Round: 1, White: ghost, Black: nil, Result: codePtr(result.WhiteWins)},
 		},
+		CompletedRounds: 1,
 	}
 
 	_, _, err := trf.Generate(input)

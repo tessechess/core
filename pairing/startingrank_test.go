@@ -7,7 +7,7 @@ import (
 	"github.com/ValkoM28/tournamentessentials/core/pairing"
 )
 
-type entrant = pairing.Entrant[string]
+type entrant = pairing.Player[string]
 
 func TestStartingOrder(t *testing.T) {
 	cases := []struct {
@@ -62,6 +62,13 @@ func TestStartingOrder(t *testing.T) {
 				{ID: "third", Rating: 1500, LastName: "Same", FirstName: "Name"},
 			},
 			[]string{"first", "second", "third"}},
+		{"existing StartingRank is ignored",
+			[]entrant{
+				{ID: "low", Rating: 1000, StartingRank: 1},
+				{ID: "high", Rating: 2000, StartingRank: 3},
+				{ID: "mid", Rating: 1500, StartingRank: 2},
+			},
+			[]string{"high", "mid", "low"}},
 		{"empty", nil, []string{}},
 	}
 	for _, c := range cases {

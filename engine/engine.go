@@ -1,7 +1,7 @@
 // Package engine runs external FIDE pairing programs (bbpPairings, JaVaFo) on a
 // TRF input and returns their raw output; parse it with the matching parser in
 // core/trf (see OutputFormat). Callers supply the binary or jar paths: the
-// programs themselves are not part of core (JaVaFo must not be redistributed).
+// programs themselves are not part of core as per their licenses. 
 package engine
 
 import "context"
@@ -11,7 +11,6 @@ type OutputFormat string
 
 const (
 	// OutputTRF means the engine outputs a modified TRF with a new round appended.
-	// Neither built-in engine uses it; parse with trf.ParseTRFRound.
 	OutputTRF OutputFormat = "trf"
 	// OutputSimplePairs means the engine outputs "count\nwhite black\n..."
 	// (bbpPairings and JaVaFo with -p); parse with trf.ParseSimplePairs.

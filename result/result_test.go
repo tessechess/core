@@ -46,11 +46,11 @@ func TestCodes(t *testing.T) {
 	}
 }
 
-func TestSubmittable(t *testing.T) {
-	got := Submittable()
+func TestReportable(t *testing.T) {
+	got := Reportable()
 	want := []Code{WhiteWins, BlackWins, Draw, WhiteForfeit, BlackForfeit, WhiteHalf, BlackHalf}
 	if !slices.Equal(got, want) {
-		t.Errorf("Submittable() = %v, want %v", got, want)
+		t.Errorf("Reportable() = %v, want %v", got, want)
 	}
 	for _, c := range got {
 		if !c.Valid() {
@@ -62,10 +62,10 @@ func TestSubmittable(t *testing.T) {
 	}
 }
 
-func TestSubmittableReturnsCopy(t *testing.T) {
-	s := Submittable()
+func TestReportableReturnsCopy(t *testing.T) {
+	s := Reportable()
 	s[0] = Void
-	if Submittable()[0] != WhiteWins {
+	if Reportable()[0] != WhiteWins {
 		t.Error("modifying the returned slice changed later results")
 	}
 }

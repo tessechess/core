@@ -7,10 +7,10 @@
 //	WhiteWins    — "1-0"     white wins normally
 //	BlackWins    — "0-1"     black wins normally
 //	Draw         — "0.5-0.5" draw
-//	WhiteForfeit — "+/-"     white wins; black forfeited (present but didn't play)
-//	BlackForfeit — "-/+"     black wins; white forfeited (present but didn't play)
-//	WhiteHalf    — "0.5-0"   white awarded 0.5, black 0 (edge case adjudication)
-//	BlackHalf    — "0-0.5"   black awarded 0.5, white 0 (edge case adjudication)
+//	WhiteForfeit — "+/-"     white wins; black forfeited
+//	BlackForfeit — "-/+"     black wins; white forfeited
+//	WhiteHalf    — "0.5-0"   white awarded 0.5, black 0
+//	BlackHalf    — "0-0.5"   black awarded 0.5, white 0
 //
 // Unplayed-round results (no black player — bye recipient is always white):
 //
@@ -79,7 +79,9 @@ func (c Code) Counts() bool {
 	return c != Unplayed && c != Void
 }
 
-// Submittable returns the codes an arbiter may enter for a game, in a stable order.
-func Submittable() []Code {
+// Reportable returns the codes an arbiter may report for a game: the seven
+// results of a played game (or a forfeit or adjudication). The bye code
+// ZeroPointBye, Unplayed and Void are set by the system, not reported.
+func Reportable() []Code {
 	return []Code{WhiteWins, BlackWins, Draw, WhiteForfeit, BlackForfeit, WhiteHalf, BlackHalf}
 }

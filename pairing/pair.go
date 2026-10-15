@@ -59,10 +59,6 @@ func Prepare[ID comparable](in Input[ID]) (*Prepared[ID], error) {
 
 	players := make([]trf.PlayerData[ID], 0, len(in.Players))
 	for _, pl := range in.Players {
-		bd := ""
-		if pl.Birthday != nil {
-			bd = pl.Birthday.Format("2006/01/02")
-		}
 		players = append(players, trf.PlayerData[ID]{
 			ID:           pl.ID,
 			StartingRank: pl.StartingRank,
@@ -71,7 +67,7 @@ func Prepare[ID comparable](in Input[ID]) (*Prepared[ID], error) {
 			FIDERating:   pl.Rating,
 			Federation:   pl.Federation,
 			FIDENumber:   pl.FIDENumber,
-			BirthDate:    bd,
+			BirthDate:    pl.Birthday,
 			Sex:          pl.Sex,
 		})
 	}
@@ -80,8 +76,8 @@ func Prepare[ID comparable](in Input[ID]) (*Prepared[ID], error) {
 		TournamentName:  in.Tournament.Name,
 		City:            in.Tournament.City,
 		Federation:      in.Tournament.Federation,
-		StartDate:       in.Tournament.StartDate.Format("2006/01/02"),
-		EndDate:         in.Tournament.EndDate.Format("2006/01/02"),
+		StartDate:       in.Tournament.StartDate,
+		EndDate:         in.Tournament.EndDate,
 		TimeControl:     in.Tournament.TimeControl,
 		TotalRounds:     in.Tournament.TotalRounds,
 		Players:         players,
@@ -118,9 +114,9 @@ func (p *Prepared[ID]) Run(ctx context.Context, eng engine.PairingEngine) ([]rou
 	var parsed []trf.ParsedPairing
 	switch eng.OutputFormat() {
 	case engine.OutputTRF:
-		parsed, err = trf.ParseBBPPairingsOutput(output, p.completed)
+		parsed, err = trf.ParseTRFRound(output, p.completed)
 	case engine.OutputSimplePairs:
-		parsed, err = trf.ParseJaVaFoOutput(output)
+		parsed, err = trf.ParseSimplePairs(output)
 	default:
 		return nil, fmt.Errorf("%w: unknown engine output format %q", ErrTRFParsing, eng.OutputFormat())
 	}
@@ -162,7 +158,7 @@ func toTRFSettings[ID comparable](s Settings[ID]) *trf.RoundSettings[ID] {
 		// TODO(#377): emit acceleration (XXA lines) from s.Acceleration.
 	}
 	for _, fp := range s.ForbiddenPairings {
-		rs.ForbiddenPairings = append(rs.ForbiddenPairings, trf.ForbiddenPairTRF[ID]{
+		rs.ForbiddenPairings = append(rs.ForbiddenPairings, trf.ForbiddenPair[ID]{
 			Player1: fp.Player1,
 			Player2: fp.Player2,
 		})

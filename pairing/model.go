@@ -55,10 +55,10 @@ type Player[ID comparable] struct {
 // Settings are the arbiter's settings for the round being paired. Check them
 // with Validate before storing or pairing.
 type Settings[ID comparable] struct {
-	WithdrawnPlayers  []ID   // zero-point bye this round
-	HalfPointByes     []ID   // half-point bye this round
-	LateEntries       []ID   // zero-point byes for the rounds they missed
-	FirstPlayerColor  string // "white" or "black"; round 1 only
+	WithdrawnPlayers  []ID        // zero-point bye this round
+	HalfPointByes     []ID        // half-point bye this round
+	LateEntries       []ID        // zero-point byes for the rounds they missed
+	FirstPlayerColor  round.Color // round.ColorWhite or round.ColorBlack; round 1 only
 	ForbiddenPairings []ForbiddenPair[ID]
 	FixedBoards       []FixedBoard[ID]
 

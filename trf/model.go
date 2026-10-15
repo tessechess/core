@@ -7,6 +7,8 @@
 package trf
 
 import (
+	"time"
+
 	"github.com/ValkoM28/tournamentessentials/core/player"
 	"github.com/ValkoM28/tournamentessentials/core/round"
 )
@@ -16,8 +18,8 @@ type GeneratorInput[ID comparable] struct {
 	TournamentName string
 	City           string
 	Federation     string
-	StartDate      string // "YYYY/MM/DD"
-	EndDate        string // "YYYY/MM/DD"
+	StartDate      time.Time // written as YYYY/MM/DD; zero = omitted
+	EndDate        time.Time // written as YYYY/MM/DD; zero = omitted
 	TimeControl    string
 	TotalRounds    int
 	Players        []PlayerData[ID]
@@ -39,7 +41,7 @@ type PlayerData[ID comparable] struct {
 	FIDERating   int          // 0 if unrated
 	Federation   string       // 3-letter code
 	FIDENumber   string
-	BirthDate    string     // "YYYY/MM/DD"
+	BirthDate    *time.Time // written as YYYY/MM/DD; nil = blank
 	Sex          player.Sex // written as "m" (male) or "w" (female); unknown leaves the column blank
 }
 
@@ -56,17 +58,18 @@ type RoundSettings[ID comparable] struct {
 	WithdrawnPlayers []ID
 	// HalfPointByes receive a half-point bye (H) for the upcoming round.
 	HalfPointByes []ID
-	// FirstPlayerColor sets the XXC line ("white" or "black"). Round 1 only.
-	FirstPlayerColor string
+	// FirstPlayerColor sets the XXC line (round.ColorWhite or round.ColorBlack;
+	// empty = no line). Round 1 only.
+	FirstPlayerColor round.Color
 	// ForbiddenPairings emits XXF lines preventing these players from being paired together.
-	ForbiddenPairings []ForbiddenPairTRF[ID]
+	ForbiddenPairings []ForbiddenPair[ID]
 	// LateEntries are IDs of players joining late. The generator
 	// inserts zero-point byes (Z) for all rounds these players missed.
 	LateEntries []ID
 }
 
-// ForbiddenPairTRF is a pair of player IDs that must not be paired.
-type ForbiddenPairTRF[ID comparable] struct {
+// ForbiddenPair is a pair of player IDs that must not be paired.
+type ForbiddenPair[ID comparable] struct {
 	Player1 ID
 	Player2 ID
 }

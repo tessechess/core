@@ -6,14 +6,13 @@ import (
 	"strings"
 )
 
-// ParseBBPPairingsOutput extracts the new round's pairings from a TRF output in
-// which a new round column is appended to each player line (engine.OutputTRF).
-// Despite the name, bbpPairings' -p output is the simple pair list: parse that
-// with ParseJaVaFoOutput. inputRoundCount is the
-// number of completed rounds that were in the input TRF; the new pairings are at
-// round inputRoundCount+1.
-func ParseBBPPairingsOutput(trfOutput string, inputRoundCount int) ([]ParsedPairing, error) {
-	newRound := inputRoundCount + 1
+// ParseTRFRound extracts the new round's pairings from a TRF output in which a
+// new round column is appended to each player line (engine.OutputTRF).
+// completedRounds is the number of completed rounds that were in the input TRF;
+// the new pairings are at round completedRounds+1. Neither built-in engine
+// writes this format (both write the pair list, see ParseSimplePairs).
+func ParseTRFRound(trfOutput string, completedRounds int) ([]ParsedPairing, error) {
+	newRound := completedRounds + 1
 	offset := 91 + (newRound-1)*10 // 0-indexed start of the new round's data
 
 	lines := strings.Split(trfOutput, "\n")
@@ -87,12 +86,12 @@ func ParseBBPPairingsOutput(trfOutput string, inputRoundCount int) ([]ParsedPair
 	return pairings, nil
 }
 
-// ParseJaVaFoOutput parses the simple-pairs output format written by JaVaFo and
-// by bbpPairings (both with -p):
+// ParseSimplePairs parses the pair-list output format (engine.OutputSimplePairs)
+// written by both JaVaFo and bbpPairings (with -p):
 //
 //	Line 1:  number of pairings
 //	Line 2+: "whiteRank blackRank" per line (blackRank 0 = bye)
-func ParseJaVaFoOutput(output string) ([]ParsedPairing, error) {
+func ParseSimplePairs(output string) ([]ParsedPairing, error) {
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	if len(lines) == 0 {
 		return nil, fmt.Errorf("empty output")

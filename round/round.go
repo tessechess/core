@@ -8,6 +8,14 @@ package round
 
 import "github.com/ValkoM28/tournamentessentials/core/result"
 
+// Color is a side in a game.
+type Color string
+
+const (
+	ColorWhite Color = "white"
+	ColorBlack Color = "black"
+)
+
 // Game is one game (or bye) of a round.
 type Game[ID comparable] struct {
 	Round  int          // round number, 1-based

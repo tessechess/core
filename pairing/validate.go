@@ -1,6 +1,10 @@
 package pairing
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/ValkoM28/tournamentessentials/core/round"
+)
 
 // Validate checks the settings on their own: allowed values, fixed boards,
 // duplicates and players placed in conflicting lists. Whether the referenced
@@ -8,7 +12,7 @@ import "fmt"
 // Errors wrap ErrInvalidSettings or ErrPlayerConflict.
 func (s Settings[ID]) Validate() error {
 	// Validate enum values
-	if s.FirstPlayerColor != "" && s.FirstPlayerColor != "white" && s.FirstPlayerColor != "black" {
+	if s.FirstPlayerColor != "" && s.FirstPlayerColor != round.ColorWhite && s.FirstPlayerColor != round.ColorBlack {
 		return fmt.Errorf("%w: first_player_color must be 'white' or 'black'", ErrInvalidSettings)
 	}
 	if s.Acceleration != "" && s.Acceleration != "none" && s.Acceleration != "baku" && s.Acceleration != "dutch" {

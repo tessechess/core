@@ -9,7 +9,7 @@ import (
 	"github.com/ValkoM28/tournamentessentials/core/trf"
 )
 
-func TestParseBBPPairingsOutput(t *testing.T) {
+func TestParseTRFRound(t *testing.T) {
 	// Build a minimal TRF with 4 players and 1 completed round,
 	// then append a second round produced by the engine.
 	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
@@ -60,9 +60,9 @@ func TestParseBBPPairingsOutput(t *testing.T) {
 		engineOutput.WriteString(string(buf) + "\n")
 	}
 
-	pairings, err := trf.ParseBBPPairingsOutput(engineOutput.String(), 1)
+	pairings, err := trf.ParseTRFRound(engineOutput.String(), 1)
 	if err != nil {
-		t.Fatalf("ParseBBPPairingsOutput error: %v", err)
+		t.Fatalf("ParseTRFRound error: %v", err)
 	}
 
 	// Expect 2 pairings (from white perspective): 1 vs 3, 4 vs 2.
@@ -80,7 +80,7 @@ func TestParseBBPPairingsOutput(t *testing.T) {
 	}
 }
 
-func TestParseBBPPairingsOutput_WithBye(t *testing.T) {
+func TestParseTRFRound_WithBye(t *testing.T) {
 	// 3 players, round 1 completed. Engine output for round 2 has a bye.
 	p1 := trf.PlayerData[string]{ID: newID(), StartingRank: 1, Name: "A, A", FIDERating: 2500}
 	p2 := trf.PlayerData[string]{ID: newID(), StartingRank: 2, Name: "B, B", FIDERating: 2400}
@@ -126,9 +126,9 @@ func TestParseBBPPairingsOutput_WithBye(t *testing.T) {
 		engineOutput.WriteString(string(buf) + "\n")
 	}
 
-	pairings, err := trf.ParseBBPPairingsOutput(engineOutput.String(), 1)
+	pairings, err := trf.ParseTRFRound(engineOutput.String(), 1)
 	if err != nil {
-		t.Fatalf("ParseBBPPairingsOutput error: %v", err)
+		t.Fatalf("ParseTRFRound error: %v", err)
 	}
 
 	if len(pairings) != 2 {
@@ -145,12 +145,12 @@ func TestParseBBPPairingsOutput_WithBye(t *testing.T) {
 	}
 }
 
-func TestParseJaVaFoOutput(t *testing.T) {
+func TestParseSimplePairs(t *testing.T) {
 	output := "3\n1 4\n2 3\n5 0\n"
 
-	pairings, err := trf.ParseJaVaFoOutput(output)
+	pairings, err := trf.ParseSimplePairs(output)
 	if err != nil {
-		t.Fatalf("ParseJaVaFoOutput error: %v", err)
+		t.Fatalf("ParseSimplePairs error: %v", err)
 	}
 
 	if len(pairings) != 3 {
@@ -169,7 +169,7 @@ func TestParseJaVaFoOutput(t *testing.T) {
 	}
 }
 
-func TestParseJaVaFoOutput_Errors(t *testing.T) {
+func TestParseSimplePairs_Errors(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
@@ -181,7 +181,7 @@ func TestParseJaVaFoOutput_Errors(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if _, err := trf.ParseJaVaFoOutput(tt.input); err == nil {
+			if _, err := trf.ParseSimplePairs(tt.input); err == nil {
 				t.Error("expected error")
 			}
 		})

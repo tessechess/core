@@ -11,10 +11,10 @@ type OutputFormat string
 
 const (
 	// OutputTRF means the engine outputs a modified TRF with a new round appended.
-	// Neither built-in engine uses it; parse with trf.ParseBBPPairingsOutput.
+	// Neither built-in engine uses it; parse with trf.ParseTRFRound.
 	OutputTRF OutputFormat = "trf"
 	// OutputSimplePairs means the engine outputs "count\nwhite black\n..."
-	// (bbpPairings and JaVaFo with -p); parse with trf.ParseJaVaFoOutput.
+	// (bbpPairings and JaVaFo with -p); parse with trf.ParseSimplePairs.
 	OutputSimplePairs OutputFormat = "simple_pairs"
 )
 

@@ -62,7 +62,7 @@ printf "1\n1 2\n" > "$OUTPUT"
 		t.Fatalf("GeneratePairings error: %v", err)
 	}
 
-	parsed, err := trf.ParseJaVaFoOutput(output)
+	parsed, err := trf.ParseSimplePairs(output)
 	if err != nil {
 		t.Fatalf("output is not a simple pair list: %v (output %q)", err, output)
 	}

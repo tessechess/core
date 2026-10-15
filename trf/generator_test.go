@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/ValkoM28/tournamentessentials/core/player"
 	"github.com/ValkoM28/tournamentessentials/core/result"
@@ -24,8 +25,8 @@ func TestGenerate_HeadersAndPlayerCount(t *testing.T) {
 		TournamentName: "Test Open 2026",
 		City:           "Bratislava",
 		Federation:     "SVK",
-		StartDate:      "2026/03/20",
-		EndDate:        "2026/03/22",
+		StartDate:      time.Date(2026, 3, 20, 0, 0, 0, 0, time.UTC),
+		EndDate:        time.Date(2026, 3, 22, 0, 0, 0, 0, time.UTC),
 		TimeControl:    "90/40+30+30",
 		TotalRounds:    7,
 		Players: []trf.PlayerData[string]{
@@ -90,6 +91,7 @@ func TestGenerate_MappingUsesStartingRank(t *testing.T) {
 }
 
 func TestGenerate_PlayerLineFixedWidth(t *testing.T) {
+	birth := time.Date(1990, 11, 30, 0, 0, 0, 0, time.UTC)
 	input := &trf.GeneratorInput[string]{
 		TournamentName: "T",
 		TotalRounds:    5,
@@ -102,7 +104,7 @@ func TestGenerate_PlayerLineFixedWidth(t *testing.T) {
 				FIDERating:   2830,
 				Federation:   "NOR",
 				FIDENumber:   "1503014",
-				BirthDate:    "1990/11/30",
+				BirthDate:    &birth,
 				Sex:          player.SexMale,
 			},
 		},
@@ -380,7 +382,7 @@ func TestGenerate_ForbiddenPairings(t *testing.T) {
 		TotalRounds:    5,
 		Players:        []trf.PlayerData[string]{p1, p2, p3},
 		Settings: &trf.RoundSettings[string]{
-			ForbiddenPairings: []trf.ForbiddenPairTRF[string]{
+			ForbiddenPairings: []trf.ForbiddenPair[string]{
 				{Player1: p1.ID, Player2: p3.ID},
 			},
 		},
@@ -629,5 +631,25 @@ func TestGenerate_TitleColumn(t *testing.T) {
 				t.Errorf("title column: got %q, want %q", got, c.want)
 			}
 		})
+	}
+}
+
+func TestGenerate_ZeroDatesOmitted(t *testing.T) {
+	input := &trf.GeneratorInput[string]{
+		TournamentName: "T",
+		TotalRounds:    5,
+		Players:        []trf.PlayerData[string]{{ID: newID(), StartingRank: 1, Name: "A, B"}},
+	}
+	out, _, err := trf.Generate(input)
+	if err != nil {
+		t.Fatalf("Generate error: %v", err)
+	}
+	if strings.Contains(out, "042 ") || strings.Contains(out, "052 ") {
+		t.Errorf("zero start/end dates should write no 042/052 line:\n%s", out)
+	}
+	for _, line := range strings.Split(out, "\n") {
+		if strings.HasPrefix(line, "001") && strings.TrimSpace(line[69:79]) != "" {
+			t.Errorf("nil birth date should leave the column blank, got %q", line[69:79])
+		}
 	}
 }

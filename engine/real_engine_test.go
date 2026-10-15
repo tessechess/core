@@ -90,9 +90,9 @@ func pairWithRealEngine(t *testing.T, eng engine.PairingEngine) {
 			var parsed []trf.ParsedPairing
 			switch eng.OutputFormat() {
 			case engine.OutputTRF:
-				parsed, err = trf.ParseBBPPairingsOutput(out, tc.completed)
+				parsed, err = trf.ParseTRFRound(out, tc.completed)
 			case engine.OutputSimplePairs:
-				parsed, err = trf.ParseJaVaFoOutput(out)
+				parsed, err = trf.ParseSimplePairs(out)
 			default:
 				t.Fatalf("unknown output format %q", eng.OutputFormat())
 			}

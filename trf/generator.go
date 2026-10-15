@@ -5,9 +5,11 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ValkoM28/tournamentessentials/core/player"
 	"github.com/ValkoM28/tournamentessentials/core/result"
+	"github.com/ValkoM28/tournamentessentials/core/round"
 )
 
 // errMissingStartingRank is returned when a player has no starting rank assigned.
@@ -162,11 +164,11 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 	if input.Federation != "" {
 		sb.WriteString("032 " + input.Federation + "\n")
 	}
-	if input.StartDate != "" {
-		sb.WriteString("042 " + input.StartDate + "\n")
+	if !input.StartDate.IsZero() {
+		sb.WriteString("042 " + formatDate(input.StartDate) + "\n")
 	}
-	if input.EndDate != "" {
-		sb.WriteString("052 " + input.EndDate + "\n")
+	if !input.EndDate.IsZero() {
+		sb.WriteString("052 " + formatDate(input.EndDate) + "\n")
 	}
 	sb.WriteString("062 " + strconv.Itoa(len(ranked)) + "\n")
 	sb.WriteString("072 " + strconv.Itoa(ratedCount) + "\n")
@@ -179,9 +181,9 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 	// Extension lines from round settings.
 	if input.Settings != nil {
 		// XXC — first player color preference (round 1 only).
-		if input.Settings.FirstPlayerColor == "white" {
+		if input.Settings.FirstPlayerColor == round.ColorWhite {
 			sb.WriteString("XXC white1\n")
-		} else if input.Settings.FirstPlayerColor == "black" {
+		} else if input.Settings.FirstPlayerColor == round.ColorBlack {
 			sb.WriteString("XXC black1\n")
 		}
 
@@ -292,8 +294,8 @@ func buildPlayerLine[ID comparable](rank int, p *PlayerData[ID], points float64,
 	}
 
 	// Birth date.
-	if p.BirthDate != "" {
-		copy(buf[69:79], ljust(p.BirthDate, 10))
+	if p.BirthDate != nil {
+		copy(buf[69:79], ljust(formatDate(*p.BirthDate), 10))
 	}
 
 	// Points.
@@ -442,3 +444,6 @@ func ensureMap[ID comparable](m map[ID]map[int]roundResult, id ID) {
 		m[id] = make(map[int]roundResult)
 	}
 }
+
+// formatDate formats t as the TRF date YYYY/MM/DD.
+func formatDate(t time.Time) string { return t.Format("2006/01/02") }

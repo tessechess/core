@@ -17,9 +17,15 @@ type Input[ID comparable] struct {
 
 // RatingInfo holds rating-change and performance-rating data for a player.
 // These are informational only and do not affect standings ordering.
+//
+// Both values ignore games that were not played over the board (byes,
+// forfeits). Unrated opponents are handled differently by the two, and
+// RatingChange is wrong for them (#383); see the package documentation.
 type RatingInfo struct {
+	// PerformanceRating is the TPR; 0 when no opponent was rated.
 	PerformanceRating float64
-	RatingChange      *float64 // nil when the player has no K-factor or no rating
+	// RatingChange is nil when the player has no K-factor or is unrated.
+	RatingChange *float64
 }
 
 // PlayerScore is one player's points, tiebreak values and rating info.

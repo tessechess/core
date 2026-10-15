@@ -11,6 +11,18 @@ Module path: `github.com/ValkoM28/tournamentessentials/core` (placeholder; may b
 - **Values, not entities.** Core owns enums, small value types and the functions over them. Entities with identity or lifecycle (ids, owners, timestamps, `json`/`db` tags) stay in the apps. See `docs/ARCHITECTURE_REWORK.md` (section "Principle: core owns rules and values; apps own entities").
 - **Tests live beside the code** (`*_test.go` in each package), unlike the backend's `tests/<module>_tests/` convention.
 
+## Known limitations
+
+Details are in the package documentation (`go doc`).
+
+- **PTP and APPO tiebreaks can hang forever** with unrated opponents ([#379](https://github.com/ValkoM28/tournamentessentials/issues/379)); don't configure them yet.
+- **Rating change against unrated opponents is wrong** ([#383](https://github.com/ValkoM28/tournamentessentials/issues/383)): they count as rating 0, but a game against an unrated player should not change the rating. ARO and TPR do leave unrated opponents out.
+- **No team tiebreaks** ([#78](https://github.com/ValkoM28/tournamentessentials/issues/78)): individual competitions only.
+- **Round 1 needs a first-player colour with bbpPairings** ([#376](https://github.com/ValkoM28/tournamentessentials/issues/376)).
+- **Acceleration is validated but ignored** ([#377](https://github.com/ValkoM28/tournamentessentials/issues/377)).
+- **Swiss pairing only**, through external engines (no round-robin generator); the engine programs are not part of the module and JaVaFo must not be redistributed.
+- **Engine timeouts on non-Unix platforms** kill only the engine process, not its children ([#382](https://github.com/ValkoM28/tournamentessentials/issues/382)).
+
 ## Packages
 
 | Package | Contents |

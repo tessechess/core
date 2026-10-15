@@ -30,12 +30,14 @@ const (
 	TournamentPerformanceRating TiebreakKey = "tpr"
 	// PerfectTournamentPerformance is the rating that gives an expected score
 	// equal to the player's score against the same opponents (PTP, FIDE 10.3).
+	// Can hang with unrated opponents (#379).
 	PerfectTournamentPerformance TiebreakKey = "ptp"
 	// AveragePerfectPerformanceRatingOfOpponents is the average of the
 	// opponents' performance ratings (APRO, FIDE 10.4).
 	AveragePerfectPerformanceRatingOfOpponents TiebreakKey = "apro"
 	// AveragePerfectPerformanceOfOpponents is the average of the opponents'
-	// perfect performances (APPO, FIDE 10.5).
+	// perfect performances (APPO, FIDE 10.5). Can hang with unrated opponents
+	// (#379).
 	AveragePerfectPerformanceOfOpponents TiebreakKey = "appo"
 	// Wins is the number of rounds won with or without playing: over-the-board
 	// wins, forfeit wins and full-point byes (FIDE 7.1).

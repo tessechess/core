@@ -6,6 +6,22 @@
 // Players are identified by a caller-defined ID type (e.g. a registration UUID
 // in the backend). The package has no persistence, and choosing which engine to
 // run is the caller's job.
+//
+// # Known limitations
+//
+// Swiss pairing only, and only through an external engine; there is no
+// round-robin (Berger tables) generator.
+//
+// The engine programs are not part of this module. The caller supplies them
+// (see package engine); JaVaFo must not be redistributed.
+//
+// Round 1 needs Settings.FirstPlayerColor with bbpPairings (#376): without
+// the colour line, bbpPairings refuses to pair a round that has no previous
+// games ("Please configure the initial piece colors") and Pair returns the
+// engine's error (engine.ErrEngineExecution). Later rounds do not need it.
+//
+// Settings.Acceleration is validated but has no effect (#377): it is not
+// written to the TRF, so engines pair without acceleration.
 package pairing
 
 import (
@@ -58,12 +74,13 @@ type Settings[ID comparable] struct {
 	WithdrawnPlayers  []ID        // zero-point bye this round
 	HalfPointByes     []ID        // half-point bye this round
 	LateEntries       []ID        // zero-point byes for the rounds they missed
-	FirstPlayerColor  round.Color // round.ColorWhite or round.ColorBlack; round 1 only
+	FirstPlayerColor  round.Color // round.ColorWhite or round.ColorBlack; round 1 only, and required then with bbpPairings (#376)
 	ForbiddenPairings []ForbiddenPair[ID]
 	FixedBoards       []FixedBoard[ID]
 
-	// Acceleration is "none", "baku", "dutch" or "" (round 1 only).
-	// TODO(#377): validated, but not written to the TRF yet, so Pair ignores it.
+	// Acceleration is "none", "baku", "dutch" or "" (round 1 only). It is
+	// validated but currently has no effect: it is not written to the TRF, so
+	// Pair ignores it (#377).
 	Acceleration string
 }
 

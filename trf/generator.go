@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ValkoM28/tournamentessentials/core/player"
 	"github.com/ValkoM28/tournamentessentials/core/result"
 )
 
@@ -209,6 +210,18 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 	return sb.String(), mapping, nil
 }
 
+// sexColumn returns the TRF 1.6 sex character ('m' or 'w'), or 0 when the sex is
+// unknown or not recognised.
+func sexColumn(s player.Sex) byte {
+	switch s {
+	case player.SexMale:
+		return 'm'
+	case player.SexFemale:
+		return 'w'
+	}
+	return 0
+}
+
 // buildPlayerLine formats a single 001 line per TRF 1.6 fixed-width positions.
 //
 // Positions (1-indexed):
@@ -249,13 +262,13 @@ func buildPlayerLine[ID comparable](rank int, p *PlayerData[ID], points float64,
 	copy(buf[4:8], rjust(strconv.Itoa(rank), 4))
 
 	// Sex.
-	if p.Sex != "" {
-		buf[9] = p.Sex[0]
+	if c := sexColumn(p.Sex); c != 0 {
+		buf[9] = c
 	}
 
 	// Title.
-	if p.Title != "" {
-		copy(buf[10:13], ljust(p.Title, 3))
+	if p.Title.FIDE() {
+		copy(buf[10:13], ljust(string(p.Title), 3))
 	}
 
 	// Name.

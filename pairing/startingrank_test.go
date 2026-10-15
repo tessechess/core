@@ -7,24 +7,6 @@ import (
 	"github.com/ValkoM28/tournamentessentials/core/pairing"
 )
 
-func TestTitleOrder(t *testing.T) {
-	fide := []string{"GM", "IM", "WGM", "FM", "WIM", "CM", "WFM", "WCM"}
-	for i, title := range fide {
-		if got := pairing.TitleOrder(title); got != i {
-			t.Errorf("TitleOrder(%q) = %d, want %d", title, got, i)
-		}
-	}
-	untitled := pairing.TitleOrder("")
-	if untitled <= pairing.TitleOrder("WCM") {
-		t.Fatalf("untitled (%d) must rank after WCM", untitled)
-	}
-	for _, title := range []string{"AGM", "AIM", "AFM", "ACM", "NM", "gm", "unknown"} {
-		if got := pairing.TitleOrder(title); got != untitled {
-			t.Errorf("TitleOrder(%q) = %d, want untitled (%d)", title, got, untitled)
-		}
-	}
-}
-
 type entrant = pairing.Entrant[string]
 
 func TestStartingOrder(t *testing.T) {

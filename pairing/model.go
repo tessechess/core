@@ -11,6 +11,7 @@ package pairing
 import (
 	"time"
 
+	"github.com/ValkoM28/tournamentessentials/core/player"
 	"github.com/ValkoM28/tournamentessentials/core/round"
 )
 
@@ -42,12 +43,12 @@ type Player[ID comparable] struct {
 	StartingRank int // pairing number; 0 = not assigned (TRF generation then fails)
 	FirstName    string
 	LastName     string
-	Title        string
+	Title        player.Title
 	Rating       int // 0 if unrated
 	Federation   string
 	FIDENumber   string
 	Birthday     *time.Time
-	Sex          string
+	Sex          player.Sex
 	FixedBoard   *int // player-level fixed board; a round-level FixedBoard for the same player wins
 }
 

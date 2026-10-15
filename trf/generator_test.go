@@ -6,6 +6,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	"github.com/ValkoM28/tournamentessentials/core/player"
 	"github.com/ValkoM28/tournamentessentials/core/result"
 	"github.com/ValkoM28/tournamentessentials/core/round"
 	"github.com/ValkoM28/tournamentessentials/core/trf"
@@ -97,12 +98,12 @@ func TestGenerate_PlayerLineFixedWidth(t *testing.T) {
 				ID:           newID(),
 				StartingRank: 1,
 				Name:         "Carlsen, Magnus",
-				Title:        "GM",
+				Title:        player.GM,
 				FIDERating:   2830,
 				Federation:   "NOR",
 				FIDENumber:   "1503014",
 				BirthDate:    "1990/11/30",
-				Sex:          "m",
+				Sex:          player.SexMale,
 			},
 		},
 	}
@@ -569,5 +570,64 @@ func assertPoints(t *testing.T, line, want, label string) {
 	got := line[80:84]
 	if got != want {
 		t.Errorf("%s points: got %q, want %q", label, got, want)
+	}
+}
+
+func TestGenerate_SexColumn(t *testing.T) {
+	cases := []struct {
+		name string
+		sex  player.Sex
+		want string
+	}{
+		{"male is m", player.SexMale, "m"},
+		{"female is w", player.SexFemale, "w"},
+		{"unknown is blank", player.SexUnknown, " "},
+		{"unrecognised is blank", "x", " "},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			out, _, err := trf.Generate(&trf.GeneratorInput[string]{
+				TournamentName: "T",
+				TotalRounds:    3,
+				Players:        []trf.PlayerData[string]{{ID: newID(), StartingRank: 1, Name: "A, B", Sex: c.sex}},
+			})
+			if err != nil {
+				t.Fatalf("Generate error: %v", err)
+			}
+			line := padTo(findPlayerLine(t, out, 1), 109)
+			if got := line[9:10]; got != c.want {
+				t.Errorf("sex column: got %q, want %q", got, c.want)
+			}
+		})
+	}
+}
+
+func TestGenerate_TitleColumn(t *testing.T) {
+	cases := []struct {
+		name  string
+		title player.Title
+		want  string
+	}{
+		{"FIDE title is written", player.WGM, "WGM"},
+		{"two-letter title is padded", player.GM, "GM "},
+		{"arena title is blank", player.AGM, "   "},
+		{"untitled is blank", player.NoTitle, "   "},
+		{"unrecognised is blank", "xyz", "   "},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			out, _, err := trf.Generate(&trf.GeneratorInput[string]{
+				TournamentName: "T",
+				TotalRounds:    3,
+				Players:        []trf.PlayerData[string]{{ID: newID(), StartingRank: 1, Name: "A, B", Title: c.title}},
+			})
+			if err != nil {
+				t.Fatalf("Generate error: %v", err)
+			}
+			line := padTo(findPlayerLine(t, out, 1), 109)
+			if got := line[10:13]; got != c.want {
+				t.Errorf("title column: got %q, want %q", got, c.want)
+			}
+		})
 	}
 }

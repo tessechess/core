@@ -9,6 +9,7 @@ import (
 
 	"github.com/ValkoM28/tournamentessentials/core/engine"
 	"github.com/ValkoM28/tournamentessentials/core/pairing"
+	"github.com/ValkoM28/tournamentessentials/core/player"
 	"github.com/ValkoM28/tournamentessentials/core/result"
 	"github.com/ValkoM28/tournamentessentials/core/round"
 )
@@ -131,10 +132,11 @@ func TestPrepare_TRFContents(t *testing.T) {
 	in := fourPlayers()
 	bday := time.Date(1990, 11, 30, 0, 0, 0, 0, time.UTC)
 	in.Players[0].Birthday = &bday
-	in.Players[0].Title = "GM"
+	in.Players[0].Title = player.GM
 	in.Players[0].Federation = "NOR"
 	in.Players[0].FIDENumber = "1503014"
-	in.Players[0].Sex = "m"
+	in.Players[0].Sex = player.SexMale
+	in.Players[1].Sex = player.SexFemale
 	in.Settings = &pairing.Settings[string]{
 		FirstPlayerColor:  "white",
 		ForbiddenPairings: []pairing.ForbiddenPair[string]{{Player1: "b", Player2: "d"}},
@@ -152,6 +154,22 @@ func TestPrepare_TRFContents(t *testing.T) {
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("TRF missing %q\n%s", want, got)
+		}
+	}
+
+	// The sex column (position 10) must use TRF's m/w, not the stored M/F.
+	for rank, want := range map[string]byte{"   1": 'm', "   2": 'w', "   3": ' '} {
+		var line string
+		for _, l := range strings.Split(got, "\n") {
+			if len(l) > 10 && l[:3] == "001" && l[4:8] == rank {
+				line = l
+			}
+		}
+		if line == "" {
+			t.Fatalf("TRF has no 001 line for rank %q\n%s", rank, got)
+		}
+		if line[9] != want {
+			t.Errorf("rank %q: sex column = %q, want %q", rank, line[9], want)
 		}
 	}
 }

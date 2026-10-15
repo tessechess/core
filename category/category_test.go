@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ValkoM28/tournamentessentials/core/category"
+	"github.com/ValkoM28/tournamentessentials/core/player"
 )
 
 func intPtr(v int) *int { return &v }
@@ -43,17 +44,17 @@ func TestMatches(t *testing.T) {
 		{"unknown birthday is fine without birthday condition", category.Criteria{MaxRating: intPtr(2000)}, category.Candidate{Rating: 1500}, true},
 
 		// Gender × sex
-		{"female in women's category", category.Criteria{Gender: gender(category.GenderFemale)}, category.Candidate{Sex: category.SexFemale}, true},
-		{"male in women's category", category.Criteria{Gender: gender(category.GenderFemale)}, category.Candidate{Sex: category.SexMale}, false},
-		{"male in men's category", category.Criteria{Gender: gender(category.GenderMale)}, category.Candidate{Sex: category.SexMale}, true},
-		{"female in men's category", category.Criteria{Gender: gender(category.GenderMale)}, category.Candidate{Sex: category.SexFemale}, false},
+		{"female in women's category", category.Criteria{Gender: gender(category.GenderFemale)}, category.Candidate{Sex: player.SexFemale}, true},
+		{"male in women's category", category.Criteria{Gender: gender(category.GenderFemale)}, category.Candidate{Sex: player.SexMale}, false},
+		{"male in men's category", category.Criteria{Gender: gender(category.GenderMale)}, category.Candidate{Sex: player.SexMale}, true},
+		{"female in men's category", category.Criteria{Gender: gender(category.GenderMale)}, category.Candidate{Sex: player.SexFemale}, false},
 		{"unknown sex fails gender condition", category.Criteria{Gender: gender(category.GenderFemale)}, category.Candidate{}, false},
 
 		// Combined
 		{"U16 girls under 1600", category.Criteria{BirthdayAfter: date(2010, 1, 1), Gender: gender(category.GenderFemale), MaxRating: intPtr(1600)},
-			category.Candidate{Birthday: born2015, Sex: category.SexFemale, Rating: 1450}, true},
+			category.Candidate{Birthday: born2015, Sex: player.SexFemale, Rating: 1450}, true},
 		{"U16 girls under 1600, rating too high", category.Criteria{BirthdayAfter: date(2010, 1, 1), Gender: gender(category.GenderFemale), MaxRating: intPtr(1600)},
-			category.Candidate{Birthday: born2015, Sex: category.SexFemale, Rating: 1700}, false},
+			category.Candidate{Birthday: born2015, Sex: player.SexFemale, Rating: 1700}, false},
 		{"ManualOnly is not checked by Matches", category.Criteria{ManualOnly: true}, category.Candidate{}, true},
 	}
 	for _, c := range cases {
@@ -104,8 +105,8 @@ func TestAssign(t *testing.T) {
 		{ID: "o2000", Criteria: category.Criteria{MinRating: intPtr(2000)}},
 	}
 	subjects := []category.Subject[int]{
-		{ID: 1, Candidate: category.Candidate{Sex: category.SexFemale, Rating: 1500}},
-		{ID: 2, Candidate: category.Candidate{Sex: category.SexMale, Rating: 1800}},
+		{ID: 1, Candidate: category.Candidate{Sex: player.SexFemale, Rating: 1500}},
+		{ID: 2, Candidate: category.Candidate{Sex: player.SexMale, Rating: 1800}},
 	}
 	got := category.Assign(rules, subjects)
 	want := map[int][]string{

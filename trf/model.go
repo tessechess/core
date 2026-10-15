@@ -6,7 +6,10 @@
 // returned PlayerMapping translates between the two.
 package trf
 
-import "github.com/ValkoM28/tournamentessentials/core/round"
+import (
+	"github.com/ValkoM28/tournamentessentials/core/player"
+	"github.com/ValkoM28/tournamentessentials/core/round"
+)
 
 // GeneratorInput contains all data needed to produce a TRF 1.6 file.
 type GeneratorInput[ID comparable] struct {
@@ -30,14 +33,14 @@ type GeneratorInput[ID comparable] struct {
 // PlayerData holds one player's details for TRF generation.
 type PlayerData[ID comparable] struct {
 	ID           ID
-	StartingRank int    // pre-assigned starting rank (pairing number), must be > 0
-	Name         string // "Lastname, Firstname"
-	Title        string // "GM", "IM", "FM", "WGM", "WIM", "WFM", ""
-	FIDERating   int    // 0 if unrated
-	Federation   string // 3-letter code
+	StartingRank int          // pre-assigned starting rank (pairing number), must be > 0
+	Name         string       // "Lastname, Firstname"
+	Title        player.Title // only FIDE titles are written; others leave the column blank
+	FIDERating   int          // 0 if unrated
+	Federation   string       // 3-letter code
 	FIDENumber   string
-	BirthDate    string // "YYYY/MM/DD"
-	Sex          string // "m", "w", ""
+	BirthDate    string     // "YYYY/MM/DD"
+	Sex          player.Sex // written as "m" (male) or "w" (female); unknown leaves the column blank
 }
 
 // PlayerMapping provides bidirectional lookup between TRF starting ranks and player IDs.

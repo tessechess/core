@@ -7,15 +7,10 @@
 // package has no persistence.
 package category
 
-import "time"
+import (
+	"time"
 
-// Sex is a player's recorded sex.
-type Sex string
-
-const (
-	SexUnknown Sex = ""
-	SexMale    Sex = "M"
-	SexFemale  Sex = "F"
+	"github.com/ValkoM28/tournamentessentials/core/player"
 )
 
 // Gender restricts a category to one sex.
@@ -39,7 +34,7 @@ type Criteria struct {
 // Candidate is what the rules need to know about a player.
 type Candidate struct {
 	Birthday *time.Time // nil when unknown
-	Sex      Sex
+	Sex      player.Sex
 	// Rating is 0 for an unrated player. An unrated player counts as below any
 	// MaxRating (an unrated player is "under 1600") and fails any MinRating.
 	Rating int
@@ -73,11 +68,11 @@ func (c Criteria) Matches(p Candidate) bool {
 
 	if c.Gender != nil {
 		switch p.Sex {
-		case SexFemale:
+		case player.SexFemale:
 			if *c.Gender == GenderMale {
 				return false
 			}
-		case SexMale:
+		case player.SexMale:
 			if *c.Gender == GenderFemale {
 				return false
 			}

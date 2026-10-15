@@ -10,15 +10,16 @@ import (
 	"path/filepath"
 )
 
-// RunEngine writes trfInput to a temp file, executes the binary, and returns the output.
-// buildArgs receives the input and output file paths and returns the argument list.
-// If readFromFile is true, the result is read from the output file; otherwise from stdout.
-func RunEngine(
+// runEngine writes trfInput to a temp file, executes the binary and returns the
+// contents of the output file the engine was told to write. buildArgs receives
+// the input and output file paths and returns the argument list. A timeout of
+// ctx gives ErrEngineTimeout, a non-zero exit gives ErrEngineExecution with the
+// engine's combined stdout and stderr.
+func runEngine(
 	ctx context.Context,
 	binaryPath string,
 	buildArgs func(inputPath, outputPath string) []string,
 	trfInput string,
-	readFromFile bool,
 ) (string, error) {
 	tmpDir, err := os.MkdirTemp("", "pairing-engine-*")
 	if err != nil {
@@ -54,13 +55,9 @@ func RunEngine(
 		return "", fmt.Errorf("%w: %s — %s", ErrEngineExecution, binaryPath, detail)
 	}
 
-	if readFromFile {
-		data, err := os.ReadFile(outputPath)
-		if err != nil {
-			return "", fmt.Errorf("failed to read engine output file: %w", err)
-		}
-		return string(data), nil
+	data, err := os.ReadFile(outputPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read engine output file: %w", err)
 	}
-
-	return combined.String(), nil
+	return string(data), nil
 }

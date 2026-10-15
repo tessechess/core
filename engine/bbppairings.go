@@ -49,7 +49,7 @@ func (b *BBPPairings) GeneratePairings(ctx context.Context, trfInput string) (st
 	ctx, cancel := context.WithTimeout(ctx, b.Timeout)
 	defer cancel()
 
-	return RunEngine(ctx, b.BinaryPath, func(inputPath, outputPath string) []string {
+	return runEngine(ctx, b.BinaryPath, func(inputPath, outputPath string) []string {
 		return []string{"--dutch", inputPath, "-p", outputPath}
-	}, trfInput, true)
+	}, trfInput)
 }

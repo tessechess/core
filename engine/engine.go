@@ -1,7 +1,7 @@
 // Package engine runs external FIDE pairing programs (bbpPairings, JaVaFo) on a
 // TRF input and returns their raw output; parse it with the matching parser in
 // core/trf (see OutputFormat). Callers supply the binary or jar paths: the
-// programs themselves are not part of core as per their licenses. 
+// programs themselves are not part of core as per their licenses.
 package engine
 
 import "context"

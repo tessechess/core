@@ -51,7 +51,7 @@ func (j *JaVaFo) GeneratePairings(ctx context.Context, trfInput string) (string,
 	ctx, cancel := context.WithTimeout(ctx, j.Timeout)
 	defer cancel()
 
-	return RunEngine(ctx, j.JavaPath, func(inputPath, outputPath string) []string {
+	return runEngine(ctx, j.JavaPath, func(inputPath, outputPath string) []string {
 		return []string{"-jar", j.JarPath, inputPath, "-p", outputPath}
-	}, trfInput, true)
+	}, trfInput)
 }

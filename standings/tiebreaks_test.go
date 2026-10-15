@@ -1,4 +1,4 @@
-package standings_test
+package standings
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 
 	"github.com/ValkoM28/tournamentessentials/core/result"
 	"github.com/ValkoM28/tournamentessentials/core/round"
-	"github.com/ValkoM28/tournamentessentials/core/standings"
 )
 
 // idSeq backs newID, which gives each test player a unique 8-character ID.
@@ -61,7 +60,7 @@ func TestComputeBuchholz_BasicCalculation(t *testing.T) {
 	t.Log("  Round 3: P1 beats P4 (1-0), P2 draws P3 (0.5-0.5)")
 
 	// Build info and scores
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 3.0, // 3 wins
 		p2: 1.5, // 1 win, 1 draw
@@ -79,7 +78,7 @@ func TestComputeBuchholz_BasicCalculation(t *testing.T) {
 	t.Log("\nCalculating P1 Buchholz:")
 	t.Log("  P1 opponents: P2 (1.5), P3 (1.5), P4 (0.0)")
 	t.Log("  Expected Buchholz: 1.5 + 1.5 + 0.0 = 3.0")
-	bh := standings.ComputeBuchholz(p1, allInfo, rawScores, 0, 0)
+	bh := computeBuchholz(p1, allInfo, rawScores, 0, 0)
 	t.Logf("  ✓ Actual Buchholz: %.1f", bh)
 	if bh != 3.0 {
 		t.Errorf("P1 Buchholz: expected 3.0, got %f", bh)
@@ -89,7 +88,7 @@ func TestComputeBuchholz_BasicCalculation(t *testing.T) {
 	t.Log("\nCalculating P2 Buchholz:")
 	t.Log("  P2 opponents: P1 (3.0), P4 (0.0), P3 (1.5)")
 	t.Log("  Expected Buchholz: 3.0 + 0.0 + 1.5 = 4.5")
-	bh = standings.ComputeBuchholz(p2, allInfo, rawScores, 0, 0)
+	bh = computeBuchholz(p2, allInfo, rawScores, 0, 0)
 	t.Logf("  ✓ Actual Buchholz: %.1f", bh)
 	if bh != 4.5 {
 		t.Errorf("P2 Buchholz: expected 4.5, got %f", bh)
@@ -99,7 +98,7 @@ func TestComputeBuchholz_BasicCalculation(t *testing.T) {
 	t.Log("\nCalculating P3 Buchholz:")
 	t.Log("  P3 opponents: P4 (0.0), P1 (3.0), P2 (1.5)")
 	t.Log("  Expected Buchholz: 0.0 + 3.0 + 1.5 = 4.5")
-	bh = standings.ComputeBuchholz(p3, allInfo, rawScores, 0, 0)
+	bh = computeBuchholz(p3, allInfo, rawScores, 0, 0)
 	t.Logf("  ✓ Actual Buchholz: %.1f", bh)
 	if bh != 4.5 {
 		t.Errorf("P3 Buchholz: expected 4.5, got %f", bh)
@@ -109,7 +108,7 @@ func TestComputeBuchholz_BasicCalculation(t *testing.T) {
 	t.Log("\nCalculating P4 Buchholz:")
 	t.Log("  P4 opponents: P3 (1.5), P2 (1.5), P1 (3.0)")
 	t.Log("  Expected Buchholz: 1.5 + 1.5 + 3.0 = 6.0")
-	bh = standings.ComputeBuchholz(p4, allInfo, rawScores, 0, 0)
+	bh = computeBuchholz(p4, allInfo, rawScores, 0, 0)
 	t.Logf("  ✓ Actual Buchholz: %.1f", bh)
 	if bh != 6.0 {
 		t.Errorf("P4 Buchholz: expected 6.0, got %f", bh)
@@ -136,7 +135,7 @@ func TestComputeBuchholz_CutLowest(t *testing.T) {
 		makePairing(3, p2, &p3, codePtr(result.Draw)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 3.0,
 		p2: 1.5,
@@ -151,7 +150,7 @@ func TestComputeBuchholz_CutLowest(t *testing.T) {
 	t.Log("\nP1 Buchholz-Cut1:")
 	t.Log("  Opponents: P2 (1.5), P3 (1.5), P4 (0.0)")
 	t.Log("  After cutting lowest (0.0): 1.5 + 1.5 = 3.0")
-	bhCut1 := standings.ComputeBuchholz(p1, allInfo, rawScores, 1, 0)
+	bhCut1 := computeBuchholz(p1, allInfo, rawScores, 1, 0)
 	t.Logf("  ✓ Result: %.1f", bhCut1)
 	if bhCut1 != 3.0 {
 		t.Errorf("P1 Buchholz-Cut1: expected 3.0, got %f", bhCut1)
@@ -162,7 +161,7 @@ func TestComputeBuchholz_CutLowest(t *testing.T) {
 	t.Log("\nP2 Buchholz-Cut1:")
 	t.Log("  Opponents: P1 (3.0), P4 (0.0), P3 (1.5)")
 	t.Log("  After cutting lowest (0.0): 3.0 + 1.5 = 4.5")
-	bhCut1 = standings.ComputeBuchholz(p2, allInfo, rawScores, 1, 0)
+	bhCut1 = computeBuchholz(p2, allInfo, rawScores, 1, 0)
 	t.Logf("  ✓ Result: %.1f", bhCut1)
 	if bhCut1 != 4.5 {
 		t.Errorf("P2 Buchholz-Cut1: expected 4.5, got %f", bhCut1)
@@ -189,7 +188,7 @@ func TestComputeBuchholz_Median(t *testing.T) {
 		makePairing(3, p2, &p3, codePtr(result.Draw)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 3.0,
 		p2: 1.5,
@@ -205,7 +204,7 @@ func TestComputeBuchholz_Median(t *testing.T) {
 	t.Log("  Opponents: P1 (3.0), P4 (0.0), P3 (1.5)")
 	t.Log("  Sorted: [0.0, 1.5, 3.0]")
 	t.Log("  After cutting lowest (0.0) AND highest (3.0): 1.5")
-	bhMedian := standings.ComputeBuchholz(p2, allInfo, rawScores, 1, 1)
+	bhMedian := computeBuchholz(p2, allInfo, rawScores, 1, 1)
 	t.Logf("  ✓ Result: %.1f", bhMedian)
 	if bhMedian != 1.5 {
 		t.Errorf("P2 Buchholz-Median: expected 1.5, got %f", bhMedian)
@@ -225,7 +224,7 @@ func TestComputeBuchholz_InsufficientRounds(t *testing.T) {
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 1.0,
 		p2: 0.0,
@@ -237,7 +236,7 @@ func TestComputeBuchholz_InsufficientRounds(t *testing.T) {
 	// Only 1 round, can't cut 1 lowest
 	t.Log("\nAttempting Cut-1 with only 1 round:")
 	t.Log("  Cannot cut 1 opponent when only 1 opponent exists")
-	bhCut1 := standings.ComputeBuchholz(p1, allInfo, rawScores, 1, 0)
+	bhCut1 := computeBuchholz(p1, allInfo, rawScores, 1, 0)
 	t.Logf("  ✓ Returns 0 as expected: %.1f", bhCut1)
 	if bhCut1 != 0.0 {
 		t.Errorf("Insufficient rounds should return 0, got %f", bhCut1)
@@ -246,7 +245,7 @@ func TestComputeBuchholz_InsufficientRounds(t *testing.T) {
 	// Only 1 round, can't cut 1 lowest and 1 highest
 	t.Log("\nAttempting Median with only 1 round:")
 	t.Log("  Cannot cut 2 opponents when only 1 opponent exists")
-	bhMedian := standings.ComputeBuchholz(p1, allInfo, rawScores, 1, 1)
+	bhMedian := computeBuchholz(p1, allInfo, rawScores, 1, 1)
 	t.Logf("  ✓ Returns 0 as expected: %.1f", bhMedian)
 	if bhMedian != 0.0 {
 		t.Errorf("Insufficient rounds should return 0, got %f", bhMedian)
@@ -272,7 +271,7 @@ func TestComputeBuchholz_WithBye(t *testing.T) {
 		makePairing(2, p2, nil, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 2.0, // 2 wins
 		p2: 1.0, // 1 bye
@@ -288,7 +287,7 @@ func TestComputeBuchholz_WithBye(t *testing.T) {
 	t.Log("\nP1 Buchholz (played 2 real games):")
 	t.Log("  Opponents: P2 (1.0), P3 (1.0)")
 	t.Log("  Buchholz: 1.0 + 1.0 = 2.0")
-	bh := standings.ComputeBuchholz(p1, allInfo, rawScores, 0, 0)
+	bh := computeBuchholz(p1, allInfo, rawScores, 0, 0)
 	t.Logf("  ✓ Result: %.1f", bh)
 	if bh != 2.0 {
 		t.Errorf("P1 Buchholz: expected 2.0, got %f", bh)
@@ -300,7 +299,7 @@ func TestComputeBuchholz_WithBye(t *testing.T) {
 	t.Log("  Real opponents: P1 (2.0)")
 	t.Log("  Virtual opponent (bye): uses P2's own score = 1.0")
 	t.Log("  Buchholz: 2.0 + 1.0 = 3.0")
-	bh = standings.ComputeBuchholz(p2, allInfo, rawScores, 0, 0)
+	bh = computeBuchholz(p2, allInfo, rawScores, 0, 0)
 	t.Logf("  ✓ Result: %.1f", bh)
 	if bh != 3.0 {
 		t.Errorf("P2 Buchholz with bye: expected 3.0, got %f", bh)
@@ -311,7 +310,7 @@ func TestComputeBuchholz_WithBye(t *testing.T) {
 	t.Log("  Virtual opponent (bye): uses P3's own score = 1.0")
 	t.Log("  Real opponents: P1 (2.0)")
 	t.Log("  Buchholz: 1.0 + 2.0 = 3.0")
-	bh = standings.ComputeBuchholz(p3, allInfo, rawScores, 0, 0)
+	bh = computeBuchholz(p3, allInfo, rawScores, 0, 0)
 	t.Logf("  ✓ Result: %.1f", bh)
 	if bh != 3.0 {
 		t.Errorf("P3 Buchholz with bye: expected 3.0, got %f", bh)
@@ -337,7 +336,7 @@ func TestComputeBuchholz_WithWithdrawal(t *testing.T) {
 		makePairing(2, p2, nil, codePtr(result.ZeroPointBye)), // withdrawal after last real game
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 2.0, // 2 wins
 		p2: 0.0, // lost round 1, withdrew round 2
@@ -359,7 +358,7 @@ func TestComputeBuchholz_WithWithdrawal(t *testing.T) {
 	t.Log("  P2's adjusted score (FIDE 16.3.2): 0.0 + 0.5 (withdrawal) = 0.5")
 	t.Log("  P3's score: 1.0")
 	t.Log("  P1 Buchholz: 0.5 + 1.0 = 1.5")
-	bh := standings.ComputeBuchholz(p1, allInfo, rawScores, 0, 0)
+	bh := computeBuchholz(p1, allInfo, rawScores, 0, 0)
 	t.Logf("  ✓ Result: %.1f", bh)
 	if bh != 1.5 {
 		t.Errorf("P1 Buchholz with opponent withdrawal: expected 1.5, got %f", bh)
@@ -380,7 +379,7 @@ func TestComputeBuchholz_NoPlayer(t *testing.T) {
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 1.0,
 		p2: 0.0,
@@ -389,7 +388,7 @@ func TestComputeBuchholz_NoPlayer(t *testing.T) {
 	t.Log("Only P1 and P2 exist in the tournament")
 	t.Logf("Querying Buchholz for non-existent player: %s", nonExistent[:8])
 
-	bh := standings.ComputeBuchholz(nonExistent, allInfo, rawScores, 0, 0)
+	bh := computeBuchholz(nonExistent, allInfo, rawScores, 0, 0)
 	t.Logf("  ✓ Returns 0 as expected: %.1f", bh)
 	if bh != 0.0 {
 		t.Errorf("Non-existent player should return 0, got %f", bh)
@@ -417,7 +416,7 @@ func TestComputeBuchholz_MultipleWithdrawals(t *testing.T) {
 		makePairing(3, p1, nil, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 3.0, // 3 byes/wins
 		p2: 0.0, // lost then withdrew twice
@@ -440,7 +439,7 @@ func TestComputeBuchholz_MultipleWithdrawals(t *testing.T) {
 	t.Log("  Round 2: Bye (virtual opponent = 3.0)")
 	t.Log("  Round 3: Bye (virtual opponent = 3.0)")
 	t.Log("  P1 Buchholz: 1.0 + 3.0 + 3.0 = 7.0")
-	bh := standings.ComputeBuchholz(p1, allInfo, rawScores, 0, 0)
+	bh := computeBuchholz(p1, allInfo, rawScores, 0, 0)
 	t.Logf("  ✓ Result: %.1f", bh)
 	if bh != 7.0 {
 		t.Errorf("P1 Buchholz with multiple opponent withdrawals: expected 7.0, got %f", bh)
@@ -479,7 +478,7 @@ func TestComputeBuchholz_ComplexScenario(t *testing.T) {
 		makePairing(4, p2, nil, codePtr(result.ZeroPointBye)), // withdrawal
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 3.5, // 3 wins, 1 draw
 		p2: 0.5, // 1 draw, 1 loss, 1 withdrawal
@@ -509,7 +508,7 @@ func TestComputeBuchholz_ComplexScenario(t *testing.T) {
 	t.Log("  P2 withdrew in round 4, adjusted score: 0.5 + 0.5 = 1.0")
 	t.Log("  Opponent scores: 1.0 (P2), 2.5 (P3), 2.0 (P5), 1.5 (P4)")
 	t.Log("  Buchholz: 1.0 + 2.5 + 2.0 + 1.5 = 7.0")
-	bh := standings.ComputeBuchholz(p1, allInfo, rawScores, 0, 0)
+	bh := computeBuchholz(p1, allInfo, rawScores, 0, 0)
 	t.Logf("  ✓ Result: %.1f", bh)
 	if bh != 7.0 {
 		t.Errorf("P1 Buchholz in complex scenario: expected 7.0, got %f", bh)
@@ -521,7 +520,7 @@ func TestComputeBuchholz_ComplexScenario(t *testing.T) {
 	t.Log("\nP1 Buchholz-Cut1:")
 	t.Log("  Opponent scores sorted: [1.0, 1.5, 2.0, 2.5]")
 	t.Log("  After cutting lowest (1.0): 1.5 + 2.0 + 2.5 = 6.0")
-	bhCut1 := standings.ComputeBuchholz(p1, allInfo, rawScores, 1, 0)
+	bhCut1 := computeBuchholz(p1, allInfo, rawScores, 1, 0)
 	t.Logf("  ✓ Result: %.1f", bhCut1)
 	if bhCut1 != 6.0 {
 		t.Errorf("P1 Buchholz-Cut1 in complex scenario: expected 6.0, got %f", bhCut1)
@@ -531,7 +530,7 @@ func TestComputeBuchholz_ComplexScenario(t *testing.T) {
 	// Cut lowest (1.0) and highest (2.5) → 1.5 + 2.0 = 3.5
 	t.Log("\nP1 Buchholz-Median:")
 	t.Log("  After cutting lowest (1.0) AND highest (2.5): 1.5 + 2.0 = 3.5")
-	bhMedian := standings.ComputeBuchholz(p1, allInfo, rawScores, 1, 1)
+	bhMedian := computeBuchholz(p1, allInfo, rawScores, 1, 1)
 	t.Logf("  ✓ Result: %.1f", bhMedian)
 	if bhMedian != 3.5 {
 		t.Errorf("P1 Buchholz-Median in complex scenario: expected 3.5, got %f", bhMedian)
@@ -598,7 +597,7 @@ func TestComputeSonnebornBerger_BasicCalculation(t *testing.T) {
 	t.Log("  Round 3: P1 beats P4 (1-0), P2 draws P3 (0.5-0.5)")
 
 	// Build info and scores
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 3.0, // 3 wins
 		p2: 1.5, // 1 win, 1 draw
@@ -618,7 +617,7 @@ func TestComputeSonnebornBerger_BasicCalculation(t *testing.T) {
 	t.Log("  P1 vs P3 (1.5): scored 1.0 → 1.5 × 1.0 = 1.5")
 	t.Log("  P1 vs P4 (0.0): scored 1.0 → 0.0 × 1.0 = 0.0")
 	t.Log("  Expected SB: 1.5 + 1.5 + 0.0 = 3.0")
-	sb := standings.ComputeSonnebornBerger(p1, allInfo, rawScores)
+	sb := computeSonnebornBerger(p1, allInfo, rawScores)
 	t.Logf("  ✓ Actual SB: %.1f", sb)
 	if sb != 3.0 {
 		t.Errorf("P1 SB: expected 3.0, got %f", sb)
@@ -630,7 +629,7 @@ func TestComputeSonnebornBerger_BasicCalculation(t *testing.T) {
 	t.Log("  P2 vs P4 (0.0): scored 1.0 → 0.0 × 1.0 = 0.0")
 	t.Log("  P2 vs P3 (1.5): scored 0.5 → 1.5 × 0.5 = 0.75")
 	t.Log("  Expected SB: 0.0 + 0.0 + 0.75 = 0.75")
-	sb = standings.ComputeSonnebornBerger(p2, allInfo, rawScores)
+	sb = computeSonnebornBerger(p2, allInfo, rawScores)
 	t.Logf("  ✓ Actual SB: %.2f", sb)
 	if sb != 0.75 {
 		t.Errorf("P2 SB: expected 0.75, got %f", sb)
@@ -642,7 +641,7 @@ func TestComputeSonnebornBerger_BasicCalculation(t *testing.T) {
 	t.Log("  P3 vs P1 (3.0): scored 0.0 → 3.0 × 0.0 = 0.0")
 	t.Log("  P3 vs P2 (1.5): scored 0.5 → 1.5 × 0.5 = 0.75")
 	t.Log("  Expected SB: 0.0 + 0.0 + 0.75 = 0.75")
-	sb = standings.ComputeSonnebornBerger(p3, allInfo, rawScores)
+	sb = computeSonnebornBerger(p3, allInfo, rawScores)
 	t.Logf("  ✓ Actual SB: %.2f", sb)
 	if sb != 0.75 {
 		t.Errorf("P3 SB: expected 0.75, got %f", sb)
@@ -654,7 +653,7 @@ func TestComputeSonnebornBerger_BasicCalculation(t *testing.T) {
 	t.Log("  P4 vs P2 (1.5): scored 0.0 → 1.5 × 0.0 = 0.0")
 	t.Log("  P4 vs P1 (3.0): scored 0.0 → 3.0 × 0.0 = 0.0")
 	t.Log("  Expected SB: 0.0 + 0.0 + 0.0 = 0.0")
-	sb = standings.ComputeSonnebornBerger(p4, allInfo, rawScores)
+	sb = computeSonnebornBerger(p4, allInfo, rawScores)
 	t.Logf("  ✓ Actual SB: %.1f", sb)
 	if sb != 0.0 {
 		t.Errorf("P4 SB: expected 0.0, got %f", sb)
@@ -680,7 +679,7 @@ func TestComputeSonnebornBerger_WithBye(t *testing.T) {
 		makePairing(2, p2, nil, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 2.0, // 2 wins
 		p2: 1.0, // 1 loss, 1 bye
@@ -697,7 +696,7 @@ func TestComputeSonnebornBerger_WithBye(t *testing.T) {
 	t.Log("  P1 vs P2 (1.0): scored 1.0 → 1.0 × 1.0 = 1.0")
 	t.Log("  P1 vs P3 (1.0): scored 1.0 → 1.0 × 1.0 = 1.0")
 	t.Log("  SB: 1.0 + 1.0 = 2.0")
-	sb := standings.ComputeSonnebornBerger(p1, allInfo, rawScores)
+	sb := computeSonnebornBerger(p1, allInfo, rawScores)
 	t.Logf("  ✓ Result: %.1f", sb)
 	if sb != 2.0 {
 		t.Errorf("P1 SB: expected 2.0, got %f", sb)
@@ -709,7 +708,7 @@ func TestComputeSonnebornBerger_WithBye(t *testing.T) {
 	t.Log("  P2 vs P1 (2.0): scored 0.0 → 2.0 × 0.0 = 0.0")
 	t.Log("  P2 vs Bye (virtual 1.0): scored 1.0 → 1.0 × 1.0 = 1.0")
 	t.Log("  SB: 0.0 + 1.0 = 1.0")
-	sb = standings.ComputeSonnebornBerger(p2, allInfo, rawScores)
+	sb = computeSonnebornBerger(p2, allInfo, rawScores)
 	t.Logf("  ✓ Result: %.1f", sb)
 	if sb != 1.0 {
 		t.Errorf("P2 SB with bye: expected 1.0, got %f", sb)
@@ -720,7 +719,7 @@ func TestComputeSonnebornBerger_WithBye(t *testing.T) {
 	t.Log("  P3 vs Bye (virtual 1.0): scored 1.0 → 1.0 × 1.0 = 1.0")
 	t.Log("  P3 vs P1 (2.0): scored 0.0 → 2.0 × 0.0 = 0.0")
 	t.Log("  SB: 1.0 + 0.0 = 1.0")
-	sb = standings.ComputeSonnebornBerger(p3, allInfo, rawScores)
+	sb = computeSonnebornBerger(p3, allInfo, rawScores)
 	t.Logf("  ✓ Result: %.1f", sb)
 	if sb != 1.0 {
 		t.Errorf("P3 SB with bye: expected 1.0, got %f", sb)
@@ -746,7 +745,7 @@ func TestComputeSonnebornBerger_WithWithdrawal(t *testing.T) {
 		makePairing(2, p2, nil, codePtr(result.ZeroPointBye)), // withdrawal after last real game
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 2.0, // 2 wins
 		p2: 0.0, // lost round 1, withdrew round 2
@@ -769,7 +768,7 @@ func TestComputeSonnebornBerger_WithWithdrawal(t *testing.T) {
 	t.Log("  P1 vs P2 (adjusted 0.5): scored 1.0 → 0.5 × 1.0 = 0.5")
 	t.Log("  P1 vs P3 (1.0): scored 1.0 → 1.0 × 1.0 = 1.0")
 	t.Log("  P1 SB: 0.5 + 1.0 = 1.5")
-	sb := standings.ComputeSonnebornBerger(p1, allInfo, rawScores)
+	sb := computeSonnebornBerger(p1, allInfo, rawScores)
 	t.Logf("  ✓ Result: %.1f", sb)
 	if sb != 1.5 {
 		t.Errorf("P1 SB with opponent withdrawal: expected 1.5, got %f", sb)
@@ -797,7 +796,7 @@ func TestComputeSonnebornBerger_MultipleWithdrawals(t *testing.T) {
 		makePairing(3, p1, nil, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 3.0, // 3 byes/wins
 		p2: 0.0, // lost then withdrew twice
@@ -821,7 +820,7 @@ func TestComputeSonnebornBerger_MultipleWithdrawals(t *testing.T) {
 	t.Log("  Round 2: Bye (virtual opponent = 3.0): scored 1.0 → 3.0 × 1.0 = 3.0")
 	t.Log("  Round 3: Bye (virtual opponent = 3.0): scored 1.0 → 3.0 × 1.0 = 3.0")
 	t.Log("  P1 SB: 1.0 + 3.0 + 3.0 = 7.0")
-	sb := standings.ComputeSonnebornBerger(p1, allInfo, rawScores)
+	sb := computeSonnebornBerger(p1, allInfo, rawScores)
 	t.Logf("  ✓ Result: %.1f", sb)
 	if sb != 7.0 {
 		t.Errorf("P1 SB with multiple opponent withdrawals: expected 7.0, got %f", sb)
@@ -851,7 +850,7 @@ func TestComputeSonnebornBerger_WithDraws(t *testing.T) {
 		makePairing(3, p2, &p3, codePtr(result.Draw)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 1.5, // 3 draws
 		p2: 1.5, // 3 draws
@@ -870,7 +869,7 @@ func TestComputeSonnebornBerger_WithDraws(t *testing.T) {
 	t.Log("  P1 vs P3 (1.5): scored 0.5 → 1.5 × 0.5 = 0.75")
 	t.Log("  P1 vs P4 (1.5): scored 0.5 → 1.5 × 0.5 = 0.75")
 	t.Log("  SB: 0.75 + 0.75 + 0.75 = 2.25")
-	sb := standings.ComputeSonnebornBerger(p1, allInfo, rawScores)
+	sb := computeSonnebornBerger(p1, allInfo, rawScores)
 	t.Logf("  ✓ Result: %.2f", sb)
 	if sb != 2.25 {
 		t.Errorf("P1 SB: expected 2.25, got %f", sb)
@@ -879,7 +878,7 @@ func TestComputeSonnebornBerger_WithDraws(t *testing.T) {
 	// All players should have the same SB
 	t.Log("\nAll players should have identical SB (2.25):")
 	for i, pid := range []string{p2, p3, p4} {
-		sb = standings.ComputeSonnebornBerger(pid, allInfo, rawScores)
+		sb = computeSonnebornBerger(pid, allInfo, rawScores)
 		t.Logf("  P%d SB: %.2f", i+2, sb)
 		if sb != 2.25 {
 			t.Errorf("P%d SB: expected 2.25, got %f", i+2, sb)
@@ -901,7 +900,7 @@ func TestComputeSonnebornBerger_NoPlayer(t *testing.T) {
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 1.0,
 		p2: 0.0,
@@ -910,7 +909,7 @@ func TestComputeSonnebornBerger_NoPlayer(t *testing.T) {
 	t.Log("Only P1 and P2 exist in the tournament")
 	t.Logf("Querying SB for non-existent player: %s", nonExistent[:8])
 
-	sb := standings.ComputeSonnebornBerger(nonExistent, allInfo, rawScores)
+	sb := computeSonnebornBerger(nonExistent, allInfo, rawScores)
 	t.Logf("  ✓ Returns 0 as expected: %.1f", sb)
 	if sb != 0.0 {
 		t.Errorf("Non-existent player should return 0, got %f", sb)
@@ -949,7 +948,7 @@ func TestComputeSonnebornBerger_ComplexScenario(t *testing.T) {
 		makePairing(4, p2, nil, codePtr(result.ZeroPointBye)), // withdrawal
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 3.5, // 3 wins, 1 draw
 		p2: 0.5, // 1 draw, 1 loss, 1 withdrawal
@@ -987,7 +986,7 @@ func TestComputeSonnebornBerger_ComplexScenario(t *testing.T) {
 	t.Log("  P1 vs P5 (2.0): scored 1.0 → 2.0 × 1.0 = 2.0")
 	t.Log("  P1 vs P4 (1.5): scored 1.0 → 1.5 × 1.0 = 1.5")
 	t.Log("  SB: 1.0 + 1.25 + 2.0 + 1.5 = 5.75")
-	sb := standings.ComputeSonnebornBerger(p1, allInfo, rawScores)
+	sb := computeSonnebornBerger(p1, allInfo, rawScores)
 	t.Logf("  ✓ Result: %.2f", sb)
 	if sb != 5.75 {
 		t.Errorf("P1 SB in complex scenario: expected 5.75, got %f", sb)
@@ -1001,7 +1000,7 @@ func TestComputeSonnebornBerger_ComplexScenario(t *testing.T) {
 	t.Log("  P3 vs Bye (virtual 2.5): scored 1.0 → 2.5 × 1.0 = 2.5")
 	t.Log("  P3 vs P5 (2.0): scored 1.0 → 2.0 × 1.0 = 2.0")
 	t.Log("  SB: 0.75 + 1.75 + 2.5 + 2.0 = 7.0")
-	sb = standings.ComputeSonnebornBerger(p3, allInfo, rawScores)
+	sb = computeSonnebornBerger(p3, allInfo, rawScores)
 	t.Logf("  ✓ Result: %.2f", sb)
 	if sb != 7.0 {
 		t.Errorf("P3 SB in complex scenario: expected 7.0, got %f", sb)
@@ -1015,7 +1014,7 @@ func TestComputeSonnebornBerger_ComplexScenario(t *testing.T) {
 	t.Log("  P5 vs P1 (3.5): scored 0.0 → 3.5 × 0.0 = 0.0")
 	t.Log("  P5 vs P3 (2.5): scored 0.0 → 2.5 × 0.0 = 0.0")
 	t.Log("  SB: 2.0 + 1.0 + 0.0 + 0.0 = 3.0")
-	sb = standings.ComputeSonnebornBerger(p5, allInfo, rawScores)
+	sb = computeSonnebornBerger(p5, allInfo, rawScores)
 	t.Logf("  ✓ Result: %.2f", sb)
 	if sb != 3.0 {
 		t.Errorf("P5 SB in complex scenario: expected 3.0, got %f", sb)
@@ -1040,7 +1039,7 @@ func TestComputeSonnebornBerger_HalfPointBye(t *testing.T) {
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 2.0, // 2 wins
 		p2: 0.0, // 1 loss
@@ -1058,7 +1057,7 @@ func TestComputeSonnebornBerger_HalfPointBye(t *testing.T) {
 	t.Log("  P3 vs Half-Bye (virtual 0.5): scored 0.5 → 0.5 × 0.5 = 0.25")
 	t.Log("  P3 vs P1 (2.0): scored 0.0 → 2.0 × 0.0 = 0.0")
 	t.Log("  SB: 0.25 + 0.0 = 0.25")
-	sb := standings.ComputeSonnebornBerger(p3, allInfo, rawScores)
+	sb := computeSonnebornBerger(p3, allInfo, rawScores)
 	t.Logf("  ✓ Result: %.2f", sb)
 	if sb != 0.25 {
 		t.Errorf("P3 SB with half-point bye: expected 0.25, got %f", sb)
@@ -1096,7 +1095,7 @@ func TestComputeKoyaSystem_Basic(t *testing.T) {
 		makePairing(3, p2, &p3, codePtr(result.Draw)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 3.0, // beats everyone
 		p2: 1.5, // beats P4, draws P3, loses to P1
@@ -1115,7 +1114,7 @@ func TestComputeKoyaSystem_Basic(t *testing.T) {
 	t.Log("  vs P3 (1.5 >= 1.5): scored 1.0 → counts")
 	t.Log("  vs P4 (0.0 < 1.5): scored 1.0 → excluded")
 	t.Log("  KS = 1.0 + 1.0 = 2.0")
-	ks := standings.ComputeKoyaSystem(p1, allInfo, rawScores, 0)
+	ks := computeKoyaSystem(p1, allInfo, rawScores, 0)
 	if ks != 2.0 {
 		t.Errorf("P1 KS: expected 2.0, got %f", ks)
 	}
@@ -1128,7 +1127,7 @@ func TestComputeKoyaSystem_Basic(t *testing.T) {
 	t.Log("  vs P4 (0.0 < 1.5): scored 1.0 → excluded")
 	t.Log("  vs P3 (1.5 >= 1.5): scored 0.5 → counts")
 	t.Log("  KS = 0.0 + 0.5 = 0.5")
-	ks = standings.ComputeKoyaSystem(p2, allInfo, rawScores, 0)
+	ks = computeKoyaSystem(p2, allInfo, rawScores, 0)
 	if ks != 0.5 {
 		t.Errorf("P2 KS: expected 0.5, got %f", ks)
 	}
@@ -1141,7 +1140,7 @@ func TestComputeKoyaSystem_Basic(t *testing.T) {
 	t.Log("  vs P1 (3.0 >= 1.5): scored 0.0 → counts (0)")
 	t.Log("  vs P2 (1.5 >= 1.5): scored 0.5 → counts")
 	t.Log("  KS = 0.0 + 0.5 = 0.5")
-	ks = standings.ComputeKoyaSystem(p3, allInfo, rawScores, 0)
+	ks = computeKoyaSystem(p3, allInfo, rawScores, 0)
 	if ks != 0.5 {
 		t.Errorf("P3 KS: expected 0.5, got %f", ks)
 	}
@@ -1154,7 +1153,7 @@ func TestComputeKoyaSystem_Basic(t *testing.T) {
 	t.Log("  vs P2 (1.5 >= 1.5): scored 0.0 → counts (0)")
 	t.Log("  vs P1 (3.0 >= 1.5): scored 0.0 → counts (0)")
 	t.Log("  KS = 0.0")
-	ks = standings.ComputeKoyaSystem(p4, allInfo, rawScores, 0)
+	ks = computeKoyaSystem(p4, allInfo, rawScores, 0)
 	if ks != 0.0 {
 		t.Errorf("P4 KS: expected 0.0, got %f", ks)
 	}
@@ -1182,7 +1181,7 @@ func TestComputeKoyaSystem_ExplicitThreshold(t *testing.T) {
 		makePairing(3, p2, &p3, codePtr(result.Draw)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 3.0,
 		p2: 1.5,
@@ -1199,7 +1198,7 @@ func TestComputeKoyaSystem_ExplicitThreshold(t *testing.T) {
 	t.Log("  vs P4 (0.0 < 2.0): excluded")
 	t.Log("  vs P3 (1.5 < 2.0): excluded")
 	t.Log("  KS = 0.0")
-	ks := standings.ComputeKoyaSystem(p2, allInfo, rawScores, 2.0)
+	ks := computeKoyaSystem(p2, allInfo, rawScores, 2.0)
 	if ks != 0.0 {
 		t.Errorf("P2 KS (threshold=2.0): expected 0.0, got %f", ks)
 	}
@@ -1208,7 +1207,7 @@ func TestComputeKoyaSystem_ExplicitThreshold(t *testing.T) {
 	// Lower threshold to 1.0 — P1(3.0), P2(1.5), P3(1.5) all qualify (P4=0 still out).
 	// Same result as default threshold=1.5 for this dataset.
 	t.Log("\nP1 Koya (threshold=1.0 — same qualifying set as 1.5 here):")
-	ks = standings.ComputeKoyaSystem(p1, allInfo, rawScores, 1.0)
+	ks = computeKoyaSystem(p1, allInfo, rawScores, 1.0)
 	if ks != 2.0 {
 		t.Errorf("P1 KS (threshold=1.0): expected 2.0, got %f", ks)
 	}
@@ -1233,7 +1232,7 @@ func TestComputeKoyaSystem_ByesIgnored(t *testing.T) {
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{
 		p1: 2.0,
 		p2: 0.0,
@@ -1248,7 +1247,7 @@ func TestComputeKoyaSystem_ByesIgnored(t *testing.T) {
 	t.Log("  vs P2 (0.0 < 1.0): excluded")
 	t.Log("  vs P3 (1.0 >= 1.0): scored 1.0 → counts")
 	t.Log("  KS = 1.0")
-	ks := standings.ComputeKoyaSystem(p1, allInfo, rawScores, 0)
+	ks := computeKoyaSystem(p1, allInfo, rawScores, 0)
 	if ks != 1.0 {
 		t.Errorf("P1 KS: expected 1.0, got %f", ks)
 	}
@@ -1261,7 +1260,7 @@ func TestComputeKoyaSystem_ByesIgnored(t *testing.T) {
 	t.Log("  Round 1 bye: ignored (not a real opponent)")
 	t.Log("  vs P1 (2.0 >= 1.0): scored 0.0 → counts (0)")
 	t.Log("  KS = 0.0")
-	ks = standings.ComputeKoyaSystem(p3, allInfo, rawScores, 0)
+	ks = computeKoyaSystem(p3, allInfo, rawScores, 0)
 	if ks != 0.0 {
 		t.Errorf("P3 KS: expected 0.0, got %f", ks)
 	}
@@ -1279,10 +1278,10 @@ func TestComputeKoyaSystem_NoPlayer(t *testing.T) {
 	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1.0, p2: 0.0}
 
-	ks := standings.ComputeKoyaSystem(ghost, allInfo, rawScores, 0)
+	ks := computeKoyaSystem(ghost, allInfo, rawScores, 0)
 	if ks != 0.0 {
 		t.Errorf("Non-existent player KS: expected 0.0, got %f", ks)
 	}
@@ -1312,11 +1311,11 @@ func TestForeBuchholz_AllPlayed(t *testing.T) {
 		makePairing(2, p2, &p4, codePtr(result.Draw)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2, p2: 0.5, p3: 1, p4: 0.5}
 
-	bh := standings.ComputeBuchholz(p1, allInfo, rawScores, 0, 0)
-	fb := standings.ComputeForeBuchholz(p1, allInfo, rawScores, 0, 0)
+	bh := computeBuchholz(p1, allInfo, rawScores, 0, 0)
+	fb := computeForeBuchholz(p1, allInfo, rawScores, 0, 0)
 	if bh != fb {
 		t.Errorf("FB should equal BH when all games played: BH=%f, FB=%f", bh, fb)
 	}
@@ -1339,16 +1338,16 @@ func TestForeBuchholz_OneUnplayed(t *testing.T) {
 		makePairing(2, p1, &p3, nil), // unplayed
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	// Scores counting only round 1 (round 2 is unplayed → 0 pts each)
 	rawScores := map[string]float64{p1: 1, p2: 0, p3: 0}
 
 	// BH for P1: round 1 opponent P2 (score 0) + round 2 opponent P3 (score 0) = 0
-	bh := standings.ComputeBuchholz(p1, allInfo, rawScores, 0, 0)
+	bh := computeBuchholz(p1, allInfo, rawScores, 0, 0)
 
 	// FB simulates P1 vs P3 as a draw → simScores: P1=1.5, P3=0.5
 	// FB for P1: P2's sim score (0) + P3's sim score (0.5) = 0.5
-	fb := standings.ComputeForeBuchholz(p1, allInfo, rawScores, 0, 0)
+	fb := computeForeBuchholz(p1, allInfo, rawScores, 0, 0)
 	if fb <= bh {
 		t.Errorf("FB should exceed BH when unplayed game exists: BH=%f, FB=%f", bh, fb)
 	}
@@ -1373,11 +1372,11 @@ func TestForeBuchholz_ByeNotSimulated(t *testing.T) {
 		makePairing(2, p1, nil, codePtr(result.WhiteWins)), // full-point bye
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2, p2: 0}
 
-	bh := standings.ComputeBuchholz(p1, allInfo, rawScores, 0, 0)
-	fb := standings.ComputeForeBuchholz(p1, allInfo, rawScores, 0, 0)
+	bh := computeBuchholz(p1, allInfo, rawScores, 0, 0)
+	fb := computeForeBuchholz(p1, allInfo, rawScores, 0, 0)
 
 	// Bye is not a paired game — FB must not simulate it as a draw.
 	// Both BH and FB use the Art. 16.4 virtual opponent (own score) for the bye.
@@ -1401,18 +1400,18 @@ func TestForeBuchholz_ResultUnplayed(t *testing.T) {
 		makePairing(2, p1, &p3, codePtr(result.Unplayed)), // "*"
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1, p2: 0, p3: 0}
 
-	fbNil := standings.ComputeForeBuchholz(p1, allInfo, rawScores, 0, 0)
+	fbNil := computeForeBuchholz(p1, allInfo, rawScores, 0, 0)
 
 	// Replace nil with "*" for the same pairing and verify same FB value
 	pairings2 := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p3, nil),
 	}
-	allInfo2 := standings.BuildPlayerPairingInfo(pairings2)
-	fbStar := standings.ComputeForeBuchholz(p1, allInfo2, rawScores, 0, 0)
+	allInfo2 := buildPlayerPairingInfo(pairings2)
+	fbStar := computeForeBuchholz(p1, allInfo2, rawScores, 0, 0)
 
 	if fbNil != fbStar {
 		t.Errorf("nil and '*' result should produce same FB: nil=%f, star=%f", fbNil, fbStar)
@@ -1436,11 +1435,11 @@ func TestForeBuchholz_CutVariants(t *testing.T) {
 		makePairing(3, p1, &p4, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 3, p2: 0, p3: 1, p4: 2}
 
-	bhC1 := standings.ComputeBuchholz(p1, allInfo, rawScores, 1, 0)
-	fbC1 := standings.ComputeForeBuchholz(p1, allInfo, rawScores, 1, 0)
+	bhC1 := computeBuchholz(p1, allInfo, rawScores, 1, 0)
+	fbC1 := computeForeBuchholz(p1, allInfo, rawScores, 1, 0)
 	if bhC1 != fbC1 {
 		t.Errorf("FB-C1 should equal BH-C1 when all played: BH-C1=%f, FB-C1=%f", bhC1, fbC1)
 	}
@@ -1464,11 +1463,11 @@ func TestComputeAPPO_SingleOpponent(t *testing.T) {
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800}
 
 	// PTP(P2): faced P1(2000), scored 0 → lower bound = 2000-800 = 1200
-	appo := standings.ComputeAveragePerfectPerformanceOfOpponents(p1, allInfo, ratings)
+	appo := computeAveragePerfectPerformanceOfOpponents(p1, allInfo, ratings)
 	if appo != 1200 {
 		t.Errorf("APPO single opp: expected 1200, got %f", appo)
 	}
@@ -1494,10 +1493,10 @@ func TestComputeAPPO_RoundRobin(t *testing.T) {
 		makePairing(3, p2, &p3, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800, p3: 1600}
 
-	appo := standings.ComputeAveragePerfectPerformanceOfOpponents(p1, allInfo, ratings)
+	appo := computeAveragePerfectPerformanceOfOpponents(p1, allInfo, ratings)
 	if appo != 1400 {
 		t.Errorf("APPO round-robin: expected 1400, got %f", appo)
 	}
@@ -1520,11 +1519,11 @@ func TestComputeAPPO_CompareWithAPRO(t *testing.T) {
 		makePairing(3, p2, &p3, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800, p3: 1600}
 
-	apro := standings.ComputeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
-	appo := standings.ComputeAveragePerfectPerformanceOfOpponents(p1, allInfo, ratings)
+	apro := computeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
+	appo := computeAveragePerfectPerformanceOfOpponents(p1, allInfo, ratings)
 
 	// APRO=1450, APPO=1400 — both measure opposition quality but via different methods
 	if apro != 1450 || appo != 1400 {
@@ -1545,11 +1544,11 @@ func TestComputeAPPO_ByeExcluded(t *testing.T) {
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)), // real game
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800}
 
 	// Only P2 counts; PTP(P2) = 1200 (same as single-opponent test).
-	appo := standings.ComputeAveragePerfectPerformanceOfOpponents(p1, allInfo, ratings)
+	appo := computeAveragePerfectPerformanceOfOpponents(p1, allInfo, ratings)
 	if appo != 1200 {
 		t.Errorf("APPO with bye: expected 1200 (bye excluded), got %f", appo)
 	}
@@ -1564,10 +1563,10 @@ func TestComputeAPPO_NoGames(t *testing.T) {
 	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000}
 
-	appo := standings.ComputeAveragePerfectPerformanceOfOpponents(p1, allInfo, ratings)
+	appo := computeAveragePerfectPerformanceOfOpponents(p1, allInfo, ratings)
 	if appo != 0 {
 		t.Errorf("APPO no games: expected 0, got %f", appo)
 	}
@@ -1591,11 +1590,11 @@ func TestComputeAPRO_SingleOpponent(t *testing.T) {
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800}
 
 	// TPR(P2): faced P1(2000), scored 0 → ARO=2000, p=0 → RD=-800 → TPR=1200
-	apro := standings.ComputeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
+	apro := computeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
 	if apro != 1200 {
 		t.Errorf("APRO single opp: expected 1200, got %f", apro)
 	}
@@ -1621,10 +1620,10 @@ func TestComputeAPRO_RoundRobin(t *testing.T) {
 		makePairing(3, p2, &p3, codePtr(result.WhiteWins)), // P2 beats P3
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800, p3: 1600}
 
-	apro := standings.ComputeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
+	apro := computeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
 	if apro != 1450 {
 		t.Errorf("APRO round-robin: expected 1450, got %f", apro)
 	}
@@ -1644,11 +1643,11 @@ func TestComputeAPRO_ByeExcluded(t *testing.T) {
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)), // real game
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800}
 
 	// Only P2 counts; TPR(P2) = 1200 (same as single-opponent test).
-	apro := standings.ComputeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
+	apro := computeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
 	if apro != 1200 {
 		t.Errorf("APRO with bye: expected 1200 (bye excluded), got %f", apro)
 	}
@@ -1678,11 +1677,11 @@ func TestComputeAPRO_Rounding(t *testing.T) {
 		makePairing(4, p3, &pb, codePtr(result.Draw)),      // P3 draws Pb
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1900, p3: 1900, pa: 1600, pb: 1601}
 
 	// TPR(P2)=1609, TPR(P3)=1610 → avg=1609.5 → round up to 1610
-	apro := standings.ComputeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
+	apro := computeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
 	if apro != 1610 {
 		t.Errorf("APRO rounding: expected 1610 (1609.5 rounds up), got %f", apro)
 	}
@@ -1713,14 +1712,14 @@ func TestComputeAPRO_ForfeitInOpponentRecordExcluded(t *testing.T) {
 		makePairing(3, p3, &p2, codePtr(result.WhiteForfeit)), // P3 beats P2 by forfeit
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800, p3: 1600}
 
 	// Correct: forfeit excluded from P2 and P3's OTB records.
 	// TPR(P2) = TPR from {vs P1(2000), score=0} = 2000-800 = 1200
 	// TPR(P3) = TPR from {vs P1(2000), score=0} = 2000-800 = 1200
 	// APRO(P1) = round((1200+1200)/2) = 1200
-	apro := standings.ComputeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
+	apro := computeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
 	if apro != 1200 {
 		// If forfeit was wrongly included, TPR(P2) would be 1000 and APRO would be 1100.
 		t.Errorf("APRO forfeit exclusion: expected 1200, got %f (1100 would mean forfeit was included)", apro)
@@ -1736,10 +1735,10 @@ func TestComputeAPRO_NoGames(t *testing.T) {
 	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000}
 
-	apro := standings.ComputeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
+	apro := computeAveragePerfectPerformanceRatingOfOpponents(p1, allInfo, ratings)
 	if apro != 0 {
 		t.Errorf("APRO no games: expected 0, got %f", apro)
 	}
@@ -1765,10 +1764,10 @@ func TestComputePTP_Symmetric(t *testing.T) {
 		makePairing(2, p3, &p1, codePtr(result.WhiteWins)), // P1 loses
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800, p3: 1600}
 
-	ptp := standings.ComputePerfectTournamentPerformance(p1, allInfo, ratings)
+	ptp := computePerfectTournamentPerformance(p1, allInfo, ratings)
 	if ptp != 1700 {
 		t.Errorf("PTP symmetric: expected 1700, got %f", ptp)
 	}
@@ -1787,10 +1786,10 @@ func TestComputePTP_DrawEqualsOpponent(t *testing.T) {
 		makePairing(1, p1, &p2, codePtr(result.Draw)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800}
 
-	ptp := standings.ComputePerfectTournamentPerformance(p1, allInfo, ratings)
+	ptp := computePerfectTournamentPerformance(p1, allInfo, ratings)
 	if ptp != 1800 {
 		t.Errorf("PTP 1 draw vs 1800: expected 1800, got %f", ptp)
 	}
@@ -1813,10 +1812,10 @@ func TestComputePTP_KnownValue(t *testing.T) {
 		makePairing(3, p4, &p1, codePtr(result.WhiteWins)), // P1 loses
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800, p3: 1700, p4: 1600}
 
-	ptp := standings.ComputePerfectTournamentPerformance(p1, allInfo, ratings)
+	ptp := computePerfectTournamentPerformance(p1, allInfo, ratings)
 	if ptp != 1827 {
 		t.Errorf("PTP known value: expected 1827, got %f", ptp)
 	}
@@ -1843,11 +1842,11 @@ func TestComputePTP_GreaterThanTPRAbove50Pct(t *testing.T) {
 		makePairing(3, p4, &p1, codePtr(result.WhiteWins)), // P1 loses
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800, p3: 1700, p4: 1600}
 
-	tpr := standings.ComputeTournamentPerformanceRating(p1, allInfo, ratings)
-	ptp := standings.ComputePerfectTournamentPerformance(p1, allInfo, ratings)
+	tpr := computeTournamentPerformanceRating(p1, allInfo, ratings)
+	ptp := computePerfectTournamentPerformance(p1, allInfo, ratings)
 
 	if ptp < tpr {
 		t.Errorf("PTP should be >= TPR when score > 50%%: PTP=%f, TPR=%f", ptp, tpr)
@@ -1872,11 +1871,11 @@ func TestComputePTP_PerfectScore(t *testing.T) {
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	// max opp rating is 1800; upper bound = 1800 + 3000 = 4800
 	ratings := map[string]int{p1: 2000, p2: 1600, p3: 1800}
 
-	ptp := standings.ComputePerfectTournamentPerformance(p1, allInfo, ratings)
+	ptp := computePerfectTournamentPerformance(p1, allInfo, ratings)
 	if ptp != 4800 {
 		t.Errorf("PTP perfect score: expected 4800 (upper bound), got %f", ptp)
 	}
@@ -1897,11 +1896,11 @@ func TestComputePTP_ZeroScore(t *testing.T) {
 		makePairing(2, p1, &p3, codePtr(result.BlackWins)), // P1 loses
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	// min opp rating is 1600; lower bound = 1600 - 800 = 800
 	ratings := map[string]int{p1: 2000, p2: 1600, p3: 1800}
 
-	ptp := standings.ComputePerfectTournamentPerformance(p1, allInfo, ratings)
+	ptp := computePerfectTournamentPerformance(p1, allInfo, ratings)
 	if ptp != 800 {
 		t.Errorf("PTP zero score: expected 800 (lower bound), got %f", ptp)
 	}
@@ -1921,11 +1920,11 @@ func TestComputePTP_ByeExcluded(t *testing.T) {
 		makePairing(2, p1, &p2, codePtr(result.Draw)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800}
 
 	// Same as TestComputePTP_DrawEqualsOpponent: only the real game counts
-	ptp := standings.ComputePerfectTournamentPerformance(p1, allInfo, ratings)
+	ptp := computePerfectTournamentPerformance(p1, allInfo, ratings)
 	if ptp != 1800 {
 		t.Errorf("PTP with bye: expected 1800 (bye excluded), got %f", ptp)
 	}
@@ -1940,10 +1939,10 @@ func TestComputePTP_NoGames(t *testing.T) {
 	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000}
 
-	ptp := standings.ComputePerfectTournamentPerformance(p1, allInfo, ratings)
+	ptp := computePerfectTournamentPerformance(p1, allInfo, ratings)
 	if ptp != 0 {
 		t.Errorf("PTP no games: expected 0, got %f", ptp)
 	}
@@ -1969,11 +1968,11 @@ func TestComputeTPR_FiftyPercent(t *testing.T) {
 		makePairing(2, p3, &p1, codePtr(result.WhiteWins)), // P3 wins as white
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1600, p3: 1800}
 
 	// ARO for P1: (1600 + 1800) / 2 = 1700; p = 0.5 → RD = 0 → TPR = 1700
-	tpr := standings.ComputeTournamentPerformanceRating(p1, allInfo, ratings)
+	tpr := computeTournamentPerformanceRating(p1, allInfo, ratings)
 	if tpr != 1700 {
 		t.Errorf("TPR at 50%%: expected 1700, got %f", tpr)
 	}
@@ -1991,11 +1990,11 @@ func TestComputeTPR_PerfectScore(t *testing.T) {
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1600}
 
 	// ARO = 1600, p = 1.0 → RD = +800 (capped) → TPR = 1600 + 800 = 2400
-	tpr := standings.ComputeTournamentPerformanceRating(p1, allInfo, ratings)
+	tpr := computeTournamentPerformanceRating(p1, allInfo, ratings)
 	if tpr != 2400 {
 		t.Errorf("TPR at 100%%: expected 2400, got %f", tpr)
 	}
@@ -2013,11 +2012,11 @@ func TestComputeTPR_ZeroScore(t *testing.T) {
 		makePairing(1, p1, &p2, codePtr(result.BlackWins)), // P1 loses
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1600}
 
 	// ARO = 1600, p = 0.0 → RD = -800 (capped) → TPR = 1600 - 800 = 800
-	tpr := standings.ComputeTournamentPerformanceRating(p1, allInfo, ratings)
+	tpr := computeTournamentPerformanceRating(p1, allInfo, ratings)
 	if tpr != 800 {
 		t.Errorf("TPR at 0%%: expected 800, got %f", tpr)
 	}
@@ -2040,13 +2039,13 @@ func TestComputeTPR_KnownValue(t *testing.T) {
 		makePairing(3, p4, &p1, codePtr(result.WhiteWins)), // 0 (P1 loses)
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1800, p3: 1700, p4: 1600}
 
 	// ARO = (1800+1700+1600)/3 = 1700.0, p = 2/3
 	// RD = 400 * log10((2/3)/(1/3)) = 400 * log10(2) ≈ 120.41
 	// TPR = round(1700 + 120.41) = 1820
-	tpr := standings.ComputeTournamentPerformanceRating(p1, allInfo, ratings)
+	tpr := computeTournamentPerformanceRating(p1, allInfo, ratings)
 	if tpr != 1820 {
 		t.Errorf("TPR known value: expected 1820, got %f", tpr)
 	}
@@ -2066,11 +2065,11 @@ func TestComputeTPR_ByeExcluded(t *testing.T) {
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)), // real game
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000, p2: 1600}
 
 	// Only round 2 counts: ARO=1600, p=1.0 → TPR=1600+800=2400
-	tpr := standings.ComputeTournamentPerformanceRating(p1, allInfo, ratings)
+	tpr := computeTournamentPerformanceRating(p1, allInfo, ratings)
 	if tpr != 2400 {
 		t.Errorf("TPR with bye: expected 2400 (bye excluded), got %f", tpr)
 	}
@@ -2085,10 +2084,10 @@ func TestComputeTPR_NoGames(t *testing.T) {
 	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.WhiteWins)), // bye only
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000}
 
-	tpr := standings.ComputeTournamentPerformanceRating(p1, allInfo, ratings)
+	tpr := computeTournamentPerformanceRating(p1, allInfo, ratings)
 	if tpr != 0 {
 		t.Errorf("TPR no games: expected 0, got %f", tpr)
 	}
@@ -2106,7 +2105,7 @@ func TestComputeTPR_UnratedOpponentExcluded(t *testing.T) {
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)), // win vs rated
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)), // win vs unrated
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{
 		p1: 1600,
 		p2: 1500,
@@ -2114,7 +2113,7 @@ func TestComputeTPR_UnratedOpponentExcluded(t *testing.T) {
 	}
 
 	// Only the rated game counts: ARO=1500, score%=100% → TPR = 1500+800 = 2300
-	tpr := standings.ComputeTournamentPerformanceRating(p1, allInfo, ratings)
+	tpr := computeTournamentPerformanceRating(p1, allInfo, ratings)
 	if tpr != 2300 {
 		t.Errorf("TPR with one unrated opponent: expected 2300 (unrated game excluded), got %f", tpr)
 	}
@@ -2140,7 +2139,7 @@ func TestComputeARO_Basic(t *testing.T) {
 		makePairing(2, p2, &p3, codePtr(result.BlackWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{
 		p1: 2000,
 		p2: 1800,
@@ -2148,21 +2147,21 @@ func TestComputeARO_Basic(t *testing.T) {
 	}
 
 	// P1 faced P2 (1800) and P3 (1600) → ARO = (1800+1600)/2 = 1700
-	aro := standings.ComputeAverageRatingOfOpponents(p1, allInfo, ratings)
+	aro := computeAverageRatingOfOpponents(p1, allInfo, ratings)
 	if aro != 1700 {
 		t.Errorf("P1 ARO: expected 1700, got %f", aro)
 	}
 	t.Log("✓ P1 ARO = 1700")
 
 	// P2 faced P1 (2000) and P3 (1600) → ARO = (2000+1600)/2 = 1800
-	aro = standings.ComputeAverageRatingOfOpponents(p2, allInfo, ratings)
+	aro = computeAverageRatingOfOpponents(p2, allInfo, ratings)
 	if aro != 1800 {
 		t.Errorf("P2 ARO: expected 1800, got %f", aro)
 	}
 	t.Log("✓ P2 ARO = 1800")
 
 	// P3 faced P1 (2000) and P2 (1800) → ARO = (2000+1800)/2 = 1900
-	aro = standings.ComputeAverageRatingOfOpponents(p3, allInfo, ratings)
+	aro = computeAverageRatingOfOpponents(p3, allInfo, ratings)
 	if aro != 1900 {
 		t.Errorf("P3 ARO: expected 1900, got %f", aro)
 	}
@@ -2183,14 +2182,14 @@ func TestComputeARO_Rounding(t *testing.T) {
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{
 		p1: 2000,
 		p2: 1800,
 		p3: 1801,
 	}
 
-	aro := standings.ComputeAverageRatingOfOpponents(p1, allInfo, ratings)
+	aro := computeAverageRatingOfOpponents(p1, allInfo, ratings)
 	if aro != 1801 {
 		t.Errorf("ARO rounding: expected 1801 (0.5 rounds up), got %f", aro)
 	}
@@ -2211,14 +2210,14 @@ func TestComputeARO_ByeExcluded(t *testing.T) {
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{
 		p1: 2000,
 		p2: 1800,
 	}
 
 	// ARO should only count P2 (the bye has no opponent)
-	aro := standings.ComputeAverageRatingOfOpponents(p1, allInfo, ratings)
+	aro := computeAverageRatingOfOpponents(p1, allInfo, ratings)
 	if aro != 1800 {
 		t.Errorf("ARO with bye: expected 1800 (bye excluded), got %f", aro)
 	}
@@ -2240,7 +2239,7 @@ func TestComputeARO_ForfeitExcluded(t *testing.T) {
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),    // real game
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{
 		p1: 2000,
 		p2: 1000, // if included, would skew ARO heavily
@@ -2248,7 +2247,7 @@ func TestComputeARO_ForfeitExcluded(t *testing.T) {
 	}
 
 	// ARO should only count P3 (the forfeit vs P2 was not played over the board)
-	aro := standings.ComputeAverageRatingOfOpponents(p1, allInfo, ratings)
+	aro := computeAverageRatingOfOpponents(p1, allInfo, ratings)
 	if aro != 1800 {
 		t.Errorf("ARO with forfeit: expected 1800 (forfeit excluded), got %f", aro)
 	}
@@ -2266,10 +2265,10 @@ func TestComputeARO_AllByes(t *testing.T) {
 		makePairing(2, p1, nil, codePtr(result.WhiteHalf)), // half-point bye
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{p1: 2000}
 
-	aro := standings.ComputeAverageRatingOfOpponents(p1, allInfo, ratings)
+	aro := computeAverageRatingOfOpponents(p1, allInfo, ratings)
 	if aro != 0 {
 		t.Errorf("ARO all byes: expected 0, got %f", aro)
 	}
@@ -2281,10 +2280,10 @@ func TestComputeARO_UnknownPlayer(t *testing.T) {
 	t.Log("=== Testing ARO: unknown player returns 0 ===")
 
 	ghost := newID()
-	allInfo := standings.BuildPlayerPairingInfo([]*round.Game[string]{})
+	allInfo := buildPlayerPairingInfo([]*round.Game[string]{})
 	ratings := map[string]int{}
 
-	aro := standings.ComputeAverageRatingOfOpponents(ghost, allInfo, ratings)
+	aro := computeAverageRatingOfOpponents(ghost, allInfo, ratings)
 	if aro != 0 {
 		t.Errorf("ARO unknown player: expected 0, got %f", aro)
 	}
@@ -2303,14 +2302,14 @@ func TestComputeARO_UnratedOpponentExcluded(t *testing.T) {
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{
 		p1: 1600,
 		p2: 1500,
 		// p3 is absent (unrated) — zero-value map lookup
 	}
 
-	aro := standings.ComputeAverageRatingOfOpponents(p1, allInfo, ratings)
+	aro := computeAverageRatingOfOpponents(p1, allInfo, ratings)
 	if aro != 1500 {
 		t.Errorf("ARO with one unrated opponent: expected 1500 (unrated excluded), got %f", aro)
 	}
@@ -2328,10 +2327,10 @@ func TestComputeNumberOfWins_AllWins(t *testing.T) {
 		makePairing(2, p1, &p3, codePtr(result.WhiteWins)),
 		makePairing(3, p1, &p4, codePtr(result.WhiteWins)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 3, p2: 0, p3: 0, p4: 0}
 
-	got := standings.ComputeNumberOfWins(p1, allInfo, rawScores)
+	got := computeNumberOfWins(p1, allInfo, rawScores)
 	if got != 3 {
 		t.Errorf("AllWins: expected 3, got %f", got)
 	}
@@ -2342,16 +2341,16 @@ func TestComputeNumberOfWins_AllWins(t *testing.T) {
 func TestComputeNumberOfWins_Mixed(t *testing.T) {
 	p1, p2, p3 := newID(), newID(), newID()
 	pairings := []*round.Game[string]{
-		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),  // win → counts
-		makePairing(2, p1, &p3, codePtr(result.Draw)),        // draw → no
-		makePairing(3, p1, &p2, codePtr(result.BlackWins)),   // loss → no
-		makePairing(4, p1, nil, codePtr(result.WhiteWins)),   // full-point bye → counts
-		makePairing(5, p1, nil, codePtr(result.WhiteHalf)),   // half-point bye → no
+		makePairing(1, p1, &p2, codePtr(result.WhiteWins)), // win → counts
+		makePairing(2, p1, &p3, codePtr(result.Draw)),      // draw → no
+		makePairing(3, p1, &p2, codePtr(result.BlackWins)), // loss → no
+		makePairing(4, p1, nil, codePtr(result.WhiteWins)), // full-point bye → counts
+		makePairing(5, p1, nil, codePtr(result.WhiteHalf)), // half-point bye → no
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2.5, p2: 1.5, p3: 0.5}
 
-	got := standings.ComputeNumberOfWins(p1, allInfo, rawScores)
+	got := computeNumberOfWins(p1, allInfo, rawScores)
 	if got != 2 {
 		t.Errorf("Mixed: expected 2, got %f", got)
 	}
@@ -2365,10 +2364,10 @@ func TestComputeNumberOfWins_ForfeitWin(t *testing.T) {
 		// p2 forfeited; white (p1) wins by forfeit
 		makePairing(1, p1, &p2, codePtr(result.WhiteForfeit)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1, p2: 0}
 
-	got := standings.ComputeNumberOfWins(p1, allInfo, rawScores)
+	got := computeNumberOfWins(p1, allInfo, rawScores)
 	if got != 1 {
 		t.Errorf("ForfeitWin: expected 1, got %f", got)
 	}
@@ -2381,10 +2380,10 @@ func TestComputeNumberOfWins_ZeroPointBye(t *testing.T) {
 	pairings := []*round.Game[string]{
 		makePairing(1, p1, nil, codePtr(result.ZeroPointBye)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 0}
 
-	got := standings.ComputeNumberOfWins(p1, allInfo, rawScores)
+	got := computeNumberOfWins(p1, allInfo, rawScores)
 	if got != 0 {
 		t.Errorf("ZeroPointBye: expected 0, got %f", got)
 	}
@@ -2393,11 +2392,11 @@ func TestComputeNumberOfWins_ZeroPointBye(t *testing.T) {
 
 // TestComputeNumberOfWins_NonExistentPlayer — returns 0 for unknown player.
 func TestComputeNumberOfWins_NonExistentPlayer(t *testing.T) {
-	allInfo := standings.BuildPlayerPairingInfo[string](nil)
+	allInfo := buildPlayerPairingInfo[string](nil)
 	rawScores := map[string]float64{}
 	ghost := newID()
 
-	got := standings.ComputeNumberOfWins(ghost, allInfo, rawScores)
+	got := computeNumberOfWins(ghost, allInfo, rawScores)
 	if got != 0 {
 		t.Errorf("NonExistent: expected 0, got %f", got)
 	}
@@ -2408,16 +2407,16 @@ func TestComputeNumberOfWins_NonExistentPlayer(t *testing.T) {
 func TestComputeNumberOfGamesWon_OTBOnly(t *testing.T) {
 	p1, p2, p3, p4 := newID(), newID(), newID(), newID()
 	pairings := []*round.Game[string]{
-		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),  // OTB win as white → counts
-		makePairing(2, p3, &p1, codePtr(result.BlackWins)),  // OTB win as black → counts
-		makePairing(3, p1, &p4, codePtr(result.Draw)),       // draw → no
-		makePairing(4, p1, &p2, codePtr(result.BlackWins)),  // loss as white → no
-		makePairing(5, p1, nil, codePtr(result.WhiteWins)),  // full-point bye → no
+		makePairing(1, p1, &p2, codePtr(result.WhiteWins)), // OTB win as white → counts
+		makePairing(2, p3, &p1, codePtr(result.BlackWins)), // OTB win as black → counts
+		makePairing(3, p1, &p4, codePtr(result.Draw)),      // draw → no
+		makePairing(4, p1, &p2, codePtr(result.BlackWins)), // loss as white → no
+		makePairing(5, p1, nil, codePtr(result.WhiteWins)), // full-point bye → no
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2.5, p2: 1, p3: 0, p4: 0.5}
 
-	got := standings.ComputeNumberOfGamesWon(p1, allInfo, rawScores)
+	got := computeNumberOfGamesWon(p1, allInfo, rawScores)
 	if got != 2 {
 		t.Errorf("OTBOnly: expected 2, got %f", got)
 	}
@@ -2431,10 +2430,10 @@ func TestComputeNumberOfGamesWon_ForfeitWinExcluded(t *testing.T) {
 		// p2 didn't show; p1 wins by forfeit
 		makePairing(1, p1, &p2, codePtr(result.WhiteForfeit)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1, p2: 0}
 
-	got := standings.ComputeNumberOfGamesWon(p1, allInfo, rawScores)
+	got := computeNumberOfGamesWon(p1, allInfo, rawScores)
 	if got != 0 {
 		t.Errorf("ForfeitWin: expected 0, got %f", got)
 	}
@@ -2443,10 +2442,10 @@ func TestComputeNumberOfGamesWon_ForfeitWinExcluded(t *testing.T) {
 
 // TestComputeNumberOfGamesWon_NonExistentPlayer — returns 0 for unknown player.
 func TestComputeNumberOfGamesWon_NonExistentPlayer(t *testing.T) {
-	allInfo := standings.BuildPlayerPairingInfo[string](nil)
+	allInfo := buildPlayerPairingInfo[string](nil)
 	rawScores := map[string]float64{}
 
-	got := standings.ComputeNumberOfGamesWon(newID(), allInfo, rawScores)
+	got := computeNumberOfGamesWon(newID(), allInfo, rawScores)
 	if got != 0 {
 		t.Errorf("NonExistent: expected 0, got %f", got)
 	}
@@ -2457,16 +2456,16 @@ func TestComputeNumberOfGamesWon_NonExistentPlayer(t *testing.T) {
 func TestComputeNumberOfPlayedGamesBlack_CountsBlackGames(t *testing.T) {
 	p1, p2, p3 := newID(), newID(), newID()
 	pairings := []*round.Game[string]{
-		makePairing(1, p2, &p1, codePtr(result.BlackWins)),  // p1 is Black, win → counts
-		makePairing(2, p3, &p1, codePtr(result.WhiteWins)),  // p1 is Black, loss → counts
-		makePairing(3, p3, &p1, codePtr(result.Draw)),       // p1 is Black, draw → counts
-		makePairing(4, p1, &p2, codePtr(result.WhiteWins)),  // p1 is White → no
-		makePairing(5, p1, nil, codePtr(result.WhiteWins)),  // bye → no
+		makePairing(1, p2, &p1, codePtr(result.BlackWins)), // p1 is Black, win → counts
+		makePairing(2, p3, &p1, codePtr(result.WhiteWins)), // p1 is Black, loss → counts
+		makePairing(3, p3, &p1, codePtr(result.Draw)),      // p1 is Black, draw → counts
+		makePairing(4, p1, &p2, codePtr(result.WhiteWins)), // p1 is White → no
+		makePairing(5, p1, nil, codePtr(result.WhiteWins)), // bye → no
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2, p2: 1.5, p3: 1.5}
 
-	got := standings.ComputeNumberOfPlayedGamesBlack(p1, allInfo, rawScores)
+	got := computeNumberOfPlayedGamesBlack(p1, allInfo, rawScores)
 	if got != 3 {
 		t.Errorf("CountsBlackGames: expected 3, got %f", got)
 	}
@@ -2482,10 +2481,10 @@ func TestComputeNumberOfPlayedGamesBlack_ForfeitCounts(t *testing.T) {
 		// p1 is Black, p1 forfeited → result is ResultWhiteForfeit
 		makePairing(2, p2, &p1, codePtr(result.WhiteForfeit)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1, p2: 1}
 
-	got := standings.ComputeNumberOfPlayedGamesBlack(p1, allInfo, rawScores)
+	got := computeNumberOfPlayedGamesBlack(p1, allInfo, rawScores)
 	if got != 2 {
 		t.Errorf("ForfeitCounts: expected 2, got %f", got)
 	}
@@ -2496,15 +2495,15 @@ func TestComputeNumberOfPlayedGamesBlack_ForfeitCounts(t *testing.T) {
 func TestComputeNumberOfPlayedGamesBlack_UnplayedExcluded(t *testing.T) {
 	p1, p2 := newID(), newID()
 	pairings := []*round.Game[string]{
-		makePairing(1, p2, &p1, nil),                               // nil result → no
-		makePairing(2, p2, &p1, codePtr(result.Unplayed)),    // "*" → no
-		makePairing(3, p2, &p1, codePtr(result.Void)),        // "void" → no
-		makePairing(4, p2, &p1, codePtr(result.Draw)),        // played → counts
+		makePairing(1, p2, &p1, nil),                      // nil result → no
+		makePairing(2, p2, &p1, codePtr(result.Unplayed)), // "*" → no
+		makePairing(3, p2, &p1, codePtr(result.Void)),     // "void" → no
+		makePairing(4, p2, &p1, codePtr(result.Draw)),     // played → counts
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 0.5, p2: 0.5}
 
-	got := standings.ComputeNumberOfPlayedGamesBlack(p1, allInfo, rawScores)
+	got := computeNumberOfPlayedGamesBlack(p1, allInfo, rawScores)
 	if got != 1 {
 		t.Errorf("UnplayedExcluded: expected 1, got %f", got)
 	}
@@ -2513,10 +2512,10 @@ func TestComputeNumberOfPlayedGamesBlack_UnplayedExcluded(t *testing.T) {
 
 // TestComputeNumberOfPlayedGamesBlack_NonExistentPlayer — returns 0 for unknown player.
 func TestComputeNumberOfPlayedGamesBlack_NonExistentPlayer(t *testing.T) {
-	allInfo := standings.BuildPlayerPairingInfo[string](nil)
+	allInfo := buildPlayerPairingInfo[string](nil)
 	rawScores := map[string]float64{}
 
-	got := standings.ComputeNumberOfPlayedGamesBlack(newID(), allInfo, rawScores)
+	got := computeNumberOfPlayedGamesBlack(newID(), allInfo, rawScores)
 	if got != 0 {
 		t.Errorf("NonExistent: expected 0, got %f", got)
 	}
@@ -2527,15 +2526,15 @@ func TestComputeNumberOfPlayedGamesBlack_NonExistentPlayer(t *testing.T) {
 func TestComputeNumberOfGamesWonBlack_OTBOnly(t *testing.T) {
 	p1, p2, p3 := newID(), newID(), newID()
 	pairings := []*round.Game[string]{
-		makePairing(1, p2, &p1, codePtr(result.BlackWins)),   // OTB win as Black → counts
-		makePairing(2, p3, &p1, codePtr(result.Draw)),        // draw as Black → no
-		makePairing(3, p2, &p1, codePtr(result.WhiteWins)),   // loss as Black → no
-		makePairing(4, p1, &p2, codePtr(result.WhiteWins)),   // win as White → no
+		makePairing(1, p2, &p1, codePtr(result.BlackWins)), // OTB win as Black → counts
+		makePairing(2, p3, &p1, codePtr(result.Draw)),      // draw as Black → no
+		makePairing(3, p2, &p1, codePtr(result.WhiteWins)), // loss as Black → no
+		makePairing(4, p1, &p2, codePtr(result.WhiteWins)), // win as White → no
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1.5, p2: 1.5, p3: 0.5}
 
-	got := standings.ComputeNumberOfGamesWonBlack(p1, allInfo, rawScores)
+	got := computeNumberOfGamesWonBlack(p1, allInfo, rawScores)
 	if got != 1 {
 		t.Errorf("OTBOnly: expected 1, got %f", got)
 	}
@@ -2549,10 +2548,10 @@ func TestComputeNumberOfGamesWonBlack_ForfeitWinExcluded(t *testing.T) {
 		// p2 (White) forfeited; p1 (Black) wins by forfeit → ResultBlackForfeit
 		makePairing(1, p2, &p1, codePtr(result.BlackForfeit)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1, p2: 0}
 
-	got := standings.ComputeNumberOfGamesWonBlack(p1, allInfo, rawScores)
+	got := computeNumberOfGamesWonBlack(p1, allInfo, rawScores)
 	if got != 0 {
 		t.Errorf("ForfeitWin: expected 0, got %f", got)
 	}
@@ -2566,10 +2565,10 @@ func TestComputeNumberOfGamesWonBlack_WhiteWinIgnored(t *testing.T) {
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2, p2: 0}
 
-	got := standings.ComputeNumberOfGamesWonBlack(p1, allInfo, rawScores)
+	got := computeNumberOfGamesWonBlack(p1, allInfo, rawScores)
 	if got != 0 {
 		t.Errorf("WhiteWinIgnored: expected 0, got %f", got)
 	}
@@ -2578,10 +2577,10 @@ func TestComputeNumberOfGamesWonBlack_WhiteWinIgnored(t *testing.T) {
 
 // TestComputeNumberOfGamesWonBlack_NonExistentPlayer — returns 0 for unknown player.
 func TestComputeNumberOfGamesWonBlack_NonExistentPlayer(t *testing.T) {
-	allInfo := standings.BuildPlayerPairingInfo[string](nil)
+	allInfo := buildPlayerPairingInfo[string](nil)
 	rawScores := map[string]float64{}
 
-	got := standings.ComputeNumberOfGamesWonBlack(newID(), allInfo, rawScores)
+	got := computeNumberOfGamesWonBlack(newID(), allInfo, rawScores)
 	if got != 0 {
 		t.Errorf("NonExistent: expected 0, got %f", got)
 	}
@@ -2605,11 +2604,11 @@ func TestComputeSumOfProgressiveScores_EarlyWinsScoreHigher(t *testing.T) {
 		makePairing(3, p4, &p1, codePtr(result.WhiteWins)),
 		makePairing(3, p3, &p2, codePtr(result.WhiteWins)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1, p2: 1, p3: 3, p4: 1}
 
-	ps1 := standings.ComputeSumOfProgressiveScores(p1, allInfo, rawScores)
-	ps2 := standings.ComputeSumOfProgressiveScores(p2, allInfo, rawScores)
+	ps1 := computeSumOfProgressiveScores(p1, allInfo, rawScores)
+	ps2 := computeSumOfProgressiveScores(p2, allInfo, rawScores)
 
 	// p1: rounds 1(+1), 2(0), 3(0) → running 1,1,1 → PS = 3
 	// p2: rounds 1(0), 2(+1), 3(0) → running 0,1,1 → PS = 2
@@ -2634,10 +2633,10 @@ func TestComputeSumOfProgressiveScores_WithDraw(t *testing.T) {
 		makePairing(2, p1, &p3, codePtr(result.Draw)),
 		makePairing(3, p1, &p2, codePtr(result.BlackWins)), // loss
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1.5, p2: 1, p3: 0.5}
 
-	got := standings.ComputeSumOfProgressiveScores(p1, allInfo, rawScores)
+	got := computeSumOfProgressiveScores(p1, allInfo, rawScores)
 	if got != 4.0 {
 		t.Errorf("WithDraw: expected 4.0, got %f", got)
 	}
@@ -2652,10 +2651,10 @@ func TestComputeSumOfProgressiveScores_HalfPointBye(t *testing.T) {
 		makePairing(1, p1, nil, codePtr(result.WhiteHalf)),
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1.5, p2: 0}
 
-	got := standings.ComputeSumOfProgressiveScores(p1, allInfo, rawScores)
+	got := computeSumOfProgressiveScores(p1, allInfo, rawScores)
 	if got != 2.0 {
 		t.Errorf("HalfPointBye: expected 2.0, got %f", got)
 	}
@@ -2664,10 +2663,10 @@ func TestComputeSumOfProgressiveScores_HalfPointBye(t *testing.T) {
 
 // TestComputeSumOfProgressiveScores_NonExistentPlayer — returns 0 for unknown player.
 func TestComputeSumOfProgressiveScores_NonExistentPlayer(t *testing.T) {
-	allInfo := standings.BuildPlayerPairingInfo[string](nil)
+	allInfo := buildPlayerPairingInfo[string](nil)
 	rawScores := map[string]float64{}
 
-	got := standings.ComputeSumOfProgressiveScores(newID(), allInfo, rawScores)
+	got := computeSumOfProgressiveScores(newID(), allInfo, rawScores)
 	if got != 0 {
 		t.Errorf("NonExistent: expected 0, got %f", got)
 	}
@@ -2682,10 +2681,10 @@ func TestComputeGamesOneElectedToPlay_AllRealGames(t *testing.T) {
 		makePairing(2, p1, &p3, codePtr(result.Draw)),
 		makePairing(3, p2, &p1, codePtr(result.BlackWins)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2, p2: 0, p3: 0.5}
 
-	got := standings.ComputeGamesOneElectedToPlay(p1, allInfo, rawScores)
+	got := computeGamesOneElectedToPlay(p1, allInfo, rawScores)
 	if got != 3 {
 		t.Errorf("AllRealGames: expected 3, got %f", got)
 	}
@@ -2697,13 +2696,13 @@ func TestComputeGamesOneElectedToPlay_HalfPointByeDeducted(t *testing.T) {
 	p1, p2 := newID(), newID()
 	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
-		makePairing(2, p1, nil, codePtr(result.WhiteHalf)),  // half-point bye → deducted
+		makePairing(2, p1, nil, codePtr(result.WhiteHalf)), // half-point bye → deducted
 		makePairing(3, p1, &p2, codePtr(result.Draw)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2, p2: 0.5}
 
-	got := standings.ComputeGamesOneElectedToPlay(p1, allInfo, rawScores)
+	got := computeGamesOneElectedToPlay(p1, allInfo, rawScores)
 	if got != 2 {
 		t.Errorf("HalfPointBye: expected 2, got %f", got)
 	}
@@ -2718,10 +2717,10 @@ func TestComputeGamesOneElectedToPlay_ZeroPointByeDeducted(t *testing.T) {
 		makePairing(2, p1, nil, codePtr(result.ZeroPointBye)), // withdrawal → deducted
 		makePairing(3, p1, &p2, codePtr(result.Draw)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1.5, p2: 0.5}
 
-	got := standings.ComputeGamesOneElectedToPlay(p1, allInfo, rawScores)
+	got := computeGamesOneElectedToPlay(p1, allInfo, rawScores)
 	if got != 2 {
 		t.Errorf("ZeroPointBye: expected 2, got %f", got)
 	}
@@ -2738,10 +2737,10 @@ func TestComputeGamesOneElectedToPlay_ForfeitLossDeducted(t *testing.T) {
 		// p1 is Black and forfeits: white wins "+/-"
 		makePairing(3, p2, &p1, codePtr(result.WhiteForfeit)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1, p2: 2}
 
-	got := standings.ComputeGamesOneElectedToPlay(p1, allInfo, rawScores)
+	got := computeGamesOneElectedToPlay(p1, allInfo, rawScores)
 	if got != 1 {
 		t.Errorf("ForfeitLoss: expected 1, got %f", got)
 	}
@@ -2756,10 +2755,10 @@ func TestComputeGamesOneElectedToPlay_FullPointByeNotDeducted(t *testing.T) {
 		makePairing(2, p1, nil, codePtr(result.WhiteWins)), // full-point bye → NOT deducted
 		makePairing(3, p1, &p2, codePtr(result.Draw)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2.5, p2: 0.5}
 
-	got := standings.ComputeGamesOneElectedToPlay(p1, allInfo, rawScores)
+	got := computeGamesOneElectedToPlay(p1, allInfo, rawScores)
 	if got != 3 {
 		t.Errorf("FullPointBye: expected 3, got %f", got)
 	}
@@ -2774,10 +2773,10 @@ func TestComputeGamesOneElectedToPlay_ForfeitWinNotDeducted(t *testing.T) {
 		makePairing(1, p1, &p2, codePtr(result.WhiteForfeit)),
 		makePairing(2, p1, &p2, codePtr(result.Draw)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1.5, p2: 0.5}
 
-	got := standings.ComputeGamesOneElectedToPlay(p1, allInfo, rawScores)
+	got := computeGamesOneElectedToPlay(p1, allInfo, rawScores)
 	if got != 2 {
 		t.Errorf("ForfeitWin: expected 2, got %f", got)
 	}
@@ -2786,10 +2785,10 @@ func TestComputeGamesOneElectedToPlay_ForfeitWinNotDeducted(t *testing.T) {
 
 // TestComputeGamesOneElectedToPlay_NonExistentPlayer — returns 0 for unknown player.
 func TestComputeGamesOneElectedToPlay_NonExistentPlayer(t *testing.T) {
-	allInfo := standings.BuildPlayerPairingInfo[string](nil)
+	allInfo := buildPlayerPairingInfo[string](nil)
 	rawScores := map[string]float64{}
 
-	got := standings.ComputeGamesOneElectedToPlay(newID(), allInfo, rawScores)
+	got := computeGamesOneElectedToPlay(newID(), allInfo, rawScores)
 	if got != 0 {
 		t.Errorf("NonExistent: expected 0, got %f", got)
 	}
@@ -2810,11 +2809,11 @@ func TestComputeSumOfProgressiveScores_AllWins(t *testing.T) {
 		makePairing(3, p2, &p5, codePtr(result.Draw)),
 		makePairing(4, p2, &p3, codePtr(result.Draw)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 4, p2: 1, p3: 1, p4: 1, p5: 1}
 
 	// running after each round: 1, 2, 3, 4 → PS = 10
-	got := standings.ComputeSumOfProgressiveScores(p1, allInfo, rawScores)
+	got := computeSumOfProgressiveScores(p1, allInfo, rawScores)
 	if got != 10 {
 		t.Errorf("AllWins: expected 10, got %f", got)
 	}
@@ -2836,10 +2835,10 @@ func TestComputeSumOfProgressiveScores_AbsentRound(t *testing.T) {
 		// give p2 and p3 a round-2 pairing so maxRound reaches 3
 		makePairing(2, p2, &p3, codePtr(result.Draw)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2, p2: 0.5, p3: 0.5}
 
-	got := standings.ComputeSumOfProgressiveScores(p1, allInfo, rawScores)
+	got := computeSumOfProgressiveScores(p1, allInfo, rawScores)
 	if got != 4 {
 		t.Errorf("AbsentRound: expected 4, got %f", got)
 	}
@@ -2852,10 +2851,10 @@ func TestComputeSumOfProgressiveScores_SingleRound(t *testing.T) {
 	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.Draw)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 0.5, p2: 0.5}
 
-	got := standings.ComputeSumOfProgressiveScores(p1, allInfo, rawScores)
+	got := computeSumOfProgressiveScores(p1, allInfo, rawScores)
 	if got != 0.5 {
 		t.Errorf("SingleRound: expected 0.5, got %f", got)
 	}
@@ -2873,10 +2872,10 @@ func TestComputeGamesOneElectedToPlay_MixedDeductions(t *testing.T) {
 		makePairing(4, p1, &p2, codePtr(result.BlackForfeit)), // p1 forfeited as white → deducted
 		makePairing(5, p1, &p2, codePtr(result.Draw)),         // real draw → no deduction
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2, p2: 1}
 
-	got := standings.ComputeGamesOneElectedToPlay(p1, allInfo, rawScores)
+	got := computeGamesOneElectedToPlay(p1, allInfo, rawScores)
 	if got != 2 {
 		t.Errorf("MixedDeductions: expected 2, got %f", got)
 	}
@@ -2915,10 +2914,10 @@ func TestComputeAOB_Basic(t *testing.T) {
 		makePairing(3, p2, &p3, codePtr(result.WhiteWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2, p2: 1, p3: 0}
 
-	got := standings.ComputeAverageOpponentBuchholz(p1, allInfo, rawScores, 0, 0)
+	got := computeAverageOpponentBuchholz(p1, allInfo, rawScores, 0, 0)
 	if got != 3 {
 		t.Errorf("AOB basic: expected 3, got %f", got)
 	}
@@ -2936,18 +2935,18 @@ func TestComputeAOB_ByeExcluded(t *testing.T) {
 	// R2: P1 beats P2
 	// R3: (P2 has a bye)
 	pairings := []*round.Game[string]{
-		makePairing(1, p1, nil, codePtr(result.WhiteWins)),  // bye
+		makePairing(1, p1, nil, codePtr(result.WhiteWins)), // bye
 		makePairing(2, p1, &p2, codePtr(result.WhiteWins)),
-		makePairing(3, p2, nil, codePtr(result.WhiteWins)),  // P2 bye
+		makePairing(3, p2, nil, codePtr(result.WhiteWins)), // P2 bye
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2, p2: 2}
 
 	// P1's only OTB opponent is P2. BH(P2) = own score for bye + p1's score.
 	// Virtual opponent for P2's bye = P2's raw score = 2. Plus P1's score = 2. BH(P2) = 4.
 	// AOB(P1) = round(4 / 1) = 4
-	got := standings.ComputeAverageOpponentBuchholz(p1, allInfo, rawScores, 0, 0)
+	got := computeAverageOpponentBuchholz(p1, allInfo, rawScores, 0, 0)
 	if got != 4 {
 		t.Errorf("AOB bye excluded: expected 4, got %f", got)
 	}
@@ -2969,13 +2968,13 @@ func TestComputeAOB_ForfeitExcluded(t *testing.T) {
 		makePairing(3, p2, &p3, codePtr(result.Draw)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 2, p2: 0.5, p3: 0.5}
 
 	// P1's OTB opponents: only P3 (P2 was a forfeit).
 	// BH(P3) = P1's score + P2's score = 2 + 0.5 = 2.5
 	// AOB(P1) = round(2.5 / 1) = 3  (0.5 rounds up)
-	got := standings.ComputeAverageOpponentBuchholz(p1, allInfo, rawScores, 0, 0)
+	got := computeAverageOpponentBuchholz(p1, allInfo, rawScores, 0, 0)
 	if got != 3 {
 		t.Errorf("AOB forfeit excluded: expected 3, got %f", got)
 	}
@@ -2992,10 +2991,10 @@ func TestComputeAOB_NoGames(t *testing.T) {
 		makePairing(2, p1, nil, codePtr(result.WhiteHalf)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rawScores := map[string]float64{p1: 1.5}
 
-	got := standings.ComputeAverageOpponentBuchholz(p1, allInfo, rawScores, 0, 0)
+	got := computeAverageOpponentBuchholz(p1, allInfo, rawScores, 0, 0)
 	if got != 0 {
 		t.Errorf("AOB no games: expected 0, got %f", got)
 	}
@@ -3007,10 +3006,10 @@ func TestComputeAOB_UnknownPlayer(t *testing.T) {
 	t.Log("=== Testing AOB: unknown player returns 0 ===")
 
 	ghost := newID()
-	allInfo := standings.BuildPlayerPairingInfo([]*round.Game[string]{})
+	allInfo := buildPlayerPairingInfo([]*round.Game[string]{})
 	rawScores := map[string]float64{}
 
-	got := standings.ComputeAverageOpponentBuchholz(ghost, allInfo, rawScores, 0, 0)
+	got := computeAverageOpponentBuchholz(ghost, allInfo, rawScores, 0, 0)
 	if got != 0 {
 		t.Errorf("AOB unknown player: expected 0, got %f", got)
 	}
@@ -3031,11 +3030,11 @@ func TestComputeAOB_WithdrawalAdjustment(t *testing.T) {
 	// R3: P2 has a bye
 	pairings := []*round.Game[string]{
 		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
-		makePairing(1, p1, &p3, codePtr(result.WhiteWins)), // duplicate round ok for test
+		makePairing(1, p1, &p3, codePtr(result.WhiteWins)),    // duplicate round ok for test
 		makePairing(2, p3, nil, codePtr(result.ZeroPointBye)), // withdrawal
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	// P1=2, P2=0, P3=0 (withdrew)
 	rawScores := map[string]float64{p1: 2, p2: 0, p3: 0}
 
@@ -3046,7 +3045,7 @@ func TestComputeAOB_WithdrawalAdjustment(t *testing.T) {
 	// BH(P2) uses virtual opponent for P2's rounds not played; P2 only played R1.
 	//   P2's only pairing is vs P1. BH(P2) = adj(P1) = 2.
 	// AOB(P1) = round((BH(P2) + BH(P3)) / 2) = round((2 + 2) / 2) = 2
-	got := standings.ComputeAverageOpponentBuchholz(p1, allInfo, rawScores, 0, 0)
+	got := computeAverageOpponentBuchholz(p1, allInfo, rawScores, 0, 0)
 	if got != 2 {
 		t.Errorf("AOB withdrawal: expected 2, got %f", got)
 	}
@@ -3054,7 +3053,7 @@ func TestComputeAOB_WithdrawalAdjustment(t *testing.T) {
 }
 
 // ===============================
-// ComputeRatingChange
+// computeRatingChange
 // ===============================
 
 // TestComputeRatingChange_WinVsEqualRating verifies the basic case:
@@ -3066,10 +3065,10 @@ func TestComputeRatingChange_WinVsEqualRating(t *testing.T) {
 	pairings := []*round.Game[string]{
 		makePairing(1, player, &opp, codePtr(result.WhiteWins)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{player: 1500, opp: 1500}
 
-	got := standings.ComputeRatingChange(player, allInfo, ratings, 1500, 20)
+	got := computeRatingChange(player, allInfo, ratings, 1500, 20)
 
 	// We = 0.5, W = 1.0 → ΔR = 20 × 0.5 = 10.0
 	if got != 10.0 {
@@ -3086,10 +3085,10 @@ func TestComputeRatingChange_DrawVsEqualRating(t *testing.T) {
 	pairings := []*round.Game[string]{
 		makePairing(1, player, &opp, codePtr(result.Draw)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{player: 1500, opp: 1500}
 
-	got := standings.ComputeRatingChange(player, allInfo, ratings, 1500, 20)
+	got := computeRatingChange(player, allInfo, ratings, 1500, 20)
 
 	// We = 0.5, W = 0.5 → ΔR = 0
 	if got != 0.0 {
@@ -3106,10 +3105,10 @@ func TestComputeRatingChange_LossVsEqualRating(t *testing.T) {
 	pairings := []*round.Game[string]{
 		makePairing(1, opp, &player, codePtr(result.WhiteWins)), // player is black, loses
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{player: 1500, opp: 1500}
 
-	got := standings.ComputeRatingChange(player, allInfo, ratings, 1500, 20)
+	got := computeRatingChange(player, allInfo, ratings, 1500, 20)
 
 	// We = 0.5, W = 0.0 → ΔR = 20 × (-0.5) = -10.0
 	if got != -10.0 {
@@ -3126,10 +3125,10 @@ func TestComputeRatingChange_WinVsStrongerOpponent(t *testing.T) {
 	pairings := []*round.Game[string]{
 		makePairing(1, player, &opp, codePtr(result.WhiteWins)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{player: 1200, opp: 1600}
 
-	got := standings.ComputeRatingChange(player, allInfo, ratings, 1200, 20)
+	got := computeRatingChange(player, allInfo, ratings, 1200, 20)
 
 	// We = 1/(1+10^1) ≈ 0.0909, W = 1.0 → ΔR ≈ 18.2
 	if got != 18.2 {
@@ -3146,10 +3145,10 @@ func TestComputeRatingChange_LossVsWeakerOpponent(t *testing.T) {
 	pairings := []*round.Game[string]{
 		makePairing(1, opp, &player, codePtr(result.WhiteWins)), // player is black, loses
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{player: 1600, opp: 1200}
 
-	got := standings.ComputeRatingChange(player, allInfo, ratings, 1600, 20)
+	got := computeRatingChange(player, allInfo, ratings, 1600, 20)
 
 	// We = 10/11 ≈ 0.909, W = 0.0 → ΔR ≈ -18.2
 	if got != -18.2 {
@@ -3167,10 +3166,10 @@ func TestComputeRatingChange_MultipleGames(t *testing.T) {
 		makePairing(1, player, &opp1, codePtr(result.WhiteWins)), // win
 		makePairing(2, opp2, &player, codePtr(result.Draw)),      // draw as black
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{player: 1500, opp1: 1500, opp2: 1500}
 
-	got := standings.ComputeRatingChange(player, allInfo, ratings, 1500, 20)
+	got := computeRatingChange(player, allInfo, ratings, 1500, 20)
 
 	// Game 1: We=0.5, W=1.0; Game 2: We=0.5, W=0.5 → ΔR = 20×(1.5-1.0) = 10.0
 	if got != 10.0 {
@@ -3188,10 +3187,10 @@ func TestComputeRatingChange_ByeDoesNotCount(t *testing.T) {
 		makePairing(1, player, &opp, codePtr(result.WhiteWins)), // OTB win
 		makePairing(2, player, nil, codePtr(result.WhiteWins)),  // full-point bye
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{player: 1500, opp: 1500}
 
-	got := standings.ComputeRatingChange(player, allInfo, ratings, 1500, 20)
+	got := computeRatingChange(player, allInfo, ratings, 1500, 20)
 
 	// Only the OTB game counts: We=0.5, W=1.0 → ΔR = 10.0 (not 5.0 which would come from 2 games)
 	if got != 10.0 {
@@ -3204,10 +3203,10 @@ func TestComputeRatingChange_ByeDoesNotCount(t *testing.T) {
 func TestComputeRatingChange_NoGames(t *testing.T) {
 	player := newID()
 
-	allInfo := standings.BuildPlayerPairingInfo([]*round.Game[string]{})
+	allInfo := buildPlayerPairingInfo([]*round.Game[string]{})
 	ratings := map[string]int{player: 1500}
 
-	got := standings.ComputeRatingChange(player, allInfo, ratings, 1500, 40)
+	got := computeRatingChange(player, allInfo, ratings, 1500, 40)
 
 	if got != 0.0 {
 		t.Errorf("expected 0.0 for player with no games, got %g", got)
@@ -3223,11 +3222,11 @@ func TestComputeRatingChange_KFactorScalesResult(t *testing.T) {
 	pairings := []*round.Game[string]{
 		makePairing(1, player, &opp, codePtr(result.WhiteWins)),
 	}
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	ratings := map[string]int{player: 1500, opp: 1500}
 
-	deltaK10 := standings.ComputeRatingChange(player, allInfo, ratings, 1500, 10)
-	deltaK40 := standings.ComputeRatingChange(player, allInfo, ratings, 1500, 40)
+	deltaK10 := computeRatingChange(player, allInfo, ratings, 1500, 10)
+	deltaK40 := computeRatingChange(player, allInfo, ratings, 1500, 40)
 
 	// K=10 → 5.0; K=40 → 20.0; ratio must be 1:4
 	ratio := deltaK40 / deltaK10
@@ -3235,4 +3234,3 @@ func TestComputeRatingChange_KFactorScalesResult(t *testing.T) {
 		t.Errorf("K40/K10 ratio: expected 4.0, got %g", ratio)
 	}
 }
-

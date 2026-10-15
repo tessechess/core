@@ -1,11 +1,10 @@
-package standings_test
+package standings
 
 import (
 	"testing"
 
 	"github.com/ValkoM28/tournamentessentials/core/result"
 	"github.com/ValkoM28/tournamentessentials/core/round"
-	"github.com/ValkoM28/tournamentessentials/core/standings"
 )
 
 // intPtr is a helper to create an *int.
@@ -35,7 +34,7 @@ func TestBuildRoundResults_Basic(t *testing.T) {
 		makePairing(3, p2, &p3, codePtr(result.Draw)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 
 	// Rankings: P1=1, P2=2, P3=3, P4=4
 	rankMap := map[string]int{
@@ -46,7 +45,7 @@ func TestBuildRoundResults_Basic(t *testing.T) {
 
 	// --- P1: 3 wins, all as white ---
 	t.Log("\nP1 round results (3 wins as white):")
-	results := standings.BuildRoundResults(p1, allInfo[p1], rankMap, totalRounds)
+	results := buildRoundResults(p1, allInfo[p1], rankMap, totalRounds)
 	if len(results) != totalRounds {
 		t.Fatalf("P1: expected %d round results, got %d", totalRounds, len(results))
 	}
@@ -60,7 +59,7 @@ func TestBuildRoundResults_Basic(t *testing.T) {
 
 	// --- P2: 1 win, 1 loss, 1 draw ---
 	t.Log("\nP2 round results:")
-	results = standings.BuildRoundResults(p2, allInfo[p2], rankMap, totalRounds)
+	results = buildRoundResults(p2, allInfo[p2], rankMap, totalRounds)
 	if len(results) != totalRounds {
 		t.Fatalf("P2: expected %d round results, got %d", totalRounds, len(results))
 	}
@@ -74,7 +73,7 @@ func TestBuildRoundResults_Basic(t *testing.T) {
 
 	// --- P4: 3 losses, all as black ---
 	t.Log("\nP4 round results (3 losses as black):")
-	results = standings.BuildRoundResults(p4, allInfo[p4], rankMap, totalRounds)
+	results = buildRoundResults(p4, allInfo[p4], rankMap, totalRounds)
 	if len(results) != totalRounds {
 		t.Fatalf("P4: expected %d round results, got %d", totalRounds, len(results))
 	}
@@ -107,13 +106,13 @@ func TestBuildRoundResults_Bye(t *testing.T) {
 		makePairing(2, p2, nil, codePtr(result.WhiteHalf)), // half-point bye
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rankMap := map[string]int{p1: 1, p2: 2, p3: 3}
 	totalRounds := 2
 
 	// P3 Round 1: bye with 1.0 point
 	t.Log("\nP3 round 1 should be a bye:")
-	results := standings.BuildRoundResults(p3, allInfo[p3], rankMap, totalRounds)
+	results := buildRoundResults(p3, allInfo[p3], rankMap, totalRounds)
 	if len(results) != totalRounds {
 		t.Fatalf("P3: expected %d results, got %d", totalRounds, len(results))
 	}
@@ -139,7 +138,7 @@ func TestBuildRoundResults_Bye(t *testing.T) {
 
 	// P2 Round 2: half-point bye
 	t.Log("\nP2 round 2 should be a half-point bye:")
-	results = standings.BuildRoundResults(p2, allInfo[p2], rankMap, totalRounds)
+	results = buildRoundResults(p2, allInfo[p2], rankMap, totalRounds)
 	r2 := results[1]
 	if !r2.IsBye {
 		t.Error("P2 R2: expected is_bye=true")
@@ -171,13 +170,13 @@ func TestBuildRoundResults_Forfeit(t *testing.T) {
 		makePairing(2, p2, &p4, codePtr(result.BlackForfeit)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rankMap := map[string]int{p1: 1, p2: 2, p3: 3, p4: 4}
 	totalRounds := 2
 
 	// P1 Round 2: white forfeit win (+/-)
 	t.Log("\nP1 round 2 should be a forfeit win:")
-	results := standings.BuildRoundResults(p1, allInfo[p1], rankMap, totalRounds)
+	results := buildRoundResults(p1, allInfo[p1], rankMap, totalRounds)
 	r2 := results[1]
 	if !r2.IsForfeit {
 		t.Error("P1 R2: expected is_forfeit=true for +/-")
@@ -192,7 +191,7 @@ func TestBuildRoundResults_Forfeit(t *testing.T) {
 
 	// P3 Round 2: lost by forfeit (opponent got +/-)
 	t.Log("\nP3 round 2 should be a forfeit loss:")
-	results = standings.BuildRoundResults(p3, allInfo[p3], rankMap, totalRounds)
+	results = buildRoundResults(p3, allInfo[p3], rankMap, totalRounds)
 	r2 = results[1]
 	if !r2.IsForfeit {
 		t.Error("P3 R2: expected is_forfeit=true for +/-")
@@ -204,7 +203,7 @@ func TestBuildRoundResults_Forfeit(t *testing.T) {
 
 	// P4 Round 2: black forfeit win (-/+)
 	t.Log("\nP4 round 2 should be a forfeit win as black:")
-	results = standings.BuildRoundResults(p4, allInfo[p4], rankMap, totalRounds)
+	results = buildRoundResults(p4, allInfo[p4], rankMap, totalRounds)
 	r2 = results[1]
 	if !r2.IsForfeit {
 		t.Error("P4 R2: expected is_forfeit=true for -/+")
@@ -219,7 +218,7 @@ func TestBuildRoundResults_Forfeit(t *testing.T) {
 
 	// P2 Round 2: lost by forfeit (opponent got -/+)
 	t.Log("\nP2 round 2 should be a forfeit loss:")
-	results = standings.BuildRoundResults(p2, allInfo[p2], rankMap, totalRounds)
+	results = buildRoundResults(p2, allInfo[p2], rankMap, totalRounds)
 	r2 = results[1]
 	if !r2.IsForfeit {
 		t.Error("P2 R2: expected is_forfeit=true for -/+")
@@ -246,11 +245,11 @@ func TestBuildRoundResults_PartialRounds(t *testing.T) {
 		makePairing(2, p2, &p1, codePtr(result.Draw)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rankMap := map[string]int{p1: 1, p2: 2}
 	totalRounds := 2 // only 2 rounds included
 
-	results := standings.BuildRoundResults(p1, allInfo[p1], rankMap, totalRounds)
+	results := buildRoundResults(p1, allInfo[p1], rankMap, totalRounds)
 	if len(results) != 2 {
 		t.Fatalf("expected 2 round results, got %d", len(results))
 	}
@@ -280,11 +279,11 @@ func TestBuildRoundResults_NoPairingInRound(t *testing.T) {
 		makePairing(3, p3, &p2, codePtr(result.BlackWins)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rankMap := map[string]int{p1: 1, p2: 2, p3: 3}
 	totalRounds := 3
 
-	results := standings.BuildRoundResults(p3, allInfo[p3], rankMap, totalRounds)
+	results := buildRoundResults(p3, allInfo[p3], rankMap, totalRounds)
 	if len(results) != totalRounds {
 		t.Fatalf("expected %d round results (no gaps), got %d", totalRounds, len(results))
 	}
@@ -338,7 +337,7 @@ func TestBuildRoundResults_NilInfo(t *testing.T) {
 	rankMap := map[string]int{p1: 1}
 	totalRounds := 3
 
-	results := standings.BuildRoundResults(p1, nil, rankMap, totalRounds)
+	results := buildRoundResults(p1, nil, rankMap, totalRounds)
 	if len(results) != totalRounds {
 		t.Fatalf("expected %d round results, got %d", totalRounds, len(results))
 	}
@@ -370,16 +369,16 @@ func TestBuildRoundResults_DrawResult(t *testing.T) {
 		makePairing(1, p1, &p2, codePtr(result.Draw)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rankMap := map[string]int{p1: 1, p2: 2}
 
 	// White side
-	results := standings.BuildRoundResults(p1, allInfo[p1], rankMap, 1)
+	results := buildRoundResults(p1, allInfo[p1], rankMap, 1)
 	assertRoundResult(t, results[0], 1, intPtr(2), "w", 0.5, false, false, true)
 	t.Log("  ✓ White draw: 0.5 points")
 
 	// Black side
-	results = standings.BuildRoundResults(p2, allInfo[p2], rankMap, 1)
+	results = buildRoundResults(p2, allInfo[p2], rankMap, 1)
 	assertRoundResult(t, results[0], 1, intPtr(1), "b", 0.5, false, false, true)
 	t.Log("  ✓ Black draw: 0.5 points")
 
@@ -396,10 +395,10 @@ func TestBuildRoundResults_ZeroPointBye(t *testing.T) {
 		makePairing(1, p1, nil, codePtr(result.ZeroPointBye)),
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rankMap := map[string]int{p1: 1}
 
-	results := standings.BuildRoundResults(p1, allInfo[p1], rankMap, 1)
+	results := buildRoundResults(p1, allInfo[p1], rankMap, 1)
 	r := results[0]
 
 	if !r.IsBye {
@@ -430,10 +429,10 @@ func TestBuildRoundResults_UnplayedResult(t *testing.T) {
 		makePairing(1, p1, &p2, nil), // paired but no result yet
 	}
 
-	allInfo := standings.BuildPlayerPairingInfo(pairings)
+	allInfo := buildPlayerPairingInfo(pairings)
 	rankMap := map[string]int{p1: 1, p2: 2}
 
-	results := standings.BuildRoundResults(p1, allInfo[p1], rankMap, 1)
+	results := buildRoundResults(p1, allInfo[p1], rankMap, 1)
 	r := results[0]
 
 	if !r.Played {
@@ -454,7 +453,7 @@ func TestBuildRoundResults_UnplayedResult(t *testing.T) {
 }
 
 // assertRoundResult is a helper to validate a RoundResult.
-func assertRoundResult(t *testing.T, r standings.RoundResult, round int, oppRk *int, color string, points float64, isForfeit, isBye, played bool) {
+func assertRoundResult(t *testing.T, r RoundResult, round int, oppRk *int, color string, points float64, isForfeit, isBye, played bool) {
 	t.Helper()
 
 	if r.Round != round {

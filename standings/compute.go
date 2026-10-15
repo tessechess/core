@@ -94,7 +94,7 @@ func Crosstable[ID comparable](in Input[ID]) (int, []CrosstableRow[ID]) {
 		rows[i] = CrosstableRow[ID]{
 			Rank:   st.Rank,
 			Score:  st.Score,
-			Rounds: BuildRoundResults(id, allInfo[id], rankMap, totalRounds),
+			Rounds: buildRoundResults(id, allInfo[id], rankMap, totalRounds),
 		}
 	}
 	return totalRounds, rows
@@ -108,7 +108,7 @@ func scoresWithInfo[ID comparable](in Input[ID]) ([]*PlayerScore[ID], map[ID]*pl
 		games[i] = &in.Games[i]
 	}
 	rawScores := buildRawScores(games)
-	allInfo := BuildPlayerPairingInfo(games)
+	allInfo := buildPlayerPairingInfo(games)
 
 	var scores []*PlayerScore[ID]
 	for playerID, points := range rawScores {
@@ -117,11 +117,11 @@ func scoresWithInfo[ID comparable](in Input[ID]) ([]*PlayerScore[ID], map[ID]*pl
 			// direct_encounter and unknown keys stay 0 here.
 			tb[cfg.MapKey()], _ = computeTiebreak(cfg, playerID, allInfo, rawScores, in.Ratings)
 		}
-		rp := ComputeTournamentPerformanceRating(playerID, allInfo, in.Ratings)
+		rp := computeTournamentPerformanceRating(playerID, allInfo, in.Ratings)
 		ri := &RatingInfo{PerformanceRating: rp}
 		if k := in.KFactors[playerID]; k != nil {
 			if r := in.Ratings[playerID]; r > 0 {
-				delta := ComputeRatingChange(playerID, allInfo, in.Ratings, r, *k)
+				delta := computeRatingChange(playerID, allInfo, in.Ratings, r, *k)
 				ri.RatingChange = &delta
 			}
 		}
@@ -179,8 +179,8 @@ func sortAndRank[ID comparable](scores []*PlayerScore[ID], tiebreakCfgs []Tiebre
 	return standings
 }
 
-// BuildRoundResults produces a RoundResult for each round 1..totalRounds for a player.
-func BuildRoundResults[ID comparable](playerID ID, info *playerPairingInfo[ID], rankMap map[ID]int, totalRounds int) []RoundResult {
+// buildRoundResults produces a RoundResult for each round 1..totalRounds for a player.
+func buildRoundResults[ID comparable](playerID ID, info *playerPairingInfo[ID], rankMap map[ID]int, totalRounds int) []RoundResult {
 	// Index pairings by round number for quick lookup.
 	byRound := make(map[int]*round.Game[ID])
 	if info != nil {
@@ -257,7 +257,7 @@ func computeDEByPointsGroup[ID comparable](scores []*PlayerScore[ID], allInfo ma
 			}
 			continue
 		}
-		for id, deScore := range ComputeDirectEncounter(group, allInfo) {
+		for id, deScore := range computeDirectEncounter(group, allInfo) {
 			de[id] = deScore
 		}
 	}
@@ -268,7 +268,7 @@ func computeDEByPointsGroup[ID comparable](scores []*PlayerScore[ID], allInfo ma
 // one is present, or ("", false) if it is absent.
 func findDE(cfgs []TiebreakConfig) (string, bool) {
 	for _, cfg := range cfgs {
-		if cfg.Key == "direct_encounter" {
+		if cfg.Key == DirectEncounter {
 			return cfg.MapKey(), true
 		}
 	}

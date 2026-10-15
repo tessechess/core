@@ -33,7 +33,7 @@ type playerPairingInfo[ID comparable] struct {
 //   - Threshold: minimum opponent score for inclusion (keys where
 //     SupportsThreshold is true).
 type TiebreakConfig struct {
-	Key        string
+	Key        TiebreakKey
 	CutLowest  int
 	CutHighest int
 	Threshold  float64
@@ -44,10 +44,10 @@ type TiebreakConfig struct {
 // so that BH and BH-C1 can coexist in the same tiebreak list without collision.
 func (c TiebreakConfig) MapKey() string {
 	if !SupportsCut(c.Key) {
-		return c.Key
+		return string(c.Key)
 	}
 	if c.CutLowest == 0 && c.CutHighest == 0 {
-		return c.Key
+		return string(c.Key)
 	}
 	if c.CutHighest == 0 {
 		return fmt.Sprintf("%s_cut%d", c.Key, c.CutLowest)

@@ -24,7 +24,7 @@ import (
 //
 // Implementation note: These need special handling in GetStandings() sorting logic.
 
-// ComputeDirectEncounter computes the Direct Encounter (DE) tiebreak for a group
+// computeDirectEncounter computes the Direct Encounter (DE) tiebreak for a group
 // of tied players. Returns each player's score in games against the other players
 // in the tied group.
 //
@@ -35,7 +35,7 @@ import (
 //
 // FIDE Article 6.1.2: If two participants met more than once, the addend is the
 // average score of those games, not the sum.
-func ComputeDirectEncounter[ID comparable](
+func computeDirectEncounter[ID comparable](
 	tiedPlayerIDs []ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 ) map[ID]float64 {
@@ -119,7 +119,7 @@ func ComputeDirectEncounter[ID comparable](
 //   - Progressive Scores (PS): cumulative score sum
 //   - Games one Elected to Play (GE): rounds minus byes/forfeits
 
-// ComputeGamesOneElectedToPlay computes the Games Elected to Play (GE) tiebreak.
+// computeGamesOneElectedToPlay computes the Games Elected to Play (GE) tiebreak.
 //
 // FIDE Article 7.6: The number of rounds reduced by the number of half-point-byes,
 // zero-point-byes or forfeit losses that a participant had in the tournament.
@@ -132,7 +132,7 @@ func ComputeDirectEncounter[ID comparable](
 //
 // NOT deducted: full-point byes (player elected to receive the point) and
 // forfeit wins (opponent didn't show; the player themselves was present).
-func ComputeGamesOneElectedToPlay[ID comparable](
+func computeGamesOneElectedToPlay[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	rawScores map[ID]float64,
@@ -166,13 +166,13 @@ func ComputeGamesOneElectedToPlay[ID comparable](
 	return float64(maxRoundNumber(allInfo) - deductions)
 }
 
-// ComputeNumberOfPlayedGamesBlack computes the Number of Games Played with Black
+// computeNumberOfPlayedGamesBlack computes the Number of Games Played with Black
 // (BPG) tiebreak for playerID.
 //
 // FIDE Article 7.3: The number of games played over the board with the black pieces.
 // A game counts when the player appears as Black (non-nil Black equal to
 // playerID) and a result has been recorded (not nil, not unplayed, not void).
-func ComputeNumberOfPlayedGamesBlack[ID comparable](
+func computeNumberOfPlayedGamesBlack[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	rawScores map[ID]float64,
@@ -198,12 +198,12 @@ func ComputeNumberOfPlayedGamesBlack[ID comparable](
 	return bpg
 }
 
-// ComputeNumberOfGamesWon computes the Number of Games Won (WON) tiebreak.
+// computeNumberOfGamesWon computes the Number of Games Won (WON) tiebreak.
 //
 // FIDE Article 7.2: The number of games won over the board.
 // Only ResultWhiteWins / ResultBlackWins against a real opponent count —
 // forfeit wins and full-point byes are excluded.
-func ComputeNumberOfGamesWon[ID comparable](
+func computeNumberOfGamesWon[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	rawScores map[ID]float64,
@@ -227,12 +227,12 @@ func ComputeNumberOfGamesWon[ID comparable](
 	return won
 }
 
-// ComputeNumberOfGamesWonBlack computes the Number of Games Won with Black
+// computeNumberOfGamesWonBlack computes the Number of Games Won with Black
 // (BWG) tiebreak for playerID.
 //
 // FIDE Article 7.4: The number of games won over the board with the black pieces.
 // Only ResultBlackWins counts — forfeit wins as Black are excluded.
-func ComputeNumberOfGamesWonBlack[ID comparable](
+func computeNumberOfGamesWonBlack[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	rawScores map[ID]float64,
@@ -253,12 +253,12 @@ func ComputeNumberOfGamesWonBlack[ID comparable](
 	return bwg
 }
 
-// ComputeNumberOfWins computes the Number of Wins (WIN) tiebreak for playerID.
+// computeNumberOfWins computes the Number of Wins (WIN) tiebreak for playerID.
 //
 // FIDE Article 7.1: The number of rounds where a participant obtains, with or
 // without playing, as many points as awarded for a win (i.e. exactly 1.0).
 // This includes over-the-board wins, forfeit wins, and full-point byes.
-func ComputeNumberOfWins[ID comparable](
+func computeNumberOfWins[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	rawScores map[ID]float64,
@@ -276,7 +276,7 @@ func ComputeNumberOfWins[ID comparable](
 	return wins
 }
 
-// ComputeSumOfProgressiveScores computes the (Sum of) Progressive Scores (PS)
+// computeSumOfProgressiveScores computes the (Sum of) Progressive Scores (PS)
 // tiebreak for playerID.
 //
 // FIDE Article 7.5: After each round a participant has a certain tournament score.
@@ -284,7 +284,7 @@ func ComputeNumberOfWins[ID comparable](
 //
 // A player who scores points early accumulates a higher PS than one who scores
 // the same total later in the tournament.
-func ComputeSumOfProgressiveScores[ID comparable](
+func computeSumOfProgressiveScores[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	rawScores map[ID]float64,
@@ -330,7 +330,7 @@ func ComputeSumOfProgressiveScores[ID comparable](
 //
 // Note: Sonneborn-Berger (SB) is classified as Type BC (combined B+C)
 
-// ComputeBuchholz computes the Buchholz tiebreak for playerID.
+// computeBuchholz computes the Buchholz tiebreak for playerID.
 //
 //	cutLowest  = number of lowest opponent scores to discard
 //	cutHighest = number of highest opponent scores to discard
@@ -342,7 +342,7 @@ func ComputeSumOfProgressiveScores[ID comparable](
 //	BH-Median (median-1): cutLowest=1, cutHighest=1
 //
 // Returns 0 if there are not enough rounds to apply the requested cuts.
-func ComputeBuchholz[ID comparable](
+func computeBuchholz[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	rawScores map[ID]float64,
@@ -369,7 +369,7 @@ func ComputeBuchholz[ID comparable](
 	return total
 }
 
-// ComputeKoyaSystem computes the Koya System (KS) tiebreak for playerID.
+// computeKoyaSystem computes the Koya System (KS) tiebreak for playerID.
 //
 // FIDE Article 9.2: The number of points achieved against all participants
 // who have scored at least 50% of the maximum possible tournament score.
@@ -381,7 +381,7 @@ func ComputeBuchholz[ID comparable](
 // The threshold can be raised or lowered in half-point steps per FIDE Article
 // 14.5 (Limit modifier). Only games played over the board (non-nil opponent)
 // are considered.
-func ComputeKoyaSystem[ID comparable](
+func computeKoyaSystem[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	rawScores map[ID]float64,
@@ -416,7 +416,7 @@ func ComputeKoyaSystem[ID comparable](
 	return total
 }
 
-// ComputeAverageOpponentBuchholz computes the Average Opponent Buchholz (AOB)
+// computeAverageOpponentBuchholz computes the Average Opponent Buchholz (AOB)
 // tiebreak for playerID.
 //
 // AOB = average of each over-the-board opponent's own Buchholz score,
@@ -426,7 +426,7 @@ func ComputeKoyaSystem[ID comparable](
 // so AOB, AOB-C1, AOB-Median, etc. are all expressible.
 //
 // Returns 0 if the player has no over-the-board opponents.
-func ComputeAverageOpponentBuchholz[ID comparable](
+func computeAverageOpponentBuchholz[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	rawScores map[ID]float64,
@@ -444,20 +444,20 @@ func ComputeAverageOpponentBuchholz[ID comparable](
 
 	var sum float64
 	for _, oppID := range opponents {
-		sum += ComputeBuchholz(oppID, allInfo, rawScores, cutLowest, cutHighest)
+		sum += computeBuchholz(oppID, allInfo, rawScores, cutLowest, cutHighest)
 	}
 
 	return math.Round(sum / float64(len(opponents)))
 }
 
-// ComputeSonnebornBerger computes the Sonneborn-Berger tiebreak for playerID.
+// computeSonnebornBerger computes the Sonneborn-Berger tiebreak for playerID.
 //
 // Note: This is classified as Type BC (combined B+C) in FIDE regulations,
 // but placed here with Type C tiebreaks for code organization since it
 // primarily depends on opponents' scores.
 //
 // SB = sum of (opponent's score × points scored against them)
-func ComputeSonnebornBerger[ID comparable](
+func computeSonnebornBerger[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	rawScores map[ID]float64,
@@ -513,7 +513,7 @@ func ComputeSonnebornBerger[ID comparable](
 //   - Avg Performance Rating of Opponents (APRO) Type DC  Article 10.4
 //   - Avg Perfect Performance of Opponents (APPO)Type DC  Article 10.5
 
-// ComputeAverageRatingOfOpponents computes the ARO tiebreak for playerID.
+// computeAverageRatingOfOpponents computes the ARO tiebreak for playerID.
 //
 // FIDE Article 10.1: The average of the ratings of the opponents played over
 // the board, rounded to the nearest whole number (0.5 rounded up).
@@ -522,7 +522,7 @@ func ComputeSonnebornBerger[ID comparable](
 // and the game reached a played result (not a forfeit, void, or unplayed).
 //
 // Returns 0 if the player has no qualifying games.
-func ComputeAverageRatingOfOpponents[ID comparable](
+func computeAverageRatingOfOpponents[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	ratings map[ID]int,
@@ -584,7 +584,7 @@ func expectedScore(playerRating, opponentRating float64) float64 {
 	return 1.0 / (1.0 + math.Pow(10, (opponentRating-playerRating)/400))
 }
 
-// ComputeForeBuchholz computes the Fore Buchholz (FB) tiebreak for playerID.
+// computeForeBuchholz computes the Fore Buchholz (FB) tiebreak for playerID.
 //
 // FIDE Article 8.3: Buchholz score calculated as if all paired games for the
 // final round had ended in draws.
@@ -597,8 +597,8 @@ func expectedScore(playerRating, opponentRating float64) float64 {
 // Byes in the final round are NOT simulated as draws; they are handled by the
 // normal Article 16 virtual-opponent logic inside buchholzOpponentScores.
 //
-// cutLowest and cutHighest follow the same convention as ComputeBuchholz.
-func ComputeForeBuchholz[ID comparable](
+// cutLowest and cutHighest follow the same convention as computeBuchholz.
+func computeForeBuchholz[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	rawScores map[ID]float64,
@@ -665,7 +665,7 @@ func ComputeForeBuchholz[ID comparable](
 	return total
 }
 
-// ComputeTournamentPerformanceRating computes the TPR tiebreak for playerID.
+// computeTournamentPerformanceRating computes the TPR tiebreak for playerID.
 //
 // FIDE Article 10.2: Calculated by adding to ARO a rating difference (RD)
 // resulting from the conversion of the fractional score (points scored in
@@ -680,7 +680,7 @@ func ComputeForeBuchholz[ID comparable](
 //	TPR     = math.Round(ARO_raw + RD)
 //
 // Returns 0 if the player has no qualifying over-the-board games.
-func ComputeTournamentPerformanceRating[ID comparable](
+func computeTournamentPerformanceRating[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	ratings map[ID]int,
@@ -722,10 +722,10 @@ func ComputeTournamentPerformanceRating[ID comparable](
 	return math.Round(aroRaw + fractionalScoreToRD(frac))
 }
 
-// ComputeRatingChange returns the FIDE rating change for a player: K × (W − We).
+// computeRatingChange returns the FIDE rating change for a player: K × (W − We).
 // playerRating is the player's pre-tournament rating; kFactor is their FIDE coefficient.
 // Only over-the-board games are counted (byes and forfeits are excluded).
-func ComputeRatingChange[ID comparable](
+func computeRatingChange[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	ratings map[ID]int,
@@ -756,7 +756,7 @@ func ComputeRatingChange[ID comparable](
 	return math.Round(float64(kFactor)*(w-we)*10) / 10
 }
 
-// ComputePerfectTournamentPerformance computes the PTP tiebreak for playerID.
+// computePerfectTournamentPerformance computes the PTP tiebreak for playerID.
 //
 // FIDE Article 10.3: The lowest integer rating R such that the player's
 // expected score against all over-the-board opponents (using the Elo formula)
@@ -770,7 +770,7 @@ func ComputeRatingChange[ID comparable](
 //	hi = max(opponent ratings) + 3000  (guarantees expected ≈ n for any score)
 //
 // Returns 0 if the player has no qualifying over-the-board games.
-func ComputePerfectTournamentPerformance[ID comparable](
+func computePerfectTournamentPerformance[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	ratings map[ID]int,
@@ -834,14 +834,14 @@ func ComputePerfectTournamentPerformance[ID comparable](
 	return float64(lo)
 }
 
-// ComputeAveragePerfectPerformanceRatingOfOpponents computes the APRO tiebreak
+// computeAveragePerfectPerformanceRatingOfOpponents computes the APRO tiebreak
 // for playerID.
 //
 // FIDE Article 10.4: The average of the performances (TPR) of the opponents
 // played over the board, rounded to the nearest whole number (0.5 rounded up).
 //
 // Returns 0 if the player has no qualifying over-the-board games.
-func ComputeAveragePerfectPerformanceRatingOfOpponents[ID comparable](
+func computeAveragePerfectPerformanceRatingOfOpponents[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	ratings map[ID]int,
@@ -858,13 +858,13 @@ func ComputeAveragePerfectPerformanceRatingOfOpponents[ID comparable](
 
 	var sum float64
 	for _, oppID := range opponents {
-		sum += ComputeTournamentPerformanceRating(oppID, allInfo, ratings)
+		sum += computeTournamentPerformanceRating(oppID, allInfo, ratings)
 	}
 
 	return math.Round(sum / float64(len(opponents)))
 }
 
-// ComputeAveragePerfectPerformanceOfOpponents computes the APPO tiebreak for
+// computeAveragePerfectPerformanceOfOpponents computes the APPO tiebreak for
 // playerID.
 //
 // FIDE Article 10.5: The average of the perfect performances (PTP) of the
@@ -872,7 +872,7 @@ func ComputeAveragePerfectPerformanceRatingOfOpponents[ID comparable](
 // (0.5 rounded up).
 //
 // Returns 0 if the player has no qualifying over-the-board games.
-func ComputeAveragePerfectPerformanceOfOpponents[ID comparable](
+func computeAveragePerfectPerformanceOfOpponents[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
 	ratings map[ID]int,
@@ -889,7 +889,7 @@ func ComputeAveragePerfectPerformanceOfOpponents[ID comparable](
 
 	var sum float64
 	for _, oppID := range opponents {
-		sum += ComputePerfectTournamentPerformance(oppID, allInfo, ratings)
+		sum += computePerfectTournamentPerformance(oppID, allInfo, ratings)
 	}
 
 	return math.Round(sum / float64(len(opponents)))
@@ -918,9 +918,9 @@ func computeMatchPoints() { panic("not implemented") } // unexported until the i
 // Helper functions
 // ============================================================================
 
-// BuildPlayerPairingInfo groups pairings by player and computes lastRealRound.
+// buildPlayerPairingInfo groups pairings by player and computes lastRealRound.
 // A "real" game is any pairing where Black is non-nil.
-func BuildPlayerPairingInfo[ID comparable](pairings []*round.Game[ID]) map[ID]*playerPairingInfo[ID] {
+func buildPlayerPairingInfo[ID comparable](pairings []*round.Game[ID]) map[ID]*playerPairingInfo[ID] {
 	allInfo := make(map[ID]*playerPairingInfo[ID])
 
 	ensure := func(id ID) *playerPairingInfo[ID] {

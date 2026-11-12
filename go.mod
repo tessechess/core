@@ -1,3 +1,3 @@
-module github.com/ValkoM28/tournamentessentials/core
+module github.com/tessechess/core
 
 go 1.25.0

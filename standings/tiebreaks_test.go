@@ -6,8 +6,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/ValkoM28/tournamentessentials/core/result"
-	"github.com/ValkoM28/tournamentessentials/core/round"
+	"github.com/tessechess/core/result"
+	"github.com/tessechess/core/round"
 )
 
 // idSeq backs newID, which gives each test player a unique 8-character ID.

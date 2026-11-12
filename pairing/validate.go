@@ -3,7 +3,7 @@ package pairing
 import (
 	"fmt"
 
-	"github.com/ValkoM28/tournamentessentials/core/round"
+	"github.com/tessechess/core/round"
 )
 
 // Validate checks the settings on their own: allowed values, fixed boards,

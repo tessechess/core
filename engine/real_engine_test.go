@@ -9,10 +9,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ValkoM28/tournamentessentials/core/engine"
-	"github.com/ValkoM28/tournamentessentials/core/result"
-	"github.com/ValkoM28/tournamentessentials/core/round"
-	"github.com/ValkoM28/tournamentessentials/core/trf"
+	"github.com/tessechess/core/engine"
+	"github.com/tessechess/core/result"
+	"github.com/tessechess/core/round"
+	"github.com/tessechess/core/trf"
 )
 
 // These tests run the real pairing programs. They are skipped unless the paths

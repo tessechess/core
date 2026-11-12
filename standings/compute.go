@@ -3,16 +3,21 @@ package standings
 import (
 	"sort"
 
-	"github.com/ValkoM28/tournamentessentials/core/result"
-	"github.com/ValkoM28/tournamentessentials/core/round"
+	"github.com/tessechess/core/result"
+	"github.com/tessechess/core/round"
 )
 
-// Input is everything needed to compute standings for one section.
+// Input is everything needed to compute standings for one section: the games of
+// the completed rounds, the players' ratings and K-factors, and the tiebreaks
+// to apply.
+//
+// Only players that appear in at least one game are ranked; a player with no
+// game yet is not in the result.
 type Input[ID comparable] struct {
 	Games     []round.Game[ID] // games of the completed rounds
 	Ratings   map[ID]int       // rating per player; 0 or missing = unrated
 	KFactors  map[ID]*int      // K-factor per player; nil or missing = no rating change
-	Tiebreaks []TiebreakConfig
+	Tiebreaks []TiebreakConfig // tiebreaks in order of significance; empty = ranking by points only
 }
 
 // RatingInfo holds rating-change and performance-rating data for a player.
@@ -30,35 +35,35 @@ type RatingInfo struct {
 
 // PlayerScore is one player's points, tiebreak values and rating info.
 type PlayerScore[ID comparable] struct {
-	ID         ID
-	Points     float64
+	ID         ID                 // the player's ID, as in Input.Games
+	Points     float64            // points from all games, byes and forfeits included
 	Tiebreaks  map[string]float64 // keyed by TiebreakConfig.MapKey()
-	RatingInfo *RatingInfo
+	RatingInfo *RatingInfo        // never nil
 }
 
 // Standing is a ranked PlayerScore.
 type Standing[ID comparable] struct {
-	Rank  int
-	Score *PlayerScore[ID]
+	Rank  int              // 1 = first place; consecutive, see Rank
+	Score *PlayerScore[ID] // the player's points and tiebreaks
 }
 
 // RoundResult is one player's game in one round, for a crosstable.
 type RoundResult struct {
-	Round        int
+	Round        int          // round number, 1-based
 	OpponentRank *int         // nil for bye or unplayed
 	Color        string       // "w" or "b"; empty for bye/unplayed
 	Result       *result.Code // nil if the player had no pairing this round
-	Points       float64
-	IsForfeit    bool
-	IsBye        bool // paired, but no opponent
-	Played       bool // false if the player had no pairing this round
+	Points       float64      // points the player scored in the game
+	IsForfeit    bool         // the game was a forfeit (either side)
+	IsBye        bool         // paired, but no opponent
+	Played       bool         // false if the player had no pairing this round
 }
 
 // CrosstableRow is one ranked player with their per-round results.
 type CrosstableRow[ID comparable] struct {
-	Rank   int
-	Score  *PlayerScore[ID]
-	Rounds []RoundResult // one per round, ordered by round number
+	Rank   int              // the player's rank, as in Standing
+	Score  *PlayerScore[ID] // the player's points and tiebreaks
+	Rounds []RoundResult    // one per round, ordered by round number
 }
 
 // CrosstableResult is a ranking crosstable: one row per player and the number
@@ -71,22 +76,27 @@ type CrosstableResult[ID comparable] struct {
 	Rows []CrosstableRow[ID]
 }
 
-// Scores returns every player's points, tiebreaks and rating info, in no
-// particular order. Direct Encounter is left at 0 here; Rank fills it in.
+// Scores returns the points, tiebreaks and rating info of every player that
+// appears in a game, in no particular order. Direct Encounter is left at 0
+// here (it needs the group of tied players); Rank fills it in.
 func Scores[ID comparable](in Input[ID]) []*PlayerScore[ID] {
 	scores, _ := scoresWithInfo(in)
 	return scores
 }
 
 // Rank returns the standings: scores with Direct Encounter filled in, sorted by
-// points and then by the configured tiebreaks, in order.
+// points and then by the configured tiebreaks, in order, highest first. Ranks
+// are consecutive (1, 2, 3, ...): players that are equal on points and every
+// tiebreak are not given a shared rank, and their relative order is not
+// specified. Only players that appear in a game are included.
 func Rank[ID comparable](in Input[ID]) []*Standing[ID] {
 	standings, _ := rankWithInfo(in)
 	return standings
 }
 
 // Crosstable returns the ranking crosstable: one row per player in standings
-// order, each with one cell per round.
+// order (see Rank), each with one cell per round from 1 to TotalRounds, the
+// highest round number among the games.
 func Crosstable[ID comparable](in Input[ID]) CrosstableResult[ID] {
 	standings, allInfo := rankWithInfo(in)
 

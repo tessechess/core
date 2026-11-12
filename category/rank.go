@@ -4,7 +4,7 @@ import "sort"
 
 // Placing is a player's place in a category's prize list.
 type Placing[ID comparable] struct {
-	ID           ID
+	ID           ID  // the player's ID
 	SectionRank  int // rank in the section standings
 	CategoryRank int // 1 = best player of the category
 }

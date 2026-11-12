@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ValkoM28/tournamentessentials/core/engine"
+	"github.com/tessechess/core/engine"
 )
 
 // The constructors return the concrete engine types (assigning to a typed

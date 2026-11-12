@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ValkoM28/tournamentessentials/core/engine"
-	"github.com/ValkoM28/tournamentessentials/core/trf"
+	"github.com/tessechess/core/engine"
+	"github.com/tessechess/core/trf"
 )
 
 // writeMockScript creates an executable shell script in a temp dir and returns its path.

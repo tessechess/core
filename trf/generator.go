@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ValkoM28/tournamentessentials/core/player"
-	"github.com/ValkoM28/tournamentessentials/core/result"
-	"github.com/ValkoM28/tournamentessentials/core/round"
+	"github.com/tessechess/core/player"
+	"github.com/tessechess/core/result"
+	"github.com/tessechess/core/round"
 )
 
 // errMissingStartingRank is returned when a player has no starting rank assigned.
@@ -23,7 +23,18 @@ type roundResult struct {
 }
 
 // Generate builds a TRF 1.6 string and the player mapping from the input data.
-// Players must have StartingRank pre-assigned; they are emitted in rank order.
+//
+// Every player must have a StartingRank greater than 0 (ranks should be
+// unique); players are written in rank order and the returned PlayerMapping
+// translates between ranks and IDs. Games from input.Games are written into the
+// players' round columns by their Round number; voided games are skipped, and
+// a game without a Black player is a bye for White. If Settings is set, the
+// withdrawn players and half-point byes of the upcoming round, the late
+// entries' missed rounds and the XXC and XXF extension lines are added.
+//
+// It returns an error if there are no players, TotalRounds is 0, a player has
+// no StartingRank, or a game refers to a player that is not in input.Players.
+// None of these errors is a sentinel value.
 func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[ID], error) {
 	if len(input.Players) == 0 {
 		return "", nil, fmt.Errorf("no players provided")

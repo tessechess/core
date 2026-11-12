@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ValkoM28/tournamentessentials/core/category"
-	"github.com/ValkoM28/tournamentessentials/core/player"
+	"github.com/tessechess/core/category"
+	"github.com/tessechess/core/player"
 )
 
 func intPtr(v int) *int { return &v }

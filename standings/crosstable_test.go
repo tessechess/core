@@ -3,8 +3,8 @@ package standings
 import (
 	"testing"
 
-	"github.com/ValkoM28/tournamentessentials/core/result"
-	"github.com/ValkoM28/tournamentessentials/core/round"
+	"github.com/tessechess/core/result"
+	"github.com/tessechess/core/round"
 )
 
 // intPtr is a helper to create an *int.

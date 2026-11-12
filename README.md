@@ -1,8 +1,12 @@
 # core
 
-Shared tournament logic used by the backend API and, later, the CLI.
+The tournament engine of [TournamentEssentials](https://github.com/ValkoM28/TournamentEssentials), an open-source chess tournament manager with an organizer dashboard, a public tournament website and an API. This module holds the pure FIDE rules (result codes, TRF generation, Swiss pairing through external engines, tiebreaks and standings, player categories) and is used by the backend API today and by a command-line tool later. It has no dependencies outside the Go standard library and can be used on its own.
 
-Module path: `github.com/ValkoM28/tournamentessentials/core` (placeholder; may be renamed if the project moves to a GitHub organization).
+Module path: `github.com/tessechess/core`, published from [github.com/tessechess/core](https://github.com/tessechess/core).
+
+## Documentation
+
+The reference is the Go doc comments: `go doc ./standings`, or [pkg.go.dev](https://pkg.go.dev/github.com/tessechess/core) once the module is public. [doc.go](doc.go) holds the module overview and a quick start. `doc_test.go` fails when an exported identifier has no doc comment.
 
 ## Rules
 

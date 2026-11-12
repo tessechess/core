@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ValkoM28/tournamentessentials/core/result"
-	"github.com/ValkoM28/tournamentessentials/core/round"
-	"github.com/ValkoM28/tournamentessentials/core/trf"
+	"github.com/tessechess/core/result"
+	"github.com/tessechess/core/round"
+	"github.com/tessechess/core/trf"
 )
 
 func TestParseTRFRound(t *testing.T) {

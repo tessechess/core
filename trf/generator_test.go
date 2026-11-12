@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ValkoM28/tournamentessentials/core/player"
-	"github.com/ValkoM28/tournamentessentials/core/result"
-	"github.com/ValkoM28/tournamentessentials/core/round"
-	"github.com/ValkoM28/tournamentessentials/core/trf"
+	"github.com/tessechess/core/player"
+	"github.com/tessechess/core/result"
+	"github.com/tessechess/core/round"
+	"github.com/tessechess/core/trf"
 )
 
 func codePtr(c result.Code) *result.Code { return &c }

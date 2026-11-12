@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/ValkoM28/tournamentessentials/core/pairing"
+	"github.com/tessechess/core/pairing"
 )
 
 type entrant = pairing.Player[string]

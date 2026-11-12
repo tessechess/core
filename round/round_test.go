@@ -3,8 +3,8 @@ package round_test
 import (
 	"testing"
 
-	"github.com/ValkoM28/tournamentessentials/core/result"
-	"github.com/ValkoM28/tournamentessentials/core/round"
+	"github.com/tessechess/core/result"
+	"github.com/tessechess/core/round"
 )
 
 func code(c result.Code) *result.Code { return &c }

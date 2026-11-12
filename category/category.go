@@ -10,7 +10,7 @@ package category
 import (
 	"time"
 
-	"github.com/ValkoM28/tournamentessentials/core/player"
+	"github.com/tessechess/core/player"
 )
 
 // Criteria is the rule data of a category. Every non-nil condition must hold.
@@ -18,15 +18,15 @@ type Criteria struct {
 	BirthdayAfter  *time.Time  // player must be born strictly after this date
 	BirthdayBefore *time.Time  // player must be born strictly before this date
 	Sex            *player.Sex // player must have this sex (player.SexMale or player.SexFemale)
-	MinRating      *int
-	MaxRating      *int
-	ManualOnly     bool // never assigned automatically (see Assign)
+	MinRating      *int        // player's rating must be at least this; unrated players fail it
+	MaxRating      *int        // player's rating must be at most this; unrated players pass it
+	ManualOnly     bool        // never assigned automatically (see Assign)
 }
 
 // Candidate is what the rules need to know about a player.
 type Candidate struct {
 	Birthday *time.Time // nil when unknown
-	Sex      player.Sex
+	Sex      player.Sex // player.SexUnknown when not recorded
 	// Rating is 0 for an unrated player. An unrated player counts as below any
 	// MaxRating (an unrated player is "under 1600") and fails any MinRating.
 	Rating int

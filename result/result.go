@@ -28,16 +28,33 @@ package result
 type Code string
 
 const (
-	WhiteWins    Code = "1-0"
-	BlackWins    Code = "0-1"
-	Draw         Code = "0.5-0.5"
+	// WhiteWins is a win for white: white 1, black 0. On a bye (no black
+	// player) it is the full-point bye. Reportable.
+	WhiteWins Code = "1-0"
+	// BlackWins is a win for black: white 0, black 1. Reportable.
+	BlackWins Code = "0-1"
+	// Draw gives each side 0.5. Reportable.
+	Draw Code = "0.5-0.5"
+	// WhiteForfeit is a win for white because black was present but did not
+	// play: white 1, black 0. Reportable; IsForfeit is true.
 	WhiteForfeit Code = "+/-"
+	// BlackForfeit is a win for black because white was present but did not
+	// play: white 0, black 1. Reportable; IsForfeit is true.
 	BlackForfeit Code = "-/+"
-	WhiteHalf    Code = "0.5-0"
-	BlackHalf    Code = "0-0.5"
+	// WhiteHalf awards white 0.5 and black 0 (an adjudication). On a bye it is
+	// the half-point bye. Reportable.
+	WhiteHalf Code = "0.5-0"
+	// BlackHalf awards black 0.5 and white 0 (an adjudication). Reportable.
+	BlackHalf Code = "0-0.5"
+	// ZeroPointBye is a zero-point bye or a withdrawal: no points. It is set
+	// by the system and is not reportable.
 	ZeroPointBye Code = "0-0"
-	Unplayed     Code = "*"
-	Void         Code = "void"
+	// Unplayed marks a game that has not been played yet: no points, and it
+	// takes no part in scoring (Counts is false). Not reportable.
+	Unplayed Code = "*"
+	// Void marks a voided pairing, excluded from all calculations (Counts is
+	// false). Not reportable.
+	Void Code = "void"
 )
 
 // Points returns the points awarded to white and black. Unplayed, Void and

@@ -5,12 +5,25 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/ValkoM28/tournamentessentials/core/engine"
-	"github.com/ValkoM28/tournamentessentials/core/round"
-	"github.com/ValkoM28/tournamentessentials/core/trf"
+	"github.com/tessechess/core/engine"
+	"github.com/tessechess/core/round"
+	"github.com/tessechess/core/trf"
 )
 
-// Pair pairs the next round: Prepare followed by Run.
+// Pair pairs the next round with the given engine: it calls Prepare and then
+// Run, and returns their errors.
+//
+// The result has one game per board, ordered by board number. Round is
+// in.CompletedRounds+1, Board is set, Black is nil for a bye, and Result is nil
+// (nothing has been played). Players with a bye already assigned for this round
+// (withdrawn, half-point bye) are left to the engine's input and are not paired
+// by it. Fixed boards are applied.
+//
+// Errors can be tested with errors.Is: ErrTRFGeneration (the input could not be
+// turned into a TRF, e.g. a player has no StartingRank, TotalRounds is 0 or a
+// game names an unknown player), the engine errors of package engine (engine
+// not found, timeout, non-zero exit), ErrTRFParsing and ErrUnknownEngineRank
+// (the engine's answer could not be read).
 func Pair[ID comparable](ctx context.Context, eng engine.PairingEngine, in Input[ID]) ([]round.Game[ID], error) {
 	p, err := Prepare(in)
 	if err != nil {
@@ -31,7 +44,9 @@ type Prepared[ID comparable] struct {
 func (p *Prepared[ID]) TRF() string { return p.trf }
 
 // Prepare merges player-level fixed boards into the settings and generates the
-// TRF input. Generation errors are wrapped with ErrTRFGeneration.
+// TRF input, without running an engine. Use it to preview the TRF (see
+// Prepared.TRF) or to run the engine separately. Generation errors are wrapped
+// with ErrTRFGeneration. The caller's settings are not modified.
 func Prepare[ID comparable](in Input[ID]) (*Prepared[ID], error) {
 	settings := Settings[ID]{}
 	if in.Settings != nil {
@@ -102,9 +117,12 @@ func Prepare[ID comparable](in Input[ID]) (*Prepared[ID], error) {
 // Run sends the TRF to the engine, parses its answer with the parser matching
 // eng.OutputFormat(), maps ranks back to player IDs and applies fixed boards.
 // The returned games are ordered by board, with Round set to the round being
-// paired and Result nil.
-// Engine errors are returned as they are; parse errors are wrapped with
-// ErrTRFParsing and unknown ranks with ErrUnknownEngineRank.
+// paired and Result nil (see Pair).
+//
+// Errors from the engine are returned as they are (see package engine). A
+// parse failure, including an unknown OutputFormat, is wrapped with
+// ErrTRFParsing, and a rank in the answer that is not in the TRF with
+// ErrUnknownEngineRank.
 func (p *Prepared[ID]) Run(ctx context.Context, eng engine.PairingEngine) ([]round.Game[ID], error) {
 	output, err := eng.GeneratePairings(ctx, p.trf)
 	if err != nil {

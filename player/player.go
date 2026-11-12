@@ -10,9 +10,13 @@ package player
 type Sex string
 
 const (
+	// SexUnknown means the sex is not recorded. It is not a valid sex (see
+	// Sex.Valid): conditions on sex never match it.
 	SexUnknown Sex = ""
-	SexMale    Sex = "M"
-	SexFemale  Sex = "F"
+	// SexMale is stored as "M" and written to TRF files as "m".
+	SexMale Sex = "M"
+	// SexFemale is stored as "F" and written to TRF files as "w".
+	SexFemale Sex = "F"
 )
 
 // Valid reports whether s is SexMale or SexFemale. SexUnknown is not valid: it

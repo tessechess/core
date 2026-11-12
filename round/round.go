@@ -6,13 +6,15 @@
 // in the backend).
 package round
 
-import "github.com/ValkoM28/tournamentessentials/core/result"
+import "github.com/tessechess/core/result"
 
 // Color is a side in a game.
 type Color string
 
 const (
+	// ColorWhite is the side that moves first.
 	ColorWhite Color = "white"
+	// ColorBlack is the side that moves second.
 	ColorBlack Color = "black"
 )
 

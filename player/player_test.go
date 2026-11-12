@@ -3,7 +3,7 @@ package player_test
 import (
 	"testing"
 
-	"github.com/ValkoM28/tournamentessentials/core/player"
+	"github.com/tessechess/core/player"
 )
 
 func TestTitleOrder(t *testing.T) {

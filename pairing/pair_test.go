@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ValkoM28/tournamentessentials/core/engine"
-	"github.com/ValkoM28/tournamentessentials/core/pairing"
-	"github.com/ValkoM28/tournamentessentials/core/player"
-	"github.com/ValkoM28/tournamentessentials/core/result"
-	"github.com/ValkoM28/tournamentessentials/core/round"
+	"github.com/tessechess/core/engine"
+	"github.com/tessechess/core/pairing"
+	"github.com/tessechess/core/player"
+	"github.com/tessechess/core/result"
+	"github.com/tessechess/core/round"
 )
 
 // fakeEngine records the TRF it receives and returns a canned answer.

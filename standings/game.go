@@ -43,7 +43,7 @@ package standings
 import (
 	"fmt"
 
-	"github.com/ValkoM28/tournamentessentials/core/round"
+	"github.com/tessechess/core/round"
 )
 
 // playerPairingInfo holds all games for one player and a derived field
@@ -67,10 +67,10 @@ type playerPairingInfo[ID comparable] struct {
 //   - Threshold: minimum opponent score for inclusion (keys where
 //     SupportsThreshold is true).
 type TiebreakConfig struct {
-	Key        TiebreakKey
-	CutLowest  int
-	CutHighest int
-	Threshold  float64
+	Key        TiebreakKey // the algorithm
+	CutLowest  int         // opponent scores to drop from the bottom; 0 = none
+	CutHighest int         // opponent scores to drop from the top; 0 = none
+	Threshold  float64     // minimum opponent score; 0 = the tiebreak's default
 }
 
 // MapKey returns the unique string key used in PlayerScore.Tiebreaks and for

@@ -1,0 +1,42 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Vet, test, dependency check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Check formatting
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then echo "Run gofmt on:"; echo "$unformatted"; exit 1; fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Vet (Windows build)
+        run: GOOS=windows go vet ./...
+
+      - name: Test (with race detector)
+        run: go test -race ./...
+
+      # The module may depend on the standard library and itself only. Widen
+      # this deliberately if a third-party module is ever allowed.
+      - name: Check dependencies
+        run: |
+          deps="$(go list -deps -f '{{if not .Standard}}{{.ImportPath}}{{end}}' ./... | grep . | grep -v '^github.com/tessechess/core' || true)"
+          if [ -n "$deps" ]; then echo "Forbidden dependencies:"; echo "$deps"; exit 1; fi
+          echo "Dependencies OK"

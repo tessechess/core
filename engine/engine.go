@@ -17,7 +17,7 @@
 // engine's output pipe open GeneratePairings can return later than Timeout (on
 // Unix too, for a child that leaves the process group). Point BinaryPath and
 // JavaPath at the real executable, not at a wrapper. Known limitation, see
-// https://github.com/ValkoM28/TournamentEssentials/issues/382.
+// https://github.com/tessechess/tessentials/issues/382.
 package engine
 
 import "context"

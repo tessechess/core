@@ -1,6 +1,6 @@
 # core
 
-The tournament engine of [TournamentEssentials](https://github.com/ValkoM28/TournamentEssentials), an open-source chess tournament manager with an organizer dashboard, a public tournament website and an API. This module holds the pure FIDE rules (result codes, TRF generation, Swiss pairing through external engines, tiebreaks and standings, player categories) and is used by the backend API today and by a command-line tool later. It has no dependencies outside the Go standard library and can be used on its own.
+The tournament engine of [TournamentEssentials](https://github.com/tessechess/tessentials), an open-source chess tournament manager with an organizer dashboard, a public tournament website and an API. This module holds the pure FIDE rules (result codes, TRF generation, Swiss pairing through external engines, tiebreaks and standings, player categories) and is used by the backend API today and by a command-line tool later. It has no dependencies outside the Go standard library and can be used on its own.
 
 Module path: `github.com/tessechess/core`, published from [github.com/tessechess/core](https://github.com/tessechess/core).
 
@@ -19,13 +19,13 @@ The reference is the Go doc comments: `go doc ./standings`, or [pkg.go.dev](http
 
 Details are in the package documentation (`go doc`).
 
-- **PTP and APPO tiebreaks can hang forever** with unrated opponents ([#379](https://github.com/ValkoM28/tournamentessentials/issues/379)); don't configure them yet.
-- **Rating change against unrated opponents is wrong** ([#383](https://github.com/ValkoM28/tournamentessentials/issues/383)): they count as rating 0, but a game against an unrated player should not change the rating. ARO and TPR do leave unrated opponents out.
-- **No team tiebreaks** ([#78](https://github.com/ValkoM28/tournamentessentials/issues/78)): individual competitions only.
-- **Round 1 needs a first-player colour with bbpPairings** ([#376](https://github.com/ValkoM28/tournamentessentials/issues/376)).
-- **Acceleration is validated but ignored** ([#377](https://github.com/ValkoM28/tournamentessentials/issues/377)).
+- **PTP and APPO tiebreaks can hang forever** with unrated opponents ([#379](https://github.com/tessechess/tessentials/issues/379)); don't configure them yet.
+- **Rating change against unrated opponents is wrong** ([#383](https://github.com/tessechess/tessentials/issues/383)): they count as rating 0, but a game against an unrated player should not change the rating. ARO and TPR do leave unrated opponents out.
+- **No team tiebreaks** ([#78](https://github.com/tessechess/tessentials/issues/78)): individual competitions only.
+- **Round 1 needs a first-player colour with bbpPairings** ([#376](https://github.com/tessechess/tessentials/issues/376)).
+- **Acceleration is validated but ignored** ([#377](https://github.com/tessechess/tessentials/issues/377)).
 - **Swiss pairing only**, through external engines (no round-robin generator); the engine programs are not part of the module and JaVaFo must not be redistributed.
-- **Engine timeouts on non-Unix platforms** kill only the engine process, not its children ([#382](https://github.com/ValkoM28/tournamentessentials/issues/382)).
+- **Engine timeouts on non-Unix platforms** kill only the engine process, not its children ([#382](https://github.com/tessechess/tessentials/issues/382)).
 
 ## Packages
 

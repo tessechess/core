@@ -4,7 +4,7 @@
 // code; import the packages below.
 //
 // It is the tournament engine of TournamentEssentials
-// (https://github.com/ValkoM28/TournamentEssentials), an open-source chess
+// (https://github.com/tessechess/tessentials), an open-source chess
 // tournament manager with a web dashboard for organizers and arbiters, a public
 // tournament website and an API; the same code pairs rounds and computes
 // standings there. It is published as a separate module so that other programs,

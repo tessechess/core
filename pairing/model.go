@@ -1,19 +1,18 @@
-// Package pairing pairs the next round of a Swiss section: it builds the TRF
+// Package pairing pairs the next round of a Swiss section (it builds the TRF
 // input from the players, the completed rounds and the round settings, runs a
 // pairing engine, maps the engine's answer back to player IDs and applies fixed
-// boards.
+// boards) or generates the full schedule of a round-robin section upfront using
+// the Berger function (see PairRoundRobin).
 //
 // Players are identified by a caller-defined ID type (e.g. a registration UUID
 // in the backend). The package has no persistence, and choosing which engine to
-// run is the caller's job.
+// run for Swiss pairings is the caller's job.
 //
 // # Known limitations
 //
-// Swiss pairing only, and only through an external engine; there is no
-// round-robin (Berger tables) generator.
-//
-// The engine programs are not part of this module. The caller supplies them
-// (see package engine); JaVaFo must not be redistributed.
+// Swiss pairing requires an external engine whose program is not part of this
+// module. The caller supplies it (see package engine); JaVaFo must not be
+// redistributed.
 //
 // Acceleration is not implemented: Settings.Validate rejects anything other
 // than AccelerationNone (or empty), and Pair does not write acceleration to

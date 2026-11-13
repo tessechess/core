@@ -21,12 +21,8 @@
 //   - PerfectTournamentPerformance and AveragePerfectPerformanceOfOpponents use
 //     rating 0 as it is.
 //   - RatingInfo.RatingChange is computed only for a rated player with a
-//     K-factor. Known bug (#383): an unrated opponent counts as rating 0 in
-//     the expected score, so a game against one changes the rating (a
-//     1500-rated player with K=20 gets +0 for a win, -10 for a draw and -20
-//     for a loss). A game against an unrated player should not change the
-//     rating at all; until this is fixed, RatingChange is wrong for players
-//     who met unrated opponents.
+//     K-factor, and leaves games against unrated opponents out of both the
+//     actual and the expected score (0 if no opponent is rated).
 //
 // The other tiebreaks (Buchholz and its variants, Sonneborn-Berger, Koya,
 // direct encounter, wins, games won/played, progressive scores) do not use

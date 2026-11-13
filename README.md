@@ -36,3 +36,9 @@ Details are in the package documentation (`go doc`).
 | `pairing` | Pairs the next round: `Prepare` (merges player-level fixed boards, builds the TRF) and `Prepared.Run` (runs an engine, parses its output by format, maps ranks to IDs, applies fixed boards); `Pair` does both. History in and new boards out are `round.Game`s. `ApplyFixedBoards`. `Settings.Validate` / `ReferencedPlayers` check the arbiter settings (`Acceleration` is a typed value, not yet implemented; the first-player colour is `round.Color`). `StartingOrder` gives starting ranks in FIDE initial-ranking order (rating, title, name; arena titles count as untitled). Generic over the player ID |
 | `standings` | FIDE tiebreaks (Buchholz and variants, Sonneborn-Berger, Koya, DE, ARO, TPR, PTP, APRO, APPO, wins, …), typed tiebreak keys (`TiebreakKey` constants such as `Buchholz`, `SonnebornBerger`) with the registry (`IsTiebreakKey`, `SupportsCut`, `SupportsThreshold`, `TiebreakKeys`), and standings: `Scores`, `Rank`, `Crosstable`, computed from `round.Game`s. The individual tiebreak functions are internal. Generic over the player ID |
 | `trf` | FIDE TRF 1.6 generator (sex written as `m`/`w`, only FIDE titles) for pairing engines and parsers for bbpPairings / JaVaFo output. Player IDs are a type parameter (`Generate[ID comparable]`); completed rounds are passed as `round.Game`s + `CompletedRounds` |
+
+## License
+
+Core is released under the [Apache License 2.0](LICENSE); the copyright notice is in [NOTICE](NOTICE). The pairing engines are not part of this module and have their own terms: bbpPairings is Apache-2.0, JaVaFo is proprietary freeware that you download yourself.
+
+Bug reports are welcome; code pull requests are not accepted yet, see [CONTRIBUTING.md](CONTRIBUTING.md).

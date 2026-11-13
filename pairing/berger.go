@@ -78,8 +78,9 @@ func RoundRobinTotalRounds(playerCount, cycles int) int {
 // PairRoundRobin generates the full round-robin tournament schedule upfront
 // across the specified number of cycles using the Berger function.
 //
-// Every player in players must have a unique 1-based StartingRank in
-// 1..len(players) (see AssignStartingRanks). For cycles >= 2 (e.g. a double
+// The caller assigns the pairing numbers: every player in players must have a
+// unique 1-based StartingRank in 1..len(players) (round-robin numbers are
+// usually drawn by lot, so nothing is assigned here). For cycles >= 2 (e.g. a double
 // round-robin with cycles == 2), even-numbered cycles reverse colors on every
 // played board relative to the first cycle.
 //

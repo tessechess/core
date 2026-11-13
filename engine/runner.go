@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 )
 
 // runEngine writes trfInput to a temp file, executes the binary and returns the
@@ -36,6 +37,7 @@ func runEngine(
 
 	args := buildArgs(inputPath, outputPath)
 	cmd := exec.CommandContext(ctx, binaryPath, args...)
+	cmd.WaitDelay = time.Second
 
 	configureProcessGroup(cmd)
 

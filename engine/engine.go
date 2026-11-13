@@ -9,15 +9,16 @@
 //
 // # Timeouts and child processes
 //
-// A run is limited by the engine's Timeout and by the deadline of the context.
-// On Unix the engine runs in its own process group and a timeout kills the
-// whole group. On other platforms only the engine process is killed: if the
-// configured executable is a wrapper that starts the real engine as a child
-// (a shell script, a launcher), that child may survive, and while it keeps the
-// engine's output pipe open GeneratePairings can return later than Timeout (on
-// Unix too, for a child that leaves the process group). Point BinaryPath and
-// JavaPath at the real executable, not at a wrapper. Known limitation, see
-// https://github.com/tessechess/tessentials/issues/382.
+// A run is limited by the engine's Timeout and by the deadline of the context,
+// and cmd.WaitDelay closes the output pipe if a child process keeps it open
+// past cancellation so GeneratePairings returns on time. On Unix the engine
+// runs in its own process group and a timeout kills the whole group. On other
+// platforms (such as Windows, where killing a process tree requires a job
+// object) only the engine process itself is killed: if the configured
+// executable is a wrapper that starts the real engine as a child (a shell
+// script, a launcher), that child may survive in the background. Point
+// BinaryPath and JavaPath at the real executable, not at a wrapper. Known
+// limitation, see https://github.com/tessechess/tessentials/issues/382.
 package engine
 
 import "context"

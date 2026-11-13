@@ -7,17 +7,17 @@ import (
 	"github.com/tessechess/core/round"
 )
 
-// BergerPair represents a single board pairing produced by the Berger function
+// bergerPair represents a single board pairing produced by the Berger function
 // using 1-based pairing numbers (1..N). When the player count P is odd,
 // N = P+1 represents the virtual bye slot.
-type BergerPair struct {
+type bergerPair struct {
 	// White is the 1-based pairing number of the player with the white pieces.
 	White int
 	// Black is the 1-based pairing number of the player with the black pieces.
 	Black int
 }
 
-// Berger computes the full single-cycle round-robin schedule for n players
+// berger computes the full single-cycle round-robin schedule for n players
 // using the algorithmic Berger function (as used in Vega Chess and defined by
 // FIDE Handbook C.05 Annex 1).
 //
@@ -25,8 +25,8 @@ type BergerPair struct {
 // rounds, each with N/2 board pairings using 1-based pairing numbers in 1..N.
 // When n is odd, pairing number N = n+1 represents the virtual bye slot.
 //
-// If n < 2, Berger returns an error wrapping ErrNotEnoughPlayers.
-func Berger(n int) ([][]BergerPair, error) {
+// If n < 2, berger returns an error wrapping ErrNotEnoughPlayers.
+func berger(n int) ([][]bergerPair, error) {
 	if n < 2 {
 		return nil, fmt.Errorf("%w: got %d", ErrNotEnoughPlayers, n)
 	}
@@ -40,19 +40,19 @@ func Berger(n int) ([][]BergerPair, error) {
 		return (x-1+roundIdx*pairs)%mod + 1
 	}
 
-	schedule := make([][]BergerPair, totalRounds)
+	schedule := make([][]bergerPair, totalRounds)
 	for r := 0; r < totalRounds; r++ {
-		roundPairs := make([]BergerPair, pairs)
+		roundPairs := make([]bergerPair, pairs)
 
 		firstPartner := shift(1, r)
 		if (r+1)%2 == 1 {
-			roundPairs[0] = BergerPair{White: firstPartner, Black: evenN}
+			roundPairs[0] = bergerPair{White: firstPartner, Black: evenN}
 		} else {
-			roundPairs[0] = BergerPair{White: evenN, Black: firstPartner}
+			roundPairs[0] = bergerPair{White: evenN, Black: firstPartner}
 		}
 
 		for b := 2; b <= pairs; b++ {
-			roundPairs[b-1] = BergerPair{
+			roundPairs[b-1] = bergerPair{
 				White: shift(b, r),
 				Black: shift(evenN-b+1, r),
 			}
@@ -203,7 +203,7 @@ func PairRoundRobin[ID comparable](players []Player[ID], cycles int, order Cycle
 		}
 	}
 
-	baseCycle, err := Berger(p)
+	baseCycle, err := berger(p)
 	if err != nil {
 		return nil, err
 	}

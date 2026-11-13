@@ -10,8 +10,8 @@ import (
 
 func TestBerger_Errors(t *testing.T) {
 	for _, n := range []int{-5, 0, 1} {
-		if _, err := Berger(n); !errors.Is(err, ErrNotEnoughPlayers) {
-			t.Errorf("Berger(%d) error = %v, want ErrNotEnoughPlayers", n, err)
+		if _, err := berger(n); !errors.Is(err, ErrNotEnoughPlayers) {
+			t.Errorf("berger(%d) error = %v, want ErrNotEnoughPlayers", n, err)
 		}
 	}
 }
@@ -21,19 +21,19 @@ func TestBerger_FIDEHandbookTables(t *testing.T) {
 	tests := []struct {
 		name string
 		n    int
-		want [][]BergerPair
+		want [][]bergerPair
 	}{
 		{
 			name: "2 players",
 			n:    2,
-			want: [][]BergerPair{
+			want: [][]bergerPair{
 				{{1, 2}},
 			},
 		},
 		{
 			name: "3-4 players (odd n=3)",
 			n:    3,
-			want: [][]BergerPair{
+			want: [][]bergerPair{
 				{{1, 4}, {2, 3}},
 				{{4, 3}, {1, 2}},
 				{{2, 4}, {3, 1}},
@@ -42,7 +42,7 @@ func TestBerger_FIDEHandbookTables(t *testing.T) {
 		{
 			name: "3-4 players (even n=4)",
 			n:    4,
-			want: [][]BergerPair{
+			want: [][]bergerPair{
 				{{1, 4}, {2, 3}},
 				{{4, 3}, {1, 2}},
 				{{2, 4}, {3, 1}},
@@ -51,7 +51,7 @@ func TestBerger_FIDEHandbookTables(t *testing.T) {
 		{
 			name: "5-6 players",
 			n:    6,
-			want: [][]BergerPair{
+			want: [][]bergerPair{
 				{{1, 6}, {2, 5}, {3, 4}},
 				{{6, 4}, {5, 3}, {1, 2}},
 				{{2, 6}, {3, 1}, {4, 5}},
@@ -62,7 +62,7 @@ func TestBerger_FIDEHandbookTables(t *testing.T) {
 		{
 			name: "7-8 players",
 			n:    8,
-			want: [][]BergerPair{
+			want: [][]bergerPair{
 				{{1, 8}, {2, 7}, {3, 6}, {4, 5}},
 				{{8, 5}, {6, 4}, {7, 3}, {1, 2}},
 				{{2, 8}, {3, 1}, {4, 7}, {5, 6}},
@@ -75,7 +75,7 @@ func TestBerger_FIDEHandbookTables(t *testing.T) {
 		{
 			name: "9-10 players",
 			n:    10,
-			want: [][]BergerPair{
+			want: [][]bergerPair{
 				{{1, 10}, {2, 9}, {3, 8}, {4, 7}, {5, 6}},
 				{{10, 6}, {7, 5}, {8, 4}, {9, 3}, {1, 2}},
 				{{2, 10}, {3, 1}, {4, 9}, {5, 8}, {6, 7}},
@@ -91,12 +91,12 @@ func TestBerger_FIDEHandbookTables(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := Berger(tc.n)
+			got, err := berger(tc.n)
 			if err != nil {
-				t.Fatalf("Berger(%d) unexpected error: %v", tc.n, err)
+				t.Fatalf("berger(%d) unexpected error: %v", tc.n, err)
 			}
 			if len(got) != len(tc.want) {
-				t.Fatalf("Berger(%d) rounds = %d, want %d", tc.n, len(got), len(tc.want))
+				t.Fatalf("berger(%d) rounds = %d, want %d", tc.n, len(got), len(tc.want))
 			}
 			for r := range tc.want {
 				if len(got[r]) != len(tc.want[r]) {
@@ -114,15 +114,15 @@ func TestBerger_FIDEHandbookTables(t *testing.T) {
 
 // vegaBergerReference implements Vega / Gacrux's iterative list-pop Berger
 // construction to verify equivalence with our closed-form Berger function.
-func vegaBergerReference(n int) [][]BergerPair {
+func vegaBergerReference(n int) [][]bergerPair {
 	evenN := n + n%2
 	pairs := evenN / 2
 	totalRounds := evenN - 1
 
-	schedule := make([][]BergerPair, totalRounds)
-	round1 := make([]BergerPair, pairs)
+	schedule := make([][]bergerPair, totalRounds)
+	round1 := make([]bergerPair, pairs)
 	for b := 1; b <= pairs; b++ {
-		round1[b-1] = BergerPair{White: b, Black: evenN - b + 1}
+		round1[b-1] = bergerPair{White: b, Black: evenN - b + 1}
 	}
 	schedule[0] = round1
 
@@ -144,17 +144,17 @@ func vegaBergerReference(n int) [][]BergerPair {
 			return v
 		}
 
-		curr := make([]BergerPair, pairs)
+		curr := make([]bergerPair, pairs)
 		firstBoard := pop()
 		if r%2 == 0 {
-			curr[0] = BergerPair{White: evenN, Black: firstBoard}
+			curr[0] = bergerPair{White: evenN, Black: firstBoard}
 		} else {
-			curr[0] = BergerPair{White: firstBoard, Black: evenN}
+			curr[0] = bergerPair{White: firstBoard, Black: evenN}
 		}
 		for b := 2; b <= pairs; b++ {
 			black := pop()
 			white := pop()
-			curr[b-1] = BergerPair{White: white, Black: black}
+			curr[b-1] = bergerPair{White: white, Black: black}
 		}
 		schedule[r-1] = curr
 		prev = curr
@@ -164,9 +164,9 @@ func vegaBergerReference(n int) [][]BergerPair {
 
 func TestBerger_MatchesVegaAndInvariants(t *testing.T) {
 	for n := 2; n <= 24; n++ {
-		got, err := Berger(n)
+		got, err := berger(n)
 		if err != nil {
-			t.Fatalf("Berger(%d) unexpected error: %v", n, err)
+			t.Fatalf("berger(%d) unexpected error: %v", n, err)
 		}
 		want := vegaBergerReference(n)
 
@@ -431,7 +431,7 @@ func rrPlayers(n int) []Player[int] {
 
 // tableIndex returns the 0-based index of the Berger round that games play,
 // and whether the colours are those of the table (false = reversed).
-func tableIndex(t *testing.T, base [][]BergerPair, p int, games []round.Game[int]) (idx int, sameColours bool) {
+func tableIndex(t *testing.T, base [][]bergerPair, p int, games []round.Game[int]) (idx int, sameColours bool) {
 	t.Helper()
 	for i, pairs := range base {
 		same, reversed, played := true, true, 0
@@ -486,7 +486,7 @@ func TestPairRoundRobin_CycleOrders(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			base, err := Berger(tc.n)
+			base, err := berger(tc.n)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -519,7 +519,7 @@ func TestPairRoundRobin_CycleOrders(t *testing.T) {
 
 func TestPairRoundRobin_SingleCycleIgnoresOrder(t *testing.T) {
 	for _, order := range []CycleOrder{"", CycleOrderRepeat, CycleOrderFIDE, CycleOrderMilvang} {
-		base, _ := Berger(6)
+		base, _ := berger(6)
 		sch, err := PairRoundRobin(rrPlayers(6), 1, order)
 		if err != nil {
 			t.Fatal(err)
@@ -533,7 +533,7 @@ func TestPairRoundRobin_SingleCycleIgnoresOrder(t *testing.T) {
 }
 
 func TestPairRoundRobin_ThreeCyclesReorderFirstOnly(t *testing.T) {
-	base, _ := Berger(4)
+	base, _ := berger(4)
 	sch, err := PairRoundRobin(rrPlayers(4), 3, CycleOrderMilvang)
 	if err != nil {
 		t.Fatal(err)

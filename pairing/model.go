@@ -2,7 +2,7 @@
 // input from the players, the completed rounds and the round settings, runs a
 // pairing engine, maps the engine's answer back to player IDs and applies fixed
 // boards) or generates the full schedule of a round-robin section upfront using
-// the Berger function (see Berger and PairRoundRobin).
+// the Berger function (see PairRoundRobin).
 //
 // Players are identified by a caller-defined ID type (e.g. a registration UUID
 // in the backend). The package has no persistence, and choosing which engine to

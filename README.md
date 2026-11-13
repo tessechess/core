@@ -1,41 +1,52 @@
-# core
+# TEssentials core library
 
-The tournament engine of [TournamentEssentials](https://github.com/tessechess/tessentials), an open-source chess tournament manager with an organizer dashboard, a public tournament website and an API. This module holds the pure FIDE rules (result codes, TRF generation, Swiss pairing through external engines, round-robin pairing via the Berger function, tiebreaks and standings, player categories) and is used by the backend API today and by a command-line tool later. It has no dependencies outside the Go standard library and can be used on its own.
+The tournament engine of [TournamentEssentials](https://github.com/tessechess/tessentials), an open-source chess tournament platform. This module holds the pure FIDE rules (result codes, TRF generation, Swiss pairing through external engines, round-robin pairing via the Berger function, tiebreaks and standings, player categories) and is used by different tools in the TEssentials ecosystem. It has no dependencies outside the Go standard library and can be used on its own.
 
 Module path: `github.com/tessechess/core`, published from [github.com/tessechess/core](https://github.com/tessechess/core).
 
 ## Documentation
 
-The reference is the Go doc comments: `go doc ./standings`, or [pkg.go.dev](https://pkg.go.dev/github.com/tessechess/core) once the module is public. [doc.go](doc.go) holds the module overview and a quick start. `doc_test.go` fails when an exported identifier has no doc comment.
+[pkg.go.dev](https://pkg.go.dev/github.com/tessechess/core)
 
-## Rules
+## Design principles
 
-- **Pure rules and values only.** No database, HTTP, Gin, config or logging.
-- **Imports nothing from `apps/`** and no third-party modules unless deliberately allowed. `make check-core` enforces this.
-- **Values, not entities.** Core owns enums, small value types and the functions over them. Entities with identity or lifecycle (ids, owners, timestamps, `json`/`db` tags) stay in the apps. See `docs/ARCHITECTURE_REWORK.md` (section "Principle: core owns rules and values; apps own entities").
-- **Tests live beside the code** (`*_test.go` in each package), unlike the backend's `tests/<module>_tests/` convention.
+- **Pure functions over plain values.** Nothing here touches a database, the network or anything else, just pure functions other programs are calling. The same input always gives the same output.
+- **Standard library only.** The module has no third-party dependencies, so adding it to a project adds nothing else to your dependency tree.
+- **Your types, not ours.** Players and games are identified by a type parameter (`[ID comparable]`), so you can use database ids, UUIDs or strings. 
+- **Rules only, no records.** The module covers FIDE rules and calculations. It has no tournament, player or user records, no persistence and no authorization.
+- **Tests live beside the code.** Each package has its `*_test.go` files next to the source; run them all with `go test ./...`.
 
-## Known limitations
+## Implementation status
 
-Details are in the package documentation (`go doc`).
+Core covers individual competitions. Details of each area are in the package documentation (`go doc`).
 
-- **No team tiebreaks** ([#78](https://github.com/tessechess/tessentials/issues/78)): individual competitions only.
-- **Acceleration is not implemented**: `Settings.Validate` rejects anything other than `none`.
-- **Swiss pairing requires external engines**: the engine programs are not part of the module and JaVaFo must not be redistributed (round-robin schedules are generated natively via the Berger function).
-- **Engine timeouts on non-Unix platforms** kill only the engine process, not its children ([#382](https://github.com/tessechess/tessentials/issues/382)).
+| Area | Status | Notes |
+|---|---|---|
+| Result codes and scoring | Implemented | Wins, draws, forfeits, byes, unplayed games and void games, with the points each side receives |
+| Round-robin pairing | Implemented | Berger tables for any number of players, any number of cycles, and three round orders for double round-robins (plain, FIDE C.05, Milvang). The caller assigns the pairing numbers. |
+| Swiss pairing | Implemented through external engines | Uses bbpPairings or JaVaFo, which you install yourself and point core to; they are not part of this module. There is no native Swiss pairing. |
+| Swiss acceleration | Not implemented | `Settings.Validate` rejects anything other than `none` |
+| Tiebreaks | Implemented, individual only | 17 FIDE tiebreaks, including Buchholz and its variants, Sonneborn-Berger, Koya, direct encounter, performance ratings and progressive scores. Team tiebreaks are not implemented. |
+| Standings and crosstables | Implemented | Scores, ranking with tiebreaks, and the crosstable, all computed from the list of games |
+| TRF | Partly implemented | Generates TRF 1.6 for the pairing engines and parses their output. There is no reader for complete TRF tournament files. |
+| Player categories | Implemented | Rating, birthday and sex conditions, assignment and prize order within a category |
+| Team tournaments | Not implemented | Pairing, scoring and tiebreaks for teams |
+| Engine timeouts on non-Unix platforms | Limited | A timeout kills only the engine process, not its children |
 
 ## Packages
 
-| Package | Contents |
-|---|---|
-| `result` | Game result codes (`1-0`, `0-1`, `0.5-0.5`, forfeits, byes, `*`, `void`) and the points each side receives |
-| `player` | `Sex` and `Title` — the shared value types of `trf`, `pairing` and `category`; `Title.Order` (FIDE initial-ranking order) and `Title.FIDE` |
-| `round` | `Game` — one game or bye of a round (`Round`, `Board`, `White`, `Black`, `Result`), with `IsBye` and `Points`; `Color` (`ColorWhite`, `ColorBlack`). The shared game type of `trf`, `pairing` and `standings`. Generic over the player ID |
-| `category` | Category rules: `Criteria.Matches` / `Validate` (rating, birthday and sex conditions, `Validate` also rejects an invalid sex; unrated counts as under any max rating), `Assign` (players → categories, `ManualOnly` skipped) and `RankWithin` (category prize order by section rank). Generic over category and player IDs |
-| `engine` | `PairingEngine` interface, bbpPairings and JaVaFo wrappers, and the runner (temp files, timeout; on Unix a timeout kills the whole process group, elsewhere only the engine process: see the package docs, #382). Callers supply the binary/jar paths |
-| `pairing` | Pairs the next Swiss round (`Prepare` merges player-level fixed boards and builds the TRF; `Prepared.Run` runs an engine, parses its output by format, maps ranks to IDs, applies fixed boards; `Pair` does both) or generates a round-robin schedule upfront via the Berger function (`PairRoundRobin`, `RoundRobinTotalRounds`; for several cycles the caller picks a `CycleOrder`: plain table order, the FIDE C.05 recommendation, or Milvang's arrangement). History in and new boards out are `round.Game`s. `ApplyFixedBoards`. `Settings.Validate` / `ReferencedPlayers` check the arbiter settings (`Acceleration` is a typed value, not yet implemented; the first-player colour is `round.Color`). `StartingOrder` gives starting ranks in FIDE initial-ranking order (rating, title, name; arena titles count as untitled). Generic over the player ID |
-| `standings` | FIDE tiebreaks (Buchholz and variants, Sonneborn-Berger, Koya, DE, ARO, TPR, PTP, APRO, APPO, wins, …), typed tiebreak keys (`TiebreakKey` constants such as `Buchholz`, `SonnebornBerger`) with the registry (`IsTiebreakKey`, `SupportsCut`, `SupportsThreshold`, `TiebreakKeys`), and standings: `Scores`, `Rank`, `Crosstable`, computed from `round.Game`s. The individual tiebreak functions are internal. Generic over the player ID |
-| `trf` | FIDE TRF 1.6 generator (sex written as `m`/`w`, only FIDE titles) for pairing engines and parsers for bbpPairings / JaVaFo output. Player IDs are a type parameter (`Generate[ID comparable]`); completed rounds are passed as `round.Game`s + `CompletedRounds` |
+Import paths are `github.com/tessechess/core/<package>`.
+
+| Package | What it does | Main entry points |
+|---|---|---|
+| `result` | Game result codes (`1-0`, `0-1`, `0.5-0.5`, forfeits, byes, `*` for not yet played, `void`) and the points each side receives | `Code` |
+| `round` | The shared game type: one game or bye of a round, with its board, colours and result | `Game`, `Color` |
+| `player` | Player value types shared by the other packages: sex and FIDE title, including the title order used for the initial ranking | `Sex`, `Title` |
+| `pairing` | Swiss pairing of the next round through an engine, round-robin schedules (single or multiple cycles, with a choice of round order), fixed boards, validation of the arbiter's settings, and starting ranks in FIDE initial-ranking order | `Pair`, `Prepare`, `PairRoundRobin`, `RoundRobinTotalRounds`, `StartingOrder`, `Settings.Validate` |
+| `engine` | Wrappers that run bbpPairings or JaVaFo (temporary files, timeout). You supply the paths to the programs. (licenses of external engines apply) | `PairingEngine`, `NewBBPPairings`, `NewJaVaFo` |
+| `trf` | Generates FIDE TRF 1.6 input for the pairing engines and parses the engines' output | `Generate`, `ParseSimplePairs`, `ParseTRFRound` |
+| `standings` | Scores, ranking and crosstables computed from the games, with the FIDE tiebreaks selected by typed keys. The registry says which keys accept a cut or a threshold. | `Scores`, `Rank`, `Crosstable`, `TiebreakKey`, `TiebreakKeys` |
+| `category` | Prize categories: which players match the rating, birthday and sex conditions of a category, and the prize order within it | `Assign`, `RankWithin`, `Criteria`, `Rule` |
 
 ## License
 

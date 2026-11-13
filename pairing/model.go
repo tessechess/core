@@ -11,8 +11,7 @@
 // # Known limitations
 //
 // Swiss pairing requires an external engine whose program is not part of this
-// module. The caller supplies it (see package engine); JaVaFo must not be
-// redistributed.
+// module. The caller supplies it (see package engine).
 //
 // Acceleration is not implemented: Settings.Validate rejects anything other
 // than AccelerationNone (or empty), and Pair does not write acceleration to

@@ -722,9 +722,56 @@ func computeTournamentPerformanceRating[ID comparable](
 	return math.Round(aroRaw + fractionalScoreToRD(frac))
 }
 
+// fidePDTableMaxD holds the upper bound of each rating-difference bucket in
+// FIDE Rating Regulations (B.02) Table 8.1.2. Index i (0..49) corresponds to a
+// higher-rated player scoring probability of (50 + i) / 100. Any difference
+// above 735 gives 1.00 for the higher-rated player and 0.00 for the lower-rated
+// player.
+var fidePDTableMaxD = [50]int{
+	3, 10, 17, 25, 32, 39, 46, 53, 61, 68,
+	76, 83, 91, 98, 106, 113, 121, 129, 137, 145,
+	153, 162, 170, 179, 188, 197, 206, 215, 225, 235,
+	245, 256, 267, 278, 290, 302, 315, 328, 344, 357,
+	374, 391, 411, 432, 456, 484, 517, 559, 619, 735,
+}
+
+// fideScoringProbability returns the player's expected score probability PD
+// for a single game under FIDE Rating Regulations (B.02) Articles 8.1.2 and 8.3.1.
+//
+// Per Article 8.3.1 (effective 1 October 2025), a rating difference of more
+// than 400 points is counted as 400 points for players rated below 2650; for
+// players rated 2650 and above, the full rating difference is used.
+func fideScoringProbability(playerRating, opponentRating int) float64 {
+	diff := playerRating - opponentRating
+	if playerRating < 2650 {
+		if diff > 400 {
+			diff = 400
+		} else if diff < -400 {
+			diff = -400
+		}
+	}
+	absDiff := diff
+	if absDiff < 0 {
+		absDiff = -absDiff
+	}
+	for i, maxD := range fidePDTableMaxD {
+		if absDiff <= maxD {
+			if diff >= 0 {
+				return float64(50+i) / 100.0
+			}
+			return float64(50-i) / 100.0
+		}
+	}
+	if diff >= 0 {
+		return 1.0
+	}
+	return 0.0
+}
+
 // computeRatingChange returns the FIDE rating change for a player: K × (W − We).
 // playerRating is the player's pre-tournament rating; kFactor is their FIDE coefficient.
-// Only over-the-board games are counted (byes and forfeits are excluded).
+// Only over-the-board games against rated opponents are counted (byes, forfeits,
+// and games against unrated opponents are excluded per FIDE B.02 Articles 5.1 and 8.3.1).
 func computeRatingChange[ID comparable](
 	playerID ID,
 	allInfo map[ID]*playerPairingInfo[ID],
@@ -749,10 +796,14 @@ func computeRatingChange[ID comparable](
 		} else {
 			oppID = p.White
 		}
-		we += expectedScore(float64(playerRating), float64(ratings[oppID]))
+		oppRating := ratings[oppID]
+		if oppRating <= 0 {
+			continue
+		}
+		we += fideScoringProbability(playerRating, oppRating)
 		w += p.Points(playerID)
 	}
-	// Round to one decimal place per FIDE rating regulations.
+	// Round to one decimal place per FIDE tournament rating change display.
 	return math.Round(float64(kFactor)*(w-we)*10) / 10
 }
 

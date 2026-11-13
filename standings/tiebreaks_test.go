@@ -3196,7 +3196,7 @@ func TestComputeRatingChange_LossVsEqualRating(t *testing.T) {
 }
 
 // TestComputeRatingChange_WinVsStrongerOpponent verifies a win against an
-// opponent rated 400 points higher yields a larger-than-average gain.
+// opponent rated 400 points higher yields the FIDE B.02 Table 8.1.2 gain.
 func TestComputeRatingChange_WinVsStrongerOpponent(t *testing.T) {
 	player := newID()
 	opp := newID()
@@ -3209,14 +3209,14 @@ func TestComputeRatingChange_WinVsStrongerOpponent(t *testing.T) {
 
 	got := computeRatingChange(player, allInfo, ratings, 1200, 20)
 
-	// We = 1/(1+10^1) ≈ 0.0909, W = 1.0 → ΔR ≈ 18.2
-	if got != 18.2 {
-		t.Errorf("expected 18.2, got %g", got)
+	// Table 8.1.2 (D=400, 392-411): PD = 0.08, W = 1.0 → ΔR = 20 × 0.92 = 18.4
+	if got != 18.4 {
+		t.Errorf("expected 18.4, got %g", got)
 	}
 }
 
 // TestComputeRatingChange_LossVsWeakerOpponent verifies that losing to an
-// opponent rated 400 points lower produces a large negative rating change.
+// opponent rated 400 points lower produces the FIDE B.02 Table 8.1.2 loss.
 func TestComputeRatingChange_LossVsWeakerOpponent(t *testing.T) {
 	player := newID()
 	opp := newID()
@@ -3229,9 +3229,9 @@ func TestComputeRatingChange_LossVsWeakerOpponent(t *testing.T) {
 
 	got := computeRatingChange(player, allInfo, ratings, 1600, 20)
 
-	// We = 10/11 ≈ 0.909, W = 0.0 → ΔR ≈ -18.2
-	if got != -18.2 {
-		t.Errorf("expected -18.2, got %g", got)
+	// Table 8.1.2 (D=400, 392-411): PD = 0.92, W = 0.0 → ΔR = 20 × (-0.92) = -18.4
+	if got != -18.4 {
+		t.Errorf("expected -18.4, got %g", got)
 	}
 }
 
@@ -3311,5 +3311,167 @@ func TestComputeRatingChange_KFactorScalesResult(t *testing.T) {
 	ratio := deltaK40 / deltaK10
 	if math.Abs(ratio-4.0) > 0.01 {
 		t.Errorf("K40/K10 ratio: expected 4.0, got %g", ratio)
+	}
+}
+
+// TestComputeRatingChange_UnratedOpponentExcluded is a regression test for #383:
+// games against unrated opponents (rating 0 or absent from ratings) must be
+// excluded from both actual score W and expected score We.
+func TestComputeRatingChange_UnratedOpponentExcluded(t *testing.T) {
+	for _, res := range []result.Code{result.WhiteWins, result.Draw, result.BlackWins} {
+		player := newID()
+		unratedZero := newID()
+		unratedMissing := newID()
+
+		pairings := []*round.Game[string]{
+			makePairing(1, player, &unratedZero, codePtr(res)),
+			makePairing(2, player, &unratedMissing, codePtr(res)),
+		}
+		allInfo := buildPlayerPairingInfo(pairings)
+		ratings := map[string]int{player: 1500, unratedZero: 0}
+
+		if got := computeRatingChange(player, allInfo, ratings, 1500, 20); got != 0.0 {
+			t.Errorf("result %s vs unrated opponents: expected 0.0, got %g", res, got)
+		}
+	}
+
+	// Mixed rated + unrated opponents: only the rated game contributes.
+	player := newID()
+	ratedOpp := newID()
+	unratedOpp := newID()
+
+	k := 20
+	in := Input[string]{
+		Games: []round.Game[string]{
+			*makePairing(1, player, &ratedOpp, codePtr(result.WhiteWins)), // +10.0
+			*makePairing(2, player, &unratedOpp, codePtr(result.Draw)),    // ignored (would have been -10.0 in #383)
+		},
+		Ratings:  map[string]int{player: 1500, ratedOpp: 1500, unratedOpp: 0},
+		KFactors: map[string]*int{player: &k},
+	}
+
+	for _, ps := range Scores(in) {
+		if ps.ID == player {
+			if ps.RatingInfo.RatingChange == nil || *ps.RatingInfo.RatingChange != 10.0 {
+				t.Fatalf("Scores() RatingChange for player = %v, want 10.0", ps.RatingInfo.RatingChange)
+			}
+		}
+	}
+}
+
+// TestComputeRatingChange_FourHundredPointCap verifies FIDE B.02 Article 8.3.1:
+// rating differences > 400 are capped at 400 for players rated below 2650,
+// whereas players rated 2650 and above use the full rating difference.
+func TestComputeRatingChange_FourHundredPointCap(t *testing.T) {
+	cases := []struct {
+		name         string
+		playerRating int
+		oppRating    int
+		kFactor      int
+		res          result.Code
+		want         float64
+	}{
+		{
+			name:         "below 2650 higher-rated win capped at +400 (PD=0.92)",
+			playerRating: 2000,
+			oppRating:    1400, // D = +600 → capped to +400 → PD = 0.92
+			kFactor:      20,
+			res:          result.WhiteWins,
+			want:         1.6, // 20 × (1.0 - 0.92)
+		},
+		{
+			name:         "below 2650 higher-rated loss capped at +400 (PD=0.92)",
+			playerRating: 2000,
+			oppRating:    1400, // D = +600 → capped to +400 → PD = 0.92
+			kFactor:      20,
+			res:          result.BlackWins,
+			want:         -18.4, // 20 × (0.0 - 0.92)
+		},
+		{
+			name:         "below 2650 lower-rated win capped at -400 (PD=0.08)",
+			playerRating: 1400,
+			oppRating:    2000, // D = -600 → capped to -400 → PD = 0.08
+			kFactor:      20,
+			res:          result.WhiteWins,
+			want:         18.4, // 20 × (1.0 - 0.08)
+		},
+		{
+			name:         "below 2650 lower-rated loss capped at -400 (PD=0.08)",
+			playerRating: 1400,
+			oppRating:    2000, // D = -600 → capped to -400 → PD = 0.08
+			kFactor:      20,
+			res:          result.BlackWins,
+			want:         -1.6, // 20 × (0.0 - 0.08)
+		},
+		{
+			name:         "2650+ higher-rated win uses full difference D=600 (PD=0.98)",
+			playerRating: 2650,
+			oppRating:    2050, // D = +600 (560-619 in Table 8.1.2) → PD = 0.98
+			kFactor:      10,
+			res:          result.WhiteWins,
+			want:         0.2, // 10 × (1.0 - 0.98)
+		},
+		{
+			name:         "2650+ higher-rated win with D>735 gives 0.0 (PD=1.00)",
+			playerRating: 2700,
+			oppRating:    1900, // D = +800 (>735 in Table 8.1.2) → PD = 1.00
+			kFactor:      10,
+			res:          result.WhiteWins,
+			want:         0.0, // 10 × (1.0 - 1.00)
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			player := newID()
+			opp := newID()
+			pairings := []*round.Game[string]{
+				makePairing(1, player, &opp, codePtr(tc.res)),
+			}
+			allInfo := buildPlayerPairingInfo(pairings)
+			ratings := map[string]int{player: tc.playerRating, opp: tc.oppRating}
+
+			got := computeRatingChange(player, allInfo, ratings, tc.playerRating, tc.kFactor)
+			if got != tc.want {
+				t.Errorf("computeRatingChange() = %g, want %g", got, tc.want)
+			}
+		})
+	}
+}
+
+// TestFideScoringProbability_Table812 spot-checks boundary values of FIDE B.02
+// Table 8.1.2 and the Article 8.3.1 400-point cap.
+func TestFideScoringProbability_Table812(t *testing.T) {
+	cases := []struct {
+		playerRating int
+		oppRating    int
+		want         float64
+	}{
+		{1500, 1500, 0.50}, // D = 0 (0-3)
+		{1503, 1500, 0.50}, // D = +3 (0-3)
+		{1500, 1503, 0.50}, // D = -3 (0-3)
+		{1504, 1500, 0.51}, // D = +4 (4-10)
+		{1500, 1504, 0.49}, // D = -4 (4-10)
+		{1510, 1500, 0.51}, // D = +10 (4-10)
+		{1511, 1500, 0.52}, // D = +11 (11-17)
+		{1891, 1500, 0.91}, // D = +391 (375-391)
+		{1892, 1500, 0.92}, // D = +392 (392-411)
+		{1900, 1500, 0.92}, // D = +400 (392-411)
+		{1500, 1900, 0.08}, // D = -400 (392-411)
+		{2200, 1500, 0.92}, // D = +700, player < 2650 → capped at +400 → 0.92
+		{1500, 2200, 0.08}, // D = -700, player < 2650 → capped at -400 → 0.08
+		{2700, 2289, 0.92}, // D = +411, player >= 2650 → 0.92
+		{2700, 2288, 0.93}, // D = +412, player >= 2650 → 0.93
+		{2700, 1965, 0.99}, // D = +735, player >= 2650 → 0.99
+		{2700, 1964, 1.00}, // D = +736, player >= 2650 → 1.00
+		{2650, 3386, 0.00}, // D = -736, player >= 2650 → 0.00
+	}
+
+	for _, tc := range cases {
+		got := fideScoringProbability(tc.playerRating, tc.oppRating)
+		if got != tc.want {
+			t.Errorf("fideScoringProbability(%d, %d) = %g, want %g",
+				tc.playerRating, tc.oppRating, got, tc.want)
+		}
 	}
 }

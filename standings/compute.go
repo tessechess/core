@@ -24,8 +24,7 @@ type Input[ID comparable] struct {
 // These are informational only and do not affect standings ordering.
 //
 // Both values ignore games that were not played over the board (byes,
-// forfeits). Unrated opponents are handled differently by the two, and
-// RatingChange is wrong for them (#383); see the package documentation.
+// forfeits) and games against unrated opponents.
 type RatingInfo struct {
 	// PerformanceRating is the TPR; 0 when no opponent was rated.
 	PerformanceRating float64

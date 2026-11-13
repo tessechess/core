@@ -19,7 +19,6 @@ The reference is the Go doc comments: `go doc ./standings`, or [pkg.go.dev](http
 
 Details are in the package documentation (`go doc`).
 
-- **Rating change against unrated opponents is wrong** ([#383](https://github.com/tessechess/tessentials/issues/383)): they count as rating 0, but a game against an unrated player should not change the rating. ARO and TPR do leave unrated opponents out.
 - **No team tiebreaks** ([#78](https://github.com/tessechess/tessentials/issues/78)): individual competitions only.
 - **Round 1 needs a first-player colour with bbpPairings** ([#376](https://github.com/tessechess/tessentials/issues/376)).
 - **Acceleration is not implemented**: `Settings.Validate` rejects anything other than `none`.

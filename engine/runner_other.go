@@ -6,10 +6,9 @@ import "os/exec"
 
 // configureProcessGroup is a no-op on non-Unix platforms: exec.CommandContext's
 // default cancellation kills only the engine process itself, so child processes
-// (e.g. JaVaFo's JVM when started via a wrapper) may outlive a timeout. Because
-// the output is captured through a pipe and cmd.WaitDelay is not set, such a
-// child that keeps the pipe open can also delay the return of the run past the
-// timeout.
+// (e.g. JaVaFo's JVM when started via a wrapper) may outlive a timeout.
+// cmd.WaitDelay in runEngine still closes the output pipe so the call returns
+// promptly.
 //
-// TODO(#382): set WaitDelay on all platforms and kill the process tree here.
+// TODO(#382): kill the process tree here (e.g. with a Windows job object).
 func configureProcessGroup(cmd *exec.Cmd) {}

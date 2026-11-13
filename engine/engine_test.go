@@ -9,6 +9,9 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -200,6 +203,37 @@ func TestEngine_Timeout(t *testing.T) {
 	}
 	if !errors.Is(err, engine.ErrEngineTimeout) {
 		t.Errorf("expected ErrEngineTimeout, got: %v", err)
+	}
+}
+
+func TestEngine_Timeout_ChildKeepsPipeOpen(t *testing.T) {
+	// With job control enabled (set -m), the backgrounded sleep runs in its own
+	// process group, so killing the engine's process group on timeout does not
+	// kill it and it keeps the stdout/stderr pipe open (#382). cmd.WaitDelay must
+	// still let GeneratePairings return promptly instead of waiting 30s.
+	pidFile := filepath.Join(t.TempDir(), "child.pid")
+	mock := writeMockScript(t, "detached-child-engine",
+		"set -m\nsleep 30 &\necho $! > "+pidFile+"\nwait\n")
+	t.Cleanup(func() {
+		if data, err := os.ReadFile(pidFile); err == nil {
+			if pid, err := strconv.Atoi(strings.TrimSpace(string(data))); err == nil && pid > 0 {
+				_ = syscall.Kill(-pid, syscall.SIGKILL)
+				_ = syscall.Kill(pid, syscall.SIGKILL)
+			}
+		}
+	})
+
+	eng := engine.NewBBPPairings(mock, 200*time.Millisecond)
+
+	start := time.Now()
+	_, err := eng.GeneratePairings(context.Background(), sampleTRF)
+	elapsed := time.Since(start)
+
+	if !errors.Is(err, engine.ErrEngineTimeout) {
+		t.Fatalf("expected ErrEngineTimeout, got: %v", err)
+	}
+	if elapsed > 5*time.Second {
+		t.Errorf("GeneratePairings took %v, expected return shortly after timeout + WaitDelay", elapsed)
 	}
 }
 

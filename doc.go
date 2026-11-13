@@ -63,6 +63,6 @@
 // # Known limitations
 //
 // See the Known limitations sections of packages standings and pairing, for
-// example that the PTP and APPO tiebreaks can hang and that acceleration is
+// example that team tiebreaks are not implemented and that acceleration is
 // ignored.
 package core

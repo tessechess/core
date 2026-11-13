@@ -5,6 +5,7 @@ import (
 	"math"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/tessechess/core/result"
 	"github.com/tessechess/core/round"
@@ -1573,6 +1574,40 @@ func TestComputeAPPO_NoGames(t *testing.T) {
 	t.Log("✓ No OTB games → APPO = 0")
 }
 
+// TestComputeAPPO_UnratedOpponent is a regression test for #379: when an
+// opponent's PTP reaches the negative range (because that opponent lost to an
+// unrated player), APPO must terminate and average the negative PTP rather than
+// hanging.
+func TestComputeAPPO_UnratedOpponent(t *testing.T) {
+	p1 := "p1"
+	p2 := "p2"
+	unrated := "unrated"
+
+	// P1 beats P2; P2 also loses to unrated (rating 0).
+	// P2's opponents are P1 (2000) and unrated (0), with score 0/2 →
+	// minOpp(P2) = 0 → PTP(P2) = 0 - 800 = -800 → APPO(P1) = -800.
+	pairings := []*round.Game[string]{
+		makePairing(1, p1, &p2, codePtr(result.WhiteWins)),
+		makePairing(2, p2, &unrated, codePtr(result.BlackWins)),
+	}
+	allInfo := buildPlayerPairingInfo(pairings)
+	ratings := map[string]int{p1: 2000, p2: 1800}
+
+	done := make(chan float64, 1)
+	go func() {
+		done <- computeAveragePerfectPerformanceOfOpponents(p1, allInfo, ratings)
+	}()
+
+	select {
+	case got := <-done:
+		if got != -800 {
+			t.Errorf("computeAveragePerfectPerformanceOfOpponents() = %v, want -800", got)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("computeAveragePerfectPerformanceOfOpponents() hung (timed out after 1s)")
+	}
+}
+
 // ============================================================================
 // APRO (Average Tournament Performance Rating of Opponents) Tests
 // ============================================================================
@@ -1947,6 +1982,50 @@ func TestComputePTP_NoGames(t *testing.T) {
 		t.Errorf("PTP no games: expected 0, got %f", ptp)
 	}
 	t.Log("✓ No OTB games → PTP = 0")
+}
+
+// TestComputePTP_UnratedOpponent is a regression test for #379: when a player
+// loses to an unrated opponent (rating 0), the binary search enters the
+// negative range [−800, 3000] and must terminate at −800 instead of hanging.
+func TestComputePTP_UnratedOpponent(t *testing.T) {
+	cases := []struct {
+		name      string
+		oppRating int
+		res       result.Code
+		want      float64
+	}{
+		{"loss vs unrated (0)", 0, result.BlackWins, -800},
+		{"draw vs unrated (0)", 0, result.Draw, 0},
+		{"win vs unrated (0)", 0, result.WhiteWins, 3000},
+		{"loss vs 1500", 1500, result.BlackWins, 700},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			b := "opp"
+			res := tc.res
+			games := []*round.Game[string]{{Round: 1, White: "player", Black: &b, Result: &res}}
+			allInfo := buildPlayerPairingInfo(games)
+			ratings := map[string]int{"player": 1500}
+			if tc.oppRating > 0 {
+				ratings["opp"] = tc.oppRating
+			}
+
+			done := make(chan float64, 1)
+			go func() {
+				done <- computePerfectTournamentPerformance("player", allInfo, ratings)
+			}()
+
+			select {
+			case got := <-done:
+				if got != tc.want {
+					t.Errorf("computePerfectTournamentPerformance() = %v, want %v", got, tc.want)
+				}
+			case <-time.After(time.Second):
+				t.Fatal("computePerfectTournamentPerformance() hung (timed out after 1s)")
+			}
+		})
+	}
 }
 
 // ============================================================================

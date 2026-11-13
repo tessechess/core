@@ -15,11 +15,6 @@
 // The engine programs are not part of this module. The caller supplies them
 // (see package engine); JaVaFo must not be redistributed.
 //
-// Round 1 needs Settings.FirstPlayerColor with bbpPairings (#376): without
-// the colour line, bbpPairings refuses to pair a round that has no previous
-// games ("Please configure the initial piece colors") and Pair returns the
-// engine's error (engine.ErrEngineExecution). Later rounds do not need it.
-//
 // Acceleration is not implemented: Settings.Validate rejects anything other
 // than AccelerationNone (or empty), and Pair does not write acceleration to
 // the TRF.
@@ -40,7 +35,7 @@ type Input[ID comparable] struct {
 	// CompletedRounds is the number of completed rounds; the round being paired
 	// is CompletedRounds+1.
 	CompletedRounds int
-	Settings        *Settings[ID] // arbiter settings for this round; nil = none
+	Settings        *Settings[ID] // arbiter settings for this round; nil = none (round 1 requires FirstPlayerColor)
 }
 
 // Tournament holds the header data written to the TRF.
@@ -75,7 +70,7 @@ type Settings[ID comparable] struct {
 	WithdrawnPlayers  []ID                // zero-point bye this round
 	HalfPointByes     []ID                // half-point bye this round
 	LateEntries       []ID                // zero-point byes for the rounds they missed
-	FirstPlayerColor  round.Color         // round.ColorWhite or round.ColorBlack; round 1 only, and required then with bbpPairings (#376)
+	FirstPlayerColor  round.Color         // round.ColorWhite or round.ColorBlack; round 1 only (required there)
 	ForbiddenPairings []ForbiddenPair[ID] // pairs of players that must not meet this round
 	FixedBoards       []FixedBoard[ID]    // players that must play on a given board this round
 

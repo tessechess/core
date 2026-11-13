@@ -3,7 +3,7 @@ package pairing
 import "errors"
 
 var (
-	// ErrInvalidSettings indicates invalid pairing settings (see Settings.Validate).
+	// ErrInvalidSettings indicates invalid pairing settings (see Settings.Validate and Prepare).
 	ErrInvalidSettings = errors.New("invalid pairing settings")
 
 	// ErrPlayerConflict indicates a player appears in conflicting settings lists.

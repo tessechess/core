@@ -19,11 +19,12 @@ import (
 // (withdrawn, half-point bye) are left to the engine's input and are not paired
 // by it. Fixed boards are applied.
 //
-// Errors can be tested with errors.Is: ErrTRFGeneration (the input could not be
-// turned into a TRF, e.g. a player has no StartingRank, TotalRounds is 0 or a
-// game names an unknown player), the engine errors of package engine (engine
-// not found, timeout, non-zero exit), ErrTRFParsing and ErrUnknownEngineRank
-// (the engine's answer could not be read).
+// Errors can be tested with errors.Is: ErrInvalidSettings (round 1 is being
+// paired without a valid Settings.FirstPlayerColor), ErrTRFGeneration (the
+// input could not be turned into a TRF, e.g. a player has no StartingRank,
+// TotalRounds is 0 or a game names an unknown player), the engine errors of
+// package engine (engine not found, timeout, non-zero exit), ErrTRFParsing and
+// ErrUnknownEngineRank (the engine's answer could not be read).
 func Pair[ID comparable](ctx context.Context, eng engine.PairingEngine, in Input[ID]) ([]round.Game[ID], error) {
 	p, err := Prepare(in)
 	if err != nil {
@@ -45,12 +46,19 @@ func (p *Prepared[ID]) TRF() string { return p.trf }
 
 // Prepare merges player-level fixed boards into the settings and generates the
 // TRF input, without running an engine. Use it to preview the TRF (see
-// Prepared.TRF) or to run the engine separately. Generation errors are wrapped
-// with ErrTRFGeneration. The caller's settings are not modified.
+// Prepared.TRF) or to run the engine separately. When pairing round 1
+// (CompletedRounds == 0), Settings.FirstPlayerColor must be round.ColorWhite or
+// round.ColorBlack; otherwise Prepare returns ErrInvalidSettings. Generation
+// errors are wrapped with ErrTRFGeneration. The caller's settings are not
+// modified.
 func Prepare[ID comparable](in Input[ID]) (*Prepared[ID], error) {
 	settings := Settings[ID]{}
 	if in.Settings != nil {
 		settings = *in.Settings
+	}
+
+	if in.CompletedRounds == 0 && settings.FirstPlayerColor != round.ColorWhite && settings.FirstPlayerColor != round.ColorBlack {
+		return nil, fmt.Errorf("%w: first_player_color must be 'white' or 'black' for round 1", ErrInvalidSettings)
 	}
 
 	// Merge player-level fixed boards into the round settings. Round-level

@@ -20,7 +20,6 @@ The reference is the Go doc comments: `go doc ./standings`, or [pkg.go.dev](http
 Details are in the package documentation (`go doc`).
 
 - **No team tiebreaks** ([#78](https://github.com/tessechess/tessentials/issues/78)): individual competitions only.
-- **Round 1 needs a first-player colour with bbpPairings** ([#376](https://github.com/tessechess/tessentials/issues/376)).
 - **Acceleration is not implemented**: `Settings.Validate` rejects anything other than `none`.
 - **Swiss pairing only**, through external engines (no round-robin generator); the engine programs are not part of the module and JaVaFo must not be redistributed.
 - **Engine timeouts on non-Unix platforms** kill only the engine process, not its children ([#382](https://github.com/tessechess/tessentials/issues/382)).

@@ -37,7 +37,7 @@ func intPtr(v int) *int                  { return &v }
 func strPtr(s string) *string            { return &s }
 func codePtr(c result.Code) *result.Code { return &c }
 
-// fourPlayers is a minimal input: players a..d with starting ranks 1..4.
+// fourPlayers is a minimal round-1 input: players a..d with starting ranks 1..4.
 func fourPlayers() pairing.Input[string] {
 	return pairing.Input[string]{
 		Tournament: pairing.Tournament{
@@ -55,6 +55,7 @@ func fourPlayers() pairing.Input[string] {
 			{ID: "c", StartingRank: 3, FirstName: "Cyril", LastName: "Charlie", Rating: 2200},
 			{ID: "d", StartingRank: 4, FirstName: "Dana", LastName: "Delta", Rating: 2100},
 		},
+		Settings: &pairing.Settings[string]{FirstPlayerColor: round.ColorWhite},
 	}
 }
 
@@ -220,6 +221,49 @@ func TestPrepare_ByeSettingsAndHistory(t *testing.T) {
 
 // ── Errors ──────────────────────────────────────────────────
 
+func TestPrepare_Round1RequiresFirstPlayerColor(t *testing.T) {
+	cases := []struct {
+		name     string
+		settings *pairing.Settings[string]
+	}{
+		{"nil settings", nil},
+		{"empty FirstPlayerColor", &pairing.Settings[string]{}},
+		{"invalid FirstPlayerColor", &pairing.Settings[string]{FirstPlayerColor: "red"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			in := fourPlayers()
+			in.Settings = tc.settings
+
+			if _, err := pairing.Prepare(in); !errors.Is(err, pairing.ErrInvalidSettings) {
+				t.Fatalf("Prepare: got %v, want ErrInvalidSettings", err)
+			}
+
+			eng := simplePairs(twoBoards)
+			if _, err := pairing.Pair(context.Background(), eng, in); !errors.Is(err, pairing.ErrInvalidSettings) {
+				t.Fatalf("Pair: got %v, want ErrInvalidSettings", err)
+			}
+			if eng.input != "" {
+				t.Errorf("engine was called despite invalid round 1 settings")
+			}
+		})
+	}
+}
+
+func TestPrepare_LaterRoundDoesNotRequireFirstPlayerColor(t *testing.T) {
+	in := fourPlayers()
+	in.CompletedRounds = 1
+	in.History = []round.Game[string]{
+		{Round: 1, White: "a", Black: strPtr("b"), Result: codePtr(result.WhiteWins)},
+		{Round: 1, White: "c", Black: strPtr("d"), Result: codePtr(result.Draw)},
+	}
+	in.Settings = nil
+
+	if _, err := pairing.Prepare(in); err != nil {
+		t.Fatalf("Prepare round 2 with nil Settings: %v", err)
+	}
+}
+
 func TestPair_UnknownRank(t *testing.T) {
 	for _, out := range []string{"1\n99 2\n", "1\n1 99\n"} {
 		_, err := pairing.Pair(context.Background(), simplePairs(out), fourPlayers())
@@ -271,7 +315,10 @@ const twoBoards = "2\n1 2\n3 4\n"
 
 func TestPair_RoundLevelFixedBoard(t *testing.T) {
 	in := fourPlayers()
-	in.Settings = &pairing.Settings[string]{FixedBoards: []pairing.FixedBoard[string]{{BoardNumber: 1, Player: "c"}}}
+	in.Settings = &pairing.Settings[string]{
+		FirstPlayerColor: round.ColorWhite,
+		FixedBoards:      []pairing.FixedBoard[string]{{BoardNumber: 1, Player: "c"}},
+	}
 
 	boards, err := pairing.Pair(context.Background(), simplePairs(twoBoards), in)
 	if err != nil {
@@ -293,8 +340,11 @@ func TestPair_PlayerLevelFixedBoard(t *testing.T) {
 
 func TestPair_RoundLevelFixedBoardWinsOverPlayerLevel(t *testing.T) {
 	in := fourPlayers()
-	in.Players[0].FixedBoard = intPtr(1)                                                                              // player-level: a on board 1
-	in.Settings = &pairing.Settings[string]{FixedBoards: []pairing.FixedBoard[string]{{BoardNumber: 5, Player: "a"}}} // round-level: a on board 5
+	in.Players[0].FixedBoard = intPtr(1) // player-level: a on board 1
+	in.Settings = &pairing.Settings[string]{
+		FirstPlayerColor: round.ColorWhite,
+		FixedBoards:      []pairing.FixedBoard[string]{{BoardNumber: 5, Player: "a"}}, // round-level: a on board 5
+	}
 
 	boards, err := pairing.Pair(context.Background(), simplePairs(twoBoards), in)
 	if err != nil {
@@ -306,7 +356,10 @@ func TestPair_RoundLevelFixedBoardWinsOverPlayerLevel(t *testing.T) {
 func TestPrepare_DoesNotModifyInputSettings(t *testing.T) {
 	in := fourPlayers()
 	in.Players[1].FixedBoard = intPtr(3)
-	settings := &pairing.Settings[string]{FixedBoards: []pairing.FixedBoard[string]{{BoardNumber: 1, Player: "c"}}}
+	settings := &pairing.Settings[string]{
+		FirstPlayerColor: round.ColorWhite,
+		FixedBoards:      []pairing.FixedBoard[string]{{BoardNumber: 1, Player: "c"}},
+	}
 	in.Settings = settings
 
 	if _, err := pairing.Prepare(in); err != nil {

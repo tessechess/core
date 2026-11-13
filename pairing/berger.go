@@ -76,6 +76,73 @@ func RoundRobinTotalRounds(playerCount, cycles int) int {
 	return cycles * (evenN - 1)
 }
 
+// CycleOrder selects in which order the rounds of the Berger table are played
+// when a round-robin has more than one cycle (for example a double round-robin).
+// Played as it is, a double round-robin can give a player the same colour in
+// three consecutive games where the first cycle ends and the second begins; the
+// orders below differ in how they deal with that. The order only changes which
+// round is played when: every cycle still contains each pairing once, and the
+// colours of a round do not depend on the order.
+//
+// The first cycle is the only one reordered, and only when cycles >= 2; a
+// single round-robin always follows the table. Cycles after the first are
+// played in table order, with the colours reversed in every even-numbered cycle
+// (the second, the fourth, ...).
+type CycleOrder string
+
+const (
+	// CycleOrderRepeat plays every cycle in table order (round 1, 2, ... ), with
+	// the colours reversed in the second cycle. It is the default for the empty
+	// value. Some players get three consecutive games with the same colour
+	// where the cycles meet.
+	CycleOrderRepeat CycleOrder = "repeat"
+
+	// CycleOrderFIDE follows the recommendation of FIDE Handbook C.05 Annex 1:
+	// the last two rounds of the first cycle are played in reverse order, "to
+	// avoid three consecutive games with the same colour". The second cycle is
+	// in table order with reversed colours.
+	CycleOrderFIDE CycleOrder = "fide"
+
+	// CycleOrderMilvang is the arrangement proposed by Otto Milvang in "Berger
+	// explained": the first cycle starts with the last round of the table and
+	// then plays rounds 1, 2, ...; the second cycle is in table order with
+	// reversed colours. It keeps the regular structure of the table.
+	CycleOrderMilvang CycleOrder = "milvang"
+)
+
+// valid reports whether o is one of the defined orders or empty.
+func (o CycleOrder) valid() bool {
+	switch o {
+	case "", CycleOrderRepeat, CycleOrderFIDE, CycleOrderMilvang:
+		return true
+	}
+	return false
+}
+
+// roundOrder returns the table rounds (0-based indexes into the single-cycle
+// schedule) in the order they are played in the given cycle (0-based).
+func (o CycleOrder) roundOrder(cycle, cycles, rounds int) []int {
+	order := make([]int, rounds)
+	for i := range order {
+		order[i] = i
+	}
+	if cycle != 0 || cycles < 2 {
+		return order
+	}
+	switch o {
+	case CycleOrderFIDE:
+		if rounds >= 2 {
+			order[rounds-2], order[rounds-1] = order[rounds-1], order[rounds-2]
+		}
+	case CycleOrderMilvang:
+		for i := 1; i < rounds; i++ {
+			order[i] = i - 1
+		}
+		order[0] = rounds - 1
+	}
+	return order
+}
+
 // freeRoundResult returns a fresh result.Void for the free round of an odd-sized round-robin.
 func freeRoundResult() *result.Code {
 	code := result.Void
@@ -99,16 +166,23 @@ func freeRoundResult() *result.Code {
 // are numbered sequentially starting at board 1. Player-level FixedBoard assignments
 // are applied to the played boards of each round via ApplyFixedBoards.
 //
+// order chooses the order of the rounds when cycles >= 2 (see CycleOrder); the
+// empty value means CycleOrderRepeat.
+//
 // Errors can be tested with errors.Is: ErrNotEnoughPlayers (fewer than 2
-// players), ErrInvalidCycles (cycles < 1), and ErrInvalidStartingRank (missing,
-// out-of-range, or duplicate StartingRank).
-func PairRoundRobin[ID comparable](players []Player[ID], cycles int) ([][]round.Game[ID], error) {
+// players), ErrInvalidCycles (cycles < 1), ErrInvalidCycleOrder (unknown
+// order), and ErrInvalidStartingRank (missing, out-of-range, or duplicate
+// StartingRank).
+func PairRoundRobin[ID comparable](players []Player[ID], cycles int, order CycleOrder) ([][]round.Game[ID], error) {
 	p := len(players)
 	if p < 2 {
 		return nil, fmt.Errorf("%w: got %d", ErrNotEnoughPlayers, p)
 	}
 	if cycles < 1 {
 		return nil, fmt.Errorf("%w: got %d", ErrInvalidCycles, cycles)
+	}
+	if !order.valid() {
+		return nil, fmt.Errorf("%w: %q", ErrInvalidCycleOrder, string(order))
 	}
 
 	rankToID := make(map[int]ID, p)
@@ -140,8 +214,9 @@ func PairRoundRobin[ID comparable](players []Player[ID], cycles int) ([][]round.
 
 	for c := 0; c < cycles; c++ {
 		reverseColors := c%2 == 1
-		for rIdx, pairs := range baseCycle {
-			roundNum := c*roundsPerCycle + rIdx + 1
+		for pos, rIdx := range order.roundOrder(c, cycles, roundsPerCycle) {
+			pairs := baseCycle[rIdx]
+			roundNum := c*roundsPerCycle + pos + 1
 			played := make([]round.Game[ID], 0, len(pairs))
 			var byeGame *round.Game[ID]
 

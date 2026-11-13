@@ -24,6 +24,9 @@ var (
 	// ErrInvalidCycles indicates a non-positive cycle count for round-robin pairing.
 	ErrInvalidCycles = errors.New("round-robin cycles must be at least 1")
 
+	// ErrInvalidCycleOrder indicates an unknown CycleOrder for round-robin pairing.
+	ErrInvalidCycleOrder = errors.New("unknown round-robin cycle order")
+
 	// ErrInvalidStartingRank indicates a missing, out-of-range, or duplicate starting rank.
 	ErrInvalidStartingRank = errors.New("invalid or duplicate player starting rank")
 )

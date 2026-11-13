@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/tessechess/core/result"
+	"github.com/tessechess/core/round"
 )
 
 func TestBerger_Errors(t *testing.T) {
@@ -257,7 +258,7 @@ func TestPairRoundRobin_EvenSingleAndDouble(t *testing.T) {
 		{ID: "p4", StartingRank: 4},
 	}
 
-	schedule, err := PairRoundRobin(players, 2)
+	schedule, err := PairRoundRobin(players, 2, CycleOrderRepeat)
 	if err != nil {
 		t.Fatalf("PairRoundRobin unexpected error: %v", err)
 	}
@@ -305,7 +306,7 @@ func TestPairRoundRobin_OddPlayers_ByeOnLastBoard(t *testing.T) {
 		{ID: "p5", StartingRank: 5},
 	}
 
-	schedule, err := PairRoundRobin(players, 2)
+	schedule, err := PairRoundRobin(players, 2, CycleOrderRepeat)
 	if err != nil {
 		t.Fatalf("PairRoundRobin unexpected error: %v", err)
 	}
@@ -359,7 +360,7 @@ func TestPairRoundRobin_FixedBoards(t *testing.T) {
 		{ID: "p5", StartingRank: 5},
 	}
 
-	schedule, err := PairRoundRobin(players, 1)
+	schedule, err := PairRoundRobin(players, 1, "")
 	if err != nil {
 		t.Fatalf("PairRoundRobin unexpected error: %v", err)
 	}
@@ -387,10 +388,10 @@ func TestPairRoundRobin_ValidationErrors(t *testing.T) {
 		{ID: "p2", StartingRank: 2},
 	}
 
-	if _, err := PairRoundRobin(validPlayers[:1], 1); !errors.Is(err, ErrNotEnoughPlayers) {
+	if _, err := PairRoundRobin(validPlayers[:1], 1, ""); !errors.Is(err, ErrNotEnoughPlayers) {
 		t.Errorf("expected ErrNotEnoughPlayers, got %v", err)
 	}
-	if _, err := PairRoundRobin(validPlayers, 0); !errors.Is(err, ErrInvalidCycles) {
+	if _, err := PairRoundRobin(validPlayers, 0, ""); !errors.Is(err, ErrInvalidCycles) {
 		t.Errorf("expected ErrInvalidCycles, got %v", err)
 	}
 
@@ -398,7 +399,7 @@ func TestPairRoundRobin_ValidationErrors(t *testing.T) {
 		{ID: "p1", StartingRank: 1},
 		{ID: "p2", StartingRank: 0},
 	}
-	if _, err := PairRoundRobin(missingRank, 1); !errors.Is(err, ErrInvalidStartingRank) {
+	if _, err := PairRoundRobin(missingRank, 1, ""); !errors.Is(err, ErrInvalidStartingRank) {
 		t.Errorf("expected ErrInvalidStartingRank for rank 0, got %v", err)
 	}
 
@@ -406,7 +407,7 @@ func TestPairRoundRobin_ValidationErrors(t *testing.T) {
 		{ID: "p1", StartingRank: 1},
 		{ID: "p2", StartingRank: 3},
 	}
-	if _, err := PairRoundRobin(outOfRangeRank, 1); !errors.Is(err, ErrInvalidStartingRank) {
+	if _, err := PairRoundRobin(outOfRangeRank, 1, ""); !errors.Is(err, ErrInvalidStartingRank) {
 		t.Errorf("expected ErrInvalidStartingRank for rank 3, got %v", err)
 	}
 
@@ -414,7 +415,236 @@ func TestPairRoundRobin_ValidationErrors(t *testing.T) {
 		{ID: "p1", StartingRank: 1},
 		{ID: "p2", StartingRank: 1},
 	}
-	if _, err := PairRoundRobin(duplicateRank, 1); !errors.Is(err, ErrInvalidStartingRank) {
+	if _, err := PairRoundRobin(duplicateRank, 1, ""); !errors.Is(err, ErrInvalidStartingRank) {
 		t.Errorf("expected ErrInvalidStartingRank for duplicate rank, got %v", err)
+	}
+}
+
+// rrPlayers returns n players whose ID equals their starting rank.
+func rrPlayers(n int) []Player[int] {
+	ps := make([]Player[int], n)
+	for i := range ps {
+		ps[i] = Player[int]{ID: i + 1, StartingRank: i + 1}
+	}
+	return ps
+}
+
+// tableIndex returns the 0-based index of the Berger round that games play,
+// and whether the colours are those of the table (false = reversed).
+func tableIndex(t *testing.T, base [][]BergerPair, p int, games []round.Game[int]) (idx int, sameColours bool) {
+	t.Helper()
+	for i, pairs := range base {
+		same, reversed, played := true, true, 0
+		for _, bp := range pairs {
+			if bp.White > p || bp.Black > p {
+				continue // free round
+			}
+			played++
+			found := false
+			for _, g := range games {
+				if g.Black == nil {
+					continue
+				}
+				if g.White == bp.White && *g.Black == bp.Black {
+					found, reversed = true, false
+				}
+				if g.White == bp.Black && *g.Black == bp.White {
+					found, same = true, false
+				}
+			}
+			if !found {
+				same, reversed = false, false
+			}
+		}
+		if played > 0 && (same || reversed) && !(same && reversed) {
+			return i, same
+		}
+	}
+	t.Fatalf("round %+v matches no Berger round", games)
+	return 0, false
+}
+
+func TestPairRoundRobin_CycleOrders(t *testing.T) {
+	// Expected order of the table rounds (0-based) in the first cycle; the second
+	// cycle is always in table order with reversed colours.
+	tests := []struct {
+		name  string
+		n     int
+		order CycleOrder
+		want  []int
+	}{
+		{"repeat n=4", 4, CycleOrderRepeat, []int{0, 1, 2}},
+		{"empty is repeat n=4", 4, "", []int{0, 1, 2}},
+		{"fide n=4", 4, CycleOrderFIDE, []int{0, 2, 1}},
+		{"milvang n=4", 4, CycleOrderMilvang, []int{2, 0, 1}},
+		{"fide n=6", 6, CycleOrderFIDE, []int{0, 1, 2, 4, 3}},
+		{"milvang n=6", 6, CycleOrderMilvang, []int{4, 0, 1, 2, 3}},
+		{"fide odd n=5", 5, CycleOrderFIDE, []int{0, 1, 2, 4, 3}},
+		{"milvang odd n=5", 5, CycleOrderMilvang, []int{4, 0, 1, 2, 3}},
+		{"fide n=2 (one round, nothing to swap)", 2, CycleOrderFIDE, []int{0}},
+		{"milvang n=2", 2, CycleOrderMilvang, []int{0}},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			base, err := Berger(tc.n)
+			if err != nil {
+				t.Fatal(err)
+			}
+			sch, err := PairRoundRobin(rrPlayers(tc.n), 2, tc.order)
+			if err != nil {
+				t.Fatal(err)
+			}
+			r := len(base)
+			if len(sch) != 2*r {
+				t.Fatalf("got %d rounds, want %d", len(sch), 2*r)
+			}
+			for pos := 0; pos < r; pos++ {
+				idx, same := tableIndex(t, base, tc.n, sch[pos])
+				if idx != tc.want[pos] || !same {
+					t.Errorf("cycle 1 round %d: table round %d (table colours %v), want %d with table colours", pos+1, idx, same, tc.want[pos])
+				}
+				idx, same = tableIndex(t, base, tc.n, sch[r+pos])
+				if idx != pos || same {
+					t.Errorf("cycle 2 round %d: table round %d (table colours %v), want %d with reversed colours", r+pos+1, idx, same, pos)
+				}
+				for _, g := range sch[pos] {
+					if g.Round != pos+1 {
+						t.Errorf("round numbering: got %d want %d", g.Round, pos+1)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestPairRoundRobin_SingleCycleIgnoresOrder(t *testing.T) {
+	for _, order := range []CycleOrder{"", CycleOrderRepeat, CycleOrderFIDE, CycleOrderMilvang} {
+		base, _ := Berger(6)
+		sch, err := PairRoundRobin(rrPlayers(6), 1, order)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for pos := range sch {
+			if idx, same := tableIndex(t, base, 6, sch[pos]); idx != pos || !same {
+				t.Errorf("order %q: round %d is table round %d (table colours %v), want table order", order, pos+1, idx, same)
+			}
+		}
+	}
+}
+
+func TestPairRoundRobin_ThreeCyclesReorderFirstOnly(t *testing.T) {
+	base, _ := Berger(4)
+	sch, err := PairRoundRobin(rrPlayers(4), 3, CycleOrderMilvang)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := [][]int{{2, 0, 1}, {0, 1, 2}, {0, 1, 2}}
+	wantSame := []bool{true, false, true}
+	for c := 0; c < 3; c++ {
+		for pos := 0; pos < 3; pos++ {
+			idx, same := tableIndex(t, base, 4, sch[c*3+pos])
+			if idx != want[c][pos] || same != wantSame[c] {
+				t.Errorf("cycle %d round %d: table round %d (table colours %v), want %d (%v)", c+1, pos+1, idx, same, want[c][pos], wantSame[c])
+			}
+		}
+	}
+}
+
+func TestPairRoundRobin_DoubleCycleColourRuns(t *testing.T) {
+	// Counts only the games a player plays, so a free round does not break a run.
+	stats := func(sch [][]round.Game[int]) (maxRun, maxRepeats int) {
+		seq := map[int][]int{}
+		for _, rd := range sch {
+			for _, g := range rd {
+				if g.Black == nil {
+					continue
+				}
+				seq[g.White] = append(seq[g.White], 1)
+				seq[*g.Black] = append(seq[*g.Black], -1)
+			}
+		}
+		for _, cs := range seq {
+			run, repeats := 1, 0
+			for i := 1; i < len(cs); i++ {
+				if cs[i] == cs[i-1] {
+					run++
+					repeats++
+				} else {
+					run = 1
+				}
+				maxRun = max(maxRun, run)
+			}
+			maxRepeats = max(maxRepeats, repeats)
+		}
+		return maxRun, maxRepeats
+	}
+
+	for n := 3; n <= 24; n++ {
+		repeat, _ := PairRoundRobin(rrPlayers(n), 2, CycleOrderRepeat)
+		fide, _ := PairRoundRobin(rrPlayers(n), 2, CycleOrderFIDE)
+		milvang, _ := PairRoundRobin(rrPlayers(n), 2, CycleOrderMilvang)
+
+		runRepeat, _ := stats(repeat)
+		runFIDE, _ := stats(fide)
+		runMilvang, repeatsMilvang := stats(milvang)
+
+		// The problem the orders solve: played as it is, an even field has players
+		// with the same colour three games in a row.
+		if n%2 == 0 && runRepeat != 3 {
+			t.Errorf("n=%d repeat: longest run = %d, want 3", n, runRepeat)
+		}
+		if runFIDE > 2 {
+			t.Errorf("n=%d fide: longest run = %d, want <= 2", n, runFIDE)
+		}
+		if runMilvang > 2 {
+			t.Errorf("n=%d milvang: longest run = %d, want <= 2", n, runMilvang)
+		}
+		if repeatsMilvang > 2 {
+			t.Errorf("n=%d milvang: %d same-colour repeats for one player, want <= 2", n, repeatsMilvang)
+		}
+
+		// Every order is still a complete double round-robin.
+		for name, sch := range map[string][][]round.Game[int]{"repeat": repeat, "fide": fide, "milvang": milvang} {
+			meet := map[[2]int]int{}
+			for _, rd := range sch {
+				seen := map[int]bool{}
+				for _, g := range rd {
+					if seen[g.White] {
+						t.Errorf("n=%d %s: player %d twice in a round", n, name, g.White)
+					}
+					seen[g.White] = true
+					if g.Black == nil {
+						continue
+					}
+					if seen[*g.Black] {
+						t.Errorf("n=%d %s: player %d twice in a round", n, name, *g.Black)
+					}
+					seen[*g.Black] = true
+					a, b := g.White, *g.Black
+					if a > b {
+						a, b = b, a
+					}
+					meet[[2]int{a, b}]++
+				}
+			}
+			if len(meet) != n*(n-1)/2 {
+				t.Errorf("n=%d %s: %d distinct pairs, want %d", n, name, len(meet), n*(n-1)/2)
+			}
+			for pair, c := range meet {
+				if c != 2 {
+					t.Errorf("n=%d %s: pair %v met %d times, want 2", n, name, pair, c)
+				}
+			}
+		}
+	}
+}
+
+func TestPairRoundRobin_InvalidCycleOrder(t *testing.T) {
+	if _, err := PairRoundRobin(rrPlayers(4), 2, "bogus"); !errors.Is(err, ErrInvalidCycleOrder) {
+		t.Errorf("expected ErrInvalidCycleOrder, got %v", err)
+	}
+	// An unknown order is rejected even when it would have no effect (one cycle).
+	if _, err := PairRoundRobin(rrPlayers(4), 1, "bogus"); !errors.Is(err, ErrInvalidCycleOrder) {
+		t.Errorf("expected ErrInvalidCycleOrder for one cycle, got %v", err)
 	}
 }

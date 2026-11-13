@@ -2,8 +2,8 @@
 // used for completed rounds (input to trf, pairing and standings) and for a
 // freshly paired round (output of pairing).
 //
-// Players are identified by a caller-defined ID type (e.g. a registration UUID
-// in the backend).
+// Players are identified by a caller-defined ID type (e.g. a UUID or a database
+// key).
 package round
 
 import "github.com/tessechess/core/result"

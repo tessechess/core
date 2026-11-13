@@ -1,9 +1,9 @@
 // Package trf generates FIDE TRF 1.6 input for pairing engines (bbpPairings,
 // JaVaFo) and parses their output.
 //
-// Players are identified by a caller-defined ID type (e.g. a registration UUID
-// in the backend). Inside the TRF they are referred to by starting rank; the
-// returned PlayerMapping translates between the two.
+// Players are identified by a caller-defined ID type (e.g. a UUID or a database
+// key). Inside the TRF they are referred to by starting rank; the returned
+// PlayerMapping translates between the two.
 package trf
 
 import (

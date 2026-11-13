@@ -13,7 +13,7 @@ import (
 )
 
 // TestExportedIdentifiersAreDocumented fails for every exported identifier in
-// the module that has no doc comment, so the pkg.go.dev reference cannot rot.
+// the module that has no doc comment.
 //
 // What counts as documented:
 //   - types, functions and methods (on exported types): a doc comment;

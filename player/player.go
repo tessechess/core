@@ -1,9 +1,9 @@
 // Package player defines the small value types that describe a player and are
 // shared by trf, pairing and category: sex and FIDE title.
 //
-// The values are the ones the backend stores ("M"/"F", "GM", "WIM", ...). Each
-// package that writes a file format converts them to that format itself (trf
-// writes sex as "m"/"w").
+// Sex is "M" or "F" (or empty when not recorded) and a title is its FIDE
+// abbreviation ("GM", "WIM", ...). Each package that writes a file format
+// converts the values to that format itself (trf writes sex as "m"/"w").
 package player
 
 // Sex is a player's recorded sex.

@@ -4,15 +4,14 @@
 // boards) or generates the full schedule of a round-robin section upfront using
 // the Berger function (see PairRoundRobin).
 //
-// Players are identified by a caller-defined ID type (e.g. a registration UUID
-// in the backend). The package has no persistence, and choosing which engine to
-// run for Swiss pairings is the caller's job.
+// Players are identified by a caller-defined ID type (e.g. a UUID or a database
+// key). The package has no persistence, and choosing which engine to run for
+// Swiss pairings is the caller's job.
 //
 // # Known limitations
 //
 // Swiss pairing requires an external engine whose program is not part of this
-// module. The caller supplies it (see package engine); JaVaFo must not be
-// redistributed.
+// module. The caller supplies it (see package engine).
 //
 // Acceleration is not implemented: Settings.Validate rejects anything other
 // than AccelerationNone (or empty), and Pair does not write acceleration to
@@ -92,7 +91,7 @@ const (
 	// AccelerationBaku is Baku acceleration (FIDE C.04.5). Not implemented
 	// (rejected by Settings.Validate).
 	AccelerationBaku Acceleration = "baku"
-	// AccelerationDutch is the third option offered by the dashboard. Not
+	// AccelerationDutch is the acceleration method named "dutch". Not
 	// implemented (rejected by Settings.Validate).
 	AccelerationDutch Acceleration = "dutch"
 )

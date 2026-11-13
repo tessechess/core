@@ -1,9 +1,9 @@
 // Package standings computes FIDE tiebreaks, standings and crosstable rows from
 // the games of one section.
 //
-// Players are identified by a caller-defined ID type (e.g. a registration UUID
-// in the backend). The package has no persistence: callers load the games,
-// ratings, K-factors and tiebreak configuration and pass them in an Input.
+// Players are identified by a caller-defined ID type (e.g. a UUID or a database
+// key). The package has no persistence: callers load the games, ratings,
+// K-factors and tiebreak configuration and pass them in an Input.
 //
 // # Known limitations
 //

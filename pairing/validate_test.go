@@ -18,13 +18,12 @@ func TestValidate_ValidSettings(t *testing.T) {
 			HalfPointByes:     []string{"b"},
 			LateEntries:       []string{"c"},
 			FirstPlayerColor:  "black",
-			Acceleration:      "baku",
+			Acceleration:      pairing.AccelerationNone,
 			ForbiddenPairings: []pairing.ForbiddenPair[string]{{Player1: "c", Player2: "d"}},
 			FixedBoards:       []pairing.FixedBoard[string]{{BoardNumber: 1, Player: "d"}, {BoardNumber: 3, Player: "e"}},
 		},
 		"explicit none values": {FirstPlayerColor: "", Acceleration: pairing.AccelerationNone},
-		"white and dutch":      {FirstPlayerColor: "white", Acceleration: pairing.AccelerationDutch},
-		"baku constant":        {Acceleration: pairing.AccelerationBaku},
+		"white colour":         {FirstPlayerColor: "white"},
 	}
 	for name, s := range cases {
 		if err := s.Validate(); err != nil {
@@ -45,8 +44,12 @@ func TestValidate_Errors(t *testing.T) {
 	}{
 		{"invalid colour", settings{FirstPlayerColor: "red"},
 			pairing.ErrInvalidSettings, "invalid pairing settings: first_player_color must be 'white' or 'black'"},
+		{"baku acceleration not implemented", settings{Acceleration: pairing.AccelerationBaku},
+			pairing.ErrInvalidSettings, "invalid pairing settings: acceleration is not implemented (must be 'none')"},
+		{"dutch acceleration not implemented", settings{Acceleration: pairing.AccelerationDutch},
+			pairing.ErrInvalidSettings, "invalid pairing settings: acceleration is not implemented (must be 'none')"},
 		{"invalid acceleration", settings{Acceleration: "fast"},
-			pairing.ErrInvalidSettings, "invalid pairing settings: acceleration must be 'none', 'baku', or 'dutch'"},
+			pairing.ErrInvalidSettings, "invalid pairing settings: acceleration is not implemented (must be 'none')"},
 		{"forbidden pair with one player", settings{ForbiddenPairings: []pairing.ForbiddenPair[string]{{Player1: "a", Player2: "a"}}},
 			pairing.ErrInvalidSettings, "invalid pairing settings: forbidden pairing cannot have the same player on both sides"},
 		{"fixed board below 1", settings{FixedBoards: []pairing.FixedBoard[string]{fb(0, "a")}},

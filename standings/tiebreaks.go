@@ -823,7 +823,7 @@ func computePerfectTournamentPerformance[ID comparable](
 
 	// Find the lowest integer R where expTotal(R) >= actual.
 	for lo < hi {
-		mid := (lo + hi) / 2
+		mid := lo + (hi-lo)/2
 		if expTotal(mid) >= actual {
 			hi = mid
 		} else {

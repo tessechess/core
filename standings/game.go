@@ -7,13 +7,6 @@
 //
 // # Known limitations
 //
-// PTP and APPO can hang (#379). PerfectTournamentPerformance and
-// AveragePerfectPerformanceOfOpponents search for a rating with a binary search
-// that never ends for some inputs, for example when a player lost to an unrated
-// opponent (rating 0). Scores, Rank and Crosstable then never return, and there
-// is no timeout. Do not put these two keys in a tiebreak list until the issue
-// is fixed.
-//
 // Individual competitions only. Team tiebreaks (game points, match points,
 // #78) are not implemented; no TiebreakKey stands for them.
 //
@@ -26,7 +19,7 @@
 //     of both the rating average and the score (0 if no opponent is rated);
 //     AveragePerfectPerformanceRatingOfOpponents builds on it.
 //   - PerfectTournamentPerformance and AveragePerfectPerformanceOfOpponents use
-//     rating 0 as it is (see the hang above).
+//     rating 0 as it is.
 //   - RatingInfo.RatingChange is computed only for a rated player with a
 //     K-factor. Known bug (#383): an unrated opponent counts as rating 0 in
 //     the expected score, so a game against one changes the rating (a

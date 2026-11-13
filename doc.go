@@ -1,7 +1,7 @@
 // Package core is the root of a module of pure tournament logic: result codes,
-// tiebreaks and standings, TRF generation and the pairing of Swiss rounds
-// through external engines, and player categories. The root package has no
-// code; import the packages below.
+// tiebreaks and standings, TRF generation, Swiss pairing through external
+// engines and round-robin pairing via the Berger function, and player
+// categories. The root package has no code; import the packages below.
 //
 // It is the tournament engine of TournamentEssentials
 // (https://github.com/tessechess/tessentials), an open-source chess
@@ -26,7 +26,8 @@
 //   - [github.com/tessechess/core/standings]: tiebreaks,
 //     standings and crosstables from the games of a section.
 //   - [github.com/tessechess/core/pairing]: pairs the next
-//     round (settings, fixed boards, starting ranks).
+//     Swiss round or generates a round-robin schedule upfront (settings, fixed
+//     boards, starting ranks, Berger function).
 //   - [github.com/tessechess/core/trf]: the FIDE TRF 1.6
 //     generator and the parsers of pairing-engine output, used by pairing.
 //   - [github.com/tessechess/core/engine]: runs bbpPairings

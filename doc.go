@@ -63,6 +63,5 @@
 // # Known limitations
 //
 // See the Known limitations sections of packages standings and pairing, for
-// example that team tiebreaks are not implemented and that acceleration is
-// ignored.
+// example that team tiebreaks and pairing acceleration are not implemented.
 package core

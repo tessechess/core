@@ -20,8 +20,9 @@
 // games ("Please configure the initial piece colors") and Pair returns the
 // engine's error (engine.ErrEngineExecution). Later rounds do not need it.
 //
-// Settings.Acceleration is validated but has no effect (#377): it is not
-// written to the TRF, so engines pair without acceleration.
+// Acceleration is not implemented: Settings.Validate rejects anything other
+// than AccelerationNone (or empty), and Pair does not write acceleration to
+// the TRF.
 package pairing
 
 import (
@@ -79,21 +80,26 @@ type Settings[ID comparable] struct {
 	FixedBoards       []FixedBoard[ID]    // players that must play on a given board this round
 
 	// Acceleration is the acceleration method for round 1; empty means none.
-	// It is validated but currently has no effect: it is not written to the
-	// TRF, so Pair ignores it (#377).
+	// Not implemented: Validate rejects anything other than AccelerationNone
+	// (or empty), and Pair ignores it.
 	Acceleration Acceleration
 }
 
 // Acceleration is a pairing acceleration method, used in round 1. The empty
 // value means "not set" and behaves like AccelerationNone.
+//
+// Not implemented: Settings.Validate rejects anything other than
+// AccelerationNone (or empty).
 type Acceleration string
 
 const (
 	// AccelerationNone pairs without acceleration.
 	AccelerationNone Acceleration = "none"
-	// AccelerationBaku is Baku acceleration (FIDE C.04.5).
+	// AccelerationBaku is Baku acceleration (FIDE C.04.5). Not implemented
+	// (rejected by Settings.Validate).
 	AccelerationBaku Acceleration = "baku"
-	// AccelerationDutch is the third option offered by the dashboard.
+	// AccelerationDutch is the third option offered by the dashboard. Not
+	// implemented (rejected by Settings.Validate).
 	AccelerationDutch Acceleration = "dutch"
 )
 

@@ -3,6 +3,8 @@ package pairing
 import (
 	"errors"
 	"testing"
+
+	"github.com/tessechess/core/result"
 )
 
 func TestBerger_Errors(t *testing.T) {
@@ -330,6 +332,19 @@ func TestPairRoundRobin_OddPlayers_ByeOnLastBoard(t *testing.T) {
 		bye := games[2]
 		if bye.Round != r+1 || bye.Board != 3 || !bye.IsBye() || bye.White != wantBye[r] {
 			t.Errorf("round %d bye = %+v, want Round=%d Board=3 White=%s Black=nil", r+1, bye, r+1, wantBye[r])
+		}
+		// A free round scores nothing and takes no part in the tiebreaks: Void,
+		// not ZeroPointBye (standings treat that like a Swiss bye) and not the
+		// full-point bye.
+		if bye.Result == nil || *bye.Result != result.Void {
+			t.Errorf("round %d bye Result = %v, want %q", r+1, bye.Result, result.Void)
+		} else if bye.Result.Counts() || bye.Points(bye.White) != 0 {
+			t.Errorf("round %d bye should not count and award 0 points", r+1)
+		}
+		for b := 0; b < 2; b++ {
+			if games[b].Result != nil {
+				t.Errorf("round %d board %d: played game has Result %v, want nil", r+1, b+1, *games[b].Result)
+			}
 		}
 	}
 }

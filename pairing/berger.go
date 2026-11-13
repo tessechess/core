@@ -3,6 +3,7 @@ package pairing
 import (
 	"fmt"
 
+	"github.com/tessechess/core/result"
 	"github.com/tessechess/core/round"
 )
 
@@ -75,20 +76,28 @@ func RoundRobinTotalRounds(playerCount, cycles int) int {
 	return cycles * (evenN - 1)
 }
 
+// freeRoundResult returns a fresh result.Void for the free round of an odd-sized round-robin.
+func freeRoundResult() *result.Code {
+	code := result.Void
+	return &code
+}
+
 // PairRoundRobin generates the full round-robin tournament schedule upfront
 // across the specified number of cycles using the Berger function.
 //
 // The caller assigns the pairing numbers: every player in players must have a
 // unique 1-based StartingRank in 1..len(players) (round-robin numbers are
-// usually drawn by lot, so nothing is assigned here). For cycles >= 2 (e.g. a double
-// round-robin with cycles == 2), even-numbered cycles reverse colors on every
-// played board relative to the first cycle.
+// usually drawn by lot, so nothing is assigned here). For cycles >= 2 (e.g. a
+// double round-robin with cycles == 2), even-numbered cycles reverse colors on
+// every played board relative to the first cycle.
 //
 // When len(players) is odd, the player paired against the virtual slot
-// N = len(players)+1 receives a bye (White set to the player's ID, Black nil)
-// placed on the last board (N/2), while played games are numbered sequentially
-// starting at board 1. Player-level FixedBoard assignments are applied to the
-// played boards of each round via ApplyFixedBoards.
+// N = len(players)+1 has a free round: a bye game (White set to the player's
+// ID, Black nil) with Result result.Void. A free round in a round-robin scores
+// nothing (unlike the full-point bye of a Swiss round), and Void keeps it out of
+// all calculations The bye is placed on the last board (N/2), while played games
+// are numbered sequentially starting at board 1. Player-level FixedBoard assignments
+// are applied to the played boards of each round via ApplyFixedBoards.
 //
 // Errors can be tested with errors.Is: ErrNotEnoughPlayers (fewer than 2
 // players), ErrInvalidCycles (cycles < 1), and ErrInvalidStartingRank (missing,
@@ -146,9 +155,10 @@ func PairRoundRobin[ID comparable](players []Player[ID], cycles int) ([][]round.
 					// Virtual bye slot is White; bRank is the real player receiving the bye.
 					id := rankToID[bRank]
 					byeGame = &round.Game[ID]{
-						Round: roundNum,
-						White: id,
-						Black: nil,
+						Round:  roundNum,
+						White:  id,
+						Black:  nil,
+						Result: freeRoundResult(),
 					}
 					continue
 				}
@@ -156,9 +166,10 @@ func PairRoundRobin[ID comparable](players []Player[ID], cycles int) ([][]round.
 					// Virtual bye slot is Black; wRank is the real player receiving the bye.
 					id := rankToID[wRank]
 					byeGame = &round.Game[ID]{
-						Round: roundNum,
-						White: id,
-						Black: nil,
+						Round:  roundNum,
+						White:  id,
+						Black:  nil,
+						Result: freeRoundResult(),
 					}
 					continue
 				}

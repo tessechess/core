@@ -1,12 +1,13 @@
 // Package pairing pairs the next round of a Swiss section (it builds the TRF
-// input from the players, the completed rounds and the round settings, runs a
-// pairing engine, maps the engine's answer back to player IDs and applies fixed
-// boards) or generates the full schedule of a round-robin section upfront using
-// the Berger function (see PairRoundRobin).
+// input from the players or teams, the completed rounds and the round settings,
+// runs a pairing engine, maps the engine's answer back to IDs and applies fixed
+// boards or tables), generates the full schedule of a round-robin section
+// upfront using the Berger function (see PairRoundRobin and PairTeamRoundRobin),
+// and generates individual board games for team matches (see PairMatchBoards).
 //
-// Players are identified by a caller-defined ID type (e.g. a UUID or a database
-// key). The package has no persistence, and choosing which engine to run for
-// Swiss pairings is the caller's job.
+// Players and teams are identified by caller-defined ID types (e.g. a UUID or a
+// database key). The package has no persistence, and choosing which engine to
+// run for Swiss pairings is the caller's job.
 //
 // # Known limitations
 //

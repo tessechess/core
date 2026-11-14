@@ -1,14 +1,12 @@
 // Package standings computes FIDE tiebreaks, standings and crosstable rows from
-// the games of one section.
+// the games of an individual section or the matches of a team section.
 //
-// Players are identified by a caller-defined ID type (e.g. a UUID or a database
-// key). The package has no persistence: callers load the games, ratings,
-// K-factors and tiebreak configuration and pass them in an Input.
+// Players and teams are identified by caller-defined ID types (e.g. a UUID or a
+// database key). The package has no persistence: callers load the games (or
+// matches), ratings, K-factors and tiebreak configuration and pass them in an
+// Input or TeamInput.
 //
-// # Known limitations
-//
-// Individual competitions only. Team tiebreaks (game points, match points,
-// #78) are not implemented; no TiebreakKey stands for them.
+// # Ratings and unrated players
 //
 // Unrated players (rating 0 or missing from Input.Ratings) are treated
 // differently by the rating-based tiebreaks:

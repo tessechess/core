@@ -153,13 +153,11 @@
 //
 // # Known limitations
 //
-// The module covers individual competitions. Team tiebreaks and team
-// tournaments are not implemented, and neither is Swiss acceleration
-// (pairing.Settings.Validate rejects it). Swiss pairing needs an external
-// engine; there is no built-in one. There is no reader for complete TRF
-// tournament files; trf generates the format for the engines and parses their
-// output. The package documentation of standings, pairing and engine has the
-// details.
+// Swiss acceleration is not implemented (pairing.Settings.Validate rejects it).
+// Swiss pairing needs an external engine; there is no built-in one. There is no
+// reader for complete TRF tournament files; trf generates the format for the
+// engines and parses their output. The package documentation of standings,
+// pairing and engine has the details.
 //
 // # License
 //

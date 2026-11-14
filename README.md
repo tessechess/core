@@ -18,19 +18,19 @@ Module path: `github.com/tessechess/core`, published from [github.com/tessechess
 
 ## Implementation status
 
-Core covers individual competitions. Details of each area are in the package documentation (`go doc`).
+Core covers individual and team competitions. Details of each area are in the package documentation (`go doc`).
 
 | Area | Status | Notes |
 |---|---|---|
 | Result codes and scoring | Implemented | Wins, draws, forfeits, byes, unplayed games and void games, with the points each side receives |
-| Round-robin pairing | Implemented | Berger tables for any number of players, any number of cycles, and three round orders for double round-robins (plain, FIDE C.05, Milvang). The caller assigns the pairing numbers. |
+| Round-robin pairing | Implemented | Berger tables for any number of players or teams, any number of cycles, and three round orders for double round-robins (plain, FIDE C.05, Milvang). The caller assigns the pairing numbers. |
 | Swiss pairing | Implemented through external engines | Uses bbpPairings or JaVaFo, which you install yourself and point core to; they are not part of this module. There is no native Swiss pairing. |
 | Swiss acceleration | Not implemented | `Settings.Validate` rejects anything other than `none` |
-| Tiebreaks | Implemented, individual only | 17 FIDE tiebreaks, including Buchholz and its variants, Sonneborn-Berger, Koya, direct encounter, performance ratings and progressive scores. Team tiebreaks are not implemented. |
-| Standings and crosstables | Implemented | Scores, ranking with tiebreaks, and the crosstable, all computed from the list of games |
+| Tiebreaks | Implemented | 25 FIDE tiebreaks across individual and team competitions, including Buchholz and its variants, Sonneborn-Berger (and extended team variants EMMSB/EMGSB/EGMSB/EGGSB), Koya, direct encounter, performance ratings, progressive scores, match/game points, board count and top board results |
+| Standings and crosstables | Implemented | Scores, ranking with tiebreaks, and the crosstable for both individual and team sections |
 | TRF | Partly implemented | Generates TRF 1.6 for the pairing engines and parses their output. There is no reader for complete TRF tournament files. |
 | Player categories | Implemented | Rating, birthday and sex conditions, assignment and prize order within a category |
-| Team tournaments | Not implemented | Pairing, scoring and tiebreaks for teams |
+| Team tournaments | Implemented | Swiss and round-robin team pairing, board game generation from lineups, configurable match/game point scoring, team standings, crosstables and FIDE team tiebreaks |
 | Engine timeouts on non-Unix platforms | Limited | A timeout kills only the engine process, not its children |
 
 ## Packages
@@ -40,12 +40,12 @@ Import paths are `github.com/tessechess/core/<package>`.
 | Package | What it does | Main entry points |
 |---|---|---|
 | `result` | Game result codes (`1-0`, `0-1`, `0.5-0.5`, forfeits, byes, `*` for not yet played, `void`) and the points each side receives | `Code` |
-| `round` | The shared game type: one game or bye of a round, with its board, colours and result | `Game`, `Color` |
+| `round` | The shared game and team match types: one game, match or bye of a round, with its board/table, colours and result | `Game`, `Match`, `Color` |
 | `player` | Player value types shared by the other packages: sex and FIDE title, including the title order used for the initial ranking | `Sex`, `Title` |
-| `pairing` | Swiss pairing of the next round through an engine, round-robin schedules (single or multiple cycles, with a choice of round order), fixed boards, validation of the arbiter's settings, and starting ranks in FIDE initial-ranking order | `Pair`, `Prepare`, `PairRoundRobin`, `RoundRobinTotalRounds`, `StartingOrder`, `Settings.Validate` |
+| `pairing` | Swiss pairing of the next round through an engine, round-robin schedules, team pairing and board game generation from lineups, fixed boards/tables, validation of the arbiter's settings, and starting ranks in FIDE initial-ranking order | `Pair`, `Prepare`, `PairRoundRobin`, `PairTeams`, `PrepareTeams`, `PairTeamRoundRobin`, `PairMatchBoards`, `RoundRobinTotalRounds`, `StartingOrder`, `TeamStartingOrder`, `Settings.Validate` |
 | `engine` | Wrappers that run bbpPairings or JaVaFo (temporary files, timeout). You supply the paths to the programs. (licenses of external engines apply) | `PairingEngine`, `NewBBPPairings`, `NewJaVaFo` |
 | `trf` | Generates FIDE TRF 1.6 input for the pairing engines and parses the engines' output | `Generate`, `ParseSimplePairs`, `ParseTRFRound` |
-| `standings` | Scores, ranking and crosstables computed from the games, with the FIDE tiebreaks selected by typed keys. The registry says which keys accept a cut or a threshold. | `Scores`, `Rank`, `Crosstable`, `TiebreakKey`, `TiebreakKeys` |
+| `standings` | Individual and team scores, ranking and crosstables computed from the games or matches, with the FIDE tiebreaks selected by typed keys. The registry says which keys accept a cut or a threshold. | `Scores`, `Rank`, `Crosstable`, `TeamScores`, `RankTeams`, `TeamCrosstable`, `TiebreakKey`, `TiebreakKeys` |
 | `category` | Prize categories: which players match the rating, birthday and sex conditions of a category, and the prize order within it | `Assign`, `RankWithin`, `Criteria`, `Rule` |
 
 ## License

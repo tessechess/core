@@ -524,23 +524,3 @@ func isMatchForfeit[TeamID, PlayerID comparable](m *round.Match[TeamID, PlayerID
 	}
 	return counted > 0
 }
-
-func computeTeamTiebreak[TeamID, PlayerID comparable](
-	cfg TiebreakConfig,
-	teamID TeamID,
-	allInfo map[TeamID]*teamPairingInfo[TeamID, PlayerID],
-	totals map[TeamID]teamRawTotals,
-	sc resolvedTeamScoring,
-) (float64, bool) {
-	return 0, false
-}
-
-func fillTeamGroupTiebreaks[TeamID, PlayerID comparable](
-	scores []*TeamScore[TeamID],
-	allInfo map[TeamID]*teamPairingInfo[TeamID, PlayerID],
-	totals map[TeamID]teamRawTotals,
-	sc resolvedTeamScoring,
-	tiebreakCfgs []TiebreakConfig,
-) {
-}
-

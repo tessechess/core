@@ -35,4 +35,12 @@ var (
 
 	// ErrInvalidLineup indicates a missing, wrong-sized, or duplicate-player team lineup.
 	ErrInvalidLineup = errors.New("invalid team lineup")
+	// ErrVarmaUnsupportedPlayerCount indicates the player count is outside the FIDE Varma table range (9..24).
+	ErrVarmaUnsupportedPlayerCount = errors.New("varma tables support 9 to 24 players")
+
+	// ErrNilRand indicates a nil *rand.Rand was passed to a lot-drawing function.
+	ErrNilRand = errors.New("random generator must not be nil")
+
+	// ErrDuplicatePlayerID indicates the players slice contains duplicate IDs.
+	ErrDuplicatePlayerID = errors.New("duplicate player ID")
 )

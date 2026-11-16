@@ -59,7 +59,8 @@
 //   - [github.com/tessechess/core/pairing]: pairs the next Swiss round or
 //     generates a round-robin schedule upfront; also the arbiter's settings
 //     (byes, forbidden pairings, fixed boards, colour of the first player),
-//     their validation, and the starting-rank order.
+//     their validation, starting-rank order, and FIDE Varma restricted drawing
+//     of lots.
 //   - [github.com/tessechess/core/engine]: runs bbpPairings and JaVaFo; the
 //     programs themselves are not part of the module.
 //   - [github.com/tessechess/core/trf]: the FIDE TRF 1.6 generator and the

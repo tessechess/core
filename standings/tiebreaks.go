@@ -947,25 +947,6 @@ func computeAveragePerfectPerformanceOfOpponents[ID comparable](
 }
 
 // ============================================================================
-// Team Tournament Tiebreaks
-// ============================================================================
-//
-// FIDE Article 4.3: "Type E - team tournaments: tiebreaks based on the
-// results of the teams' players, so they can be calculated only at the end of
-// the round or tournament."
-//
-// These tiebreaks apply to team tournaments and depend on the results of
-// individual team members.
-//
-// FIDE tiebreaks in this category:
-//   - Game Points (GP): total points scored by all team members
-//   - Match Points (MP): total match points scored by the team (2 for win, 1 for draw, 0 for loss)
-
-func computeGamePoints() { panic("not implemented") } // unexported until the implementation is done
-
-func computeMatchPoints() { panic("not implemented") } // unexported until the implementation is done
-
-// ============================================================================
 // Helper functions
 // ============================================================================
 

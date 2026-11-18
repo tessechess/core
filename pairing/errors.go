@@ -29,4 +29,10 @@ var (
 
 	// ErrInvalidStartingRank indicates a missing, out-of-range, or duplicate starting rank.
 	ErrInvalidStartingRank = errors.New("invalid or duplicate player starting rank")
+
+	// ErrInvalidBoardsPerMatch indicates a non-positive number of boards per match.
+	ErrInvalidBoardsPerMatch = errors.New("boards per match must be at least 1")
+
+	// ErrInvalidLineup indicates a missing, wrong-sized, or duplicate-player team lineup.
+	ErrInvalidLineup = errors.New("invalid team lineup")
 )

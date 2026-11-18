@@ -6,14 +6,16 @@ import (
 )
 
 // allKeys lists every exported TiebreakKey constant. Adding a key means adding
-// it here, to the registry and to computeTiebreak; the tests below fail if the
-// three disagree.
+// it here, to the registry and to computeTiebreak / computeTeamTiebreak; the
+// tests below fail if they disagree.
 var allKeys = []TiebreakKey{
 	Buchholz, ForeBuchholz, AverageOpponentBuchholz, SonnebornBerger, KoyaSystem,
 	DirectEncounter, AverageRatingOfOpponents, TournamentPerformanceRating,
 	PerfectTournamentPerformance, AveragePerfectPerformanceRatingOfOpponents,
 	AveragePerfectPerformanceOfOpponents, Wins, GamesWon, GamesPlayedBlack,
 	WinsWithBlack, ProgressiveScores, GamesElectedToPlay,
+	MatchPoints, GamePoints, ExtendedMatchMatchSB, ExtendedMatchGameSB,
+	ExtendedGameMatchSB, ExtendedGameGameSB, BoardCount, TopBoardResults,
 }
 
 func TestTiebreakKeys_MatchConstants(t *testing.T) {
@@ -34,11 +36,44 @@ func TestTiebreakKeys_MatchConstants(t *testing.T) {
 	}
 }
 
-func TestTiebreakKeys_ComputeTiebreakHandlesAllButDirectEncounter(t *testing.T) {
+func TestTiebreakKeys_ComputeTiebreakDispatch(t *testing.T) {
+	teamOnly := map[TiebreakKey]bool{
+		MatchPoints:          true,
+		GamePoints:           true,
+		ExtendedMatchMatchSB: true,
+		ExtendedMatchGameSB:  true,
+		ExtendedGameMatchSB:  true,
+		ExtendedGameGameSB:   true,
+		BoardCount:           true,
+		TopBoardResults:      true,
+	}
+	individualOnly := map[TiebreakKey]bool{
+		AverageRatingOfOpponents:                   true,
+		TournamentPerformanceRating:                true,
+		PerfectTournamentPerformance:               true,
+		AveragePerfectPerformanceRatingOfOpponents: true,
+		AveragePerfectPerformanceOfOpponents:       true,
+		GamesPlayedBlack:                           true,
+		WinsWithBlack:                              true,
+	}
+
 	for _, k := range allKeys {
 		_, handled := computeTiebreak(TiebreakConfig{Key: k}, "p", map[string]*playerPairingInfo[string]{}, map[string]float64{}, map[string]int{})
-		if want := k != DirectEncounter; handled != want {
-			t.Errorf("computeTiebreak(%q) handled = %v, want %v", k, handled, want)
+		wantIndiv := k != DirectEncounter && !teamOnly[k]
+		if handled != wantIndiv {
+			t.Errorf("computeTiebreak(%q) handled = %v, want %v", k, handled, wantIndiv)
+		}
+
+		_, teamHandled := computeTeamTiebreak(
+			TiebreakConfig{Key: k},
+			"t",
+			map[string]*teamPairingInfo[string, string]{},
+			map[string]teamRawTotals{},
+			resolveTeamScoring(nil, 4, TeamScoreMatchPoints),
+		)
+		wantTeam := k != DirectEncounter && k != TopBoardResults && !individualOnly[k]
+		if teamHandled != wantTeam {
+			t.Errorf("computeTeamTiebreak(%q) handled = %v, want %v", k, teamHandled, wantTeam)
 		}
 	}
 }

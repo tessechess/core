@@ -1,9 +1,9 @@
-// Package round defines the games of a tournament round. The same Game type is
-// used for completed rounds (input to trf, pairing and standings) and for a
-// freshly paired round (output of pairing).
+// Package round defines the games and team matches of a tournament round. The
+// same Game and Match types are used for completed rounds (input to trf,
+// pairing and standings) and for a freshly paired round (output of pairing).
 //
-// Players are identified by a caller-defined ID type (e.g. a UUID or a database
-// key).
+// Players and teams are identified by caller-defined ID types (e.g. a UUID or a
+// database key).
 package round
 
 import "github.com/tessechess/core/result"

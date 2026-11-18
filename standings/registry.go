@@ -55,6 +55,37 @@ const (
 	// GamesElectedToPlay is the number of rounds minus the half-point byes,
 	// zero-point byes and forfeit losses (FIDE 7.6).
 	GamesElectedToPlay TiebreakKey = "games_elected_to_play"
+	// MatchPoints is the total match points scored by a team (FIDE C.07). Team
+	// competitions only.
+	MatchPoints TiebreakKey = "match_points"
+	// GamePoints is the total board game points scored by all members of a
+	// team (FIDE C.07). Team competitions only.
+	GamePoints TiebreakKey = "game_points"
+	// ExtendedMatchMatchSB is the Extended Sonneborn-Berger for teams using
+	// opponent match points × match points scored against them (EMMSB, FIDE
+	// C.07 13.1). Team competitions only.
+	ExtendedMatchMatchSB TiebreakKey = "emmsb"
+	// ExtendedMatchGameSB is the Extended Sonneborn-Berger for teams using
+	// opponent match points × game points scored against them (EMGSB, FIDE
+	// C.07 13.2). Team competitions only.
+	ExtendedMatchGameSB TiebreakKey = "emgsb"
+	// ExtendedGameMatchSB is the Extended Sonneborn-Berger for teams using
+	// opponent game points × match points scored against them (EGMSB, FIDE
+	// C.07 13.3). Team competitions only.
+	ExtendedGameMatchSB TiebreakKey = "egmsb"
+	// ExtendedGameGameSB is the Extended Sonneborn-Berger for teams using
+	// opponent game points × game points scored against them (EGGSB, FIDE
+	// C.07 13.4). Team competitions only.
+	ExtendedGameGameSB TiebreakKey = "eggsb"
+	// BoardCount is the Berlin system board-weighted score: on a B-board match,
+	// board b (1..B) has weight B-b+1 multiplied by the game points scored on
+	// that board (BC, FIDE C.07 11.2). Team competitions only.
+	BoardCount TiebreakKey = "board_count"
+	// TopBoardResults breaks ties among tied teams by comparing total game
+	// points on board 1, then board 2, and so on down to board B (TBR / BBE,
+	// FIDE C.07 11.3). RankTeams computes it per tied group. Team competitions
+	// only.
+	TopBoardResults TiebreakKey = "top_board_results"
 )
 
 // tiebreakInfo describes which optional parameters a tiebreak key accepts.
@@ -63,9 +94,7 @@ type tiebreakInfo struct {
 	threshold bool // accepts Threshold
 }
 
-// tiebreaks is the single list of supported tiebreak keys. computeTiebreak must
-// handle every key except DirectEncounter, which Rank computes per points
-// group.
+// tiebreaks is the single list of supported tiebreak keys.
 var tiebreaks = map[TiebreakKey]tiebreakInfo{
 	Buchholz:                     {cut: true},
 	ForeBuchholz:                 {cut: true},
@@ -84,6 +113,14 @@ var tiebreaks = map[TiebreakKey]tiebreakInfo{
 	WinsWithBlack:                              {},
 	ProgressiveScores:                          {},
 	GamesElectedToPlay:                         {},
+	MatchPoints:                                {},
+	GamePoints:                                 {},
+	ExtendedMatchMatchSB:                       {},
+	ExtendedMatchGameSB:                        {},
+	ExtendedGameMatchSB:                        {},
+	ExtendedGameGameSB:                         {},
+	BoardCount:                                 {},
+	TopBoardResults:                            {},
 }
 
 // IsTiebreakKey reports whether key is a supported tiebreak.

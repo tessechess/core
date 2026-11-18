@@ -222,4 +222,3 @@ func TestPrepareTeams_Errors(t *testing.T) {
 		t.Errorf("engine timeout: got %v, want ErrEngineTimeout", err)
 	}
 }
-

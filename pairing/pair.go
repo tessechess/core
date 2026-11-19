@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/tessechess/core/engine"
+	"github.com/tessechess/core/result"
 	"github.com/tessechess/core/round"
 	"github.com/tessechess/core/trf"
 )
@@ -14,17 +15,24 @@ import (
 // Run, and returns their errors.
 //
 // The result has one game per board, ordered by board number. Round is
-// in.CompletedRounds+1, Board is set, Black is nil for a bye, and Result is nil
-// (nothing has been played). Players with a bye already assigned for this round
-// (withdrawn, half-point bye) are left to the engine's input and are not paired
-// by it. Fixed boards are applied.
+// in.CompletedRounds+1, Board is set and Black is nil for a bye. Games paired
+// by the engine (including its pairing-allocated bye) have a nil Result
+// (nothing has been played). Fixed boards are applied.
+//
+// Players with a bye already assigned for this round (Settings.WithdrawnPlayers,
+// Settings.HalfPointByes) are written to the engine's input and not paired by
+// it. Each of them gets its own game after the engine's boards, in starting
+// rank order, with Black nil and Result already set: result.ZeroPointBye for a
+// withdrawn player and result.WhiteHalf for a half-point bye. Saving these
+// games keeps the bye in the history of later rounds.
 //
 // Errors can be tested with errors.Is: ErrInvalidSettings (round 1 is being
 // paired without a valid Settings.FirstPlayerColor), ErrTRFGeneration (the
 // input could not be turned into a TRF, e.g. a player has no StartingRank,
 // TotalRounds is 0 or a game names an unknown player), the engine errors of
 // package engine (engine not found, timeout, non-zero exit), ErrTRFParsing and
-// ErrUnknownEngineRank (the engine's answer could not be read).
+// ErrUnknownEngineRank (the engine's answer could not be read, or it paired a
+// player who has a pre-assigned bye).
 func Pair[ID comparable](ctx context.Context, eng engine.PairingEngine, in Input[ID]) ([]round.Game[ID], error) {
 	p, err := Prepare(in)
 	if err != nil {
@@ -39,6 +47,13 @@ type Prepared[ID comparable] struct {
 	mapping     *trf.PlayerMapping[ID]
 	completed   int
 	fixedBoards []FixedBoard[ID]
+	byes        []preassignedBye[ID] // in starting rank order
+}
+
+// preassignedBye is a bye set in the round settings before pairing.
+type preassignedBye[ID comparable] struct {
+	player ID
+	result result.Code
 }
 
 // TRF returns the TRF input that Run sends to the engine.
@@ -50,7 +65,8 @@ func (p *Prepared[ID]) TRF() string { return p.trf }
 // (CompletedRounds == 0), Settings.FirstPlayerColor must be round.ColorWhite or
 // round.ColorBlack; otherwise Prepare returns ErrInvalidSettings. Generation
 // errors are wrapped with ErrTRFGeneration. The caller's settings are not
-// modified.
+// modified. A player with a pre-assigned bye keeps no player-level fixed board
+// for this round, since they do not play.
 func Prepare[ID comparable](in Input[ID]) (*Prepared[ID], error) {
 	settings := Settings[ID]{}
 	if in.Settings != nil {
@@ -61,11 +77,25 @@ func Prepare[ID comparable](in Input[ID]) (*Prepared[ID], error) {
 		return nil, fmt.Errorf("%w: first_player_color must be 'white' or 'black' for round 1", ErrInvalidSettings)
 	}
 
+	// Pre-assigned byes of this round, by player.
+	byeResult := make(map[ID]result.Code, len(settings.WithdrawnPlayers)+len(settings.HalfPointByes))
+	for _, id := range settings.WithdrawnPlayers {
+		byeResult[id] = result.ZeroPointBye
+	}
+	for _, id := range settings.HalfPointByes {
+		if _, ok := byeResult[id]; !ok {
+			byeResult[id] = result.WhiteHalf
+		}
+	}
+
 	// Merge player-level fixed boards into the round settings. Round-level
 	// entries take priority; player-level entries fill in the rest.
 	fixedBoards := append([]FixedBoard[ID](nil), settings.FixedBoards...)
 	for _, pl := range in.Players {
 		if pl.FixedBoard == nil {
+			continue
+		}
+		if _, hasBye := byeResult[pl.ID]; hasBye {
 			continue
 		}
 		alreadyFixed := false
@@ -77,6 +107,18 @@ func Prepare[ID comparable](in Input[ID]) (*Prepared[ID], error) {
 		}
 		if !alreadyFixed {
 			fixedBoards = append(fixedBoards, FixedBoard[ID]{BoardNumber: *pl.FixedBoard, Player: pl.ID})
+		}
+	}
+
+	// The bye games are numbered in starting rank order.
+	var byes []preassignedBye[ID]
+	if len(byeResult) > 0 {
+		byPlayer := append([]Player[ID](nil), in.Players...)
+		sort.SliceStable(byPlayer, func(i, j int) bool { return byPlayer[i].StartingRank < byPlayer[j].StartingRank })
+		for _, pl := range byPlayer {
+			if r, ok := byeResult[pl.ID]; ok {
+				byes = append(byes, preassignedBye[ID]{player: pl.ID, result: r})
+			}
 		}
 	}
 
@@ -119,18 +161,20 @@ func Prepare[ID comparable](in Input[ID]) (*Prepared[ID], error) {
 		mapping:     mapping,
 		completed:   in.CompletedRounds,
 		fixedBoards: fixedBoards,
+		byes:        byes,
 	}, nil
 }
 
 // Run sends the TRF to the engine, parses its answer with the parser matching
-// eng.OutputFormat(), maps ranks back to player IDs and applies fixed boards.
-// The returned games are ordered by board, with Round set to the round being
-// paired and Result nil (see Pair).
+// eng.OutputFormat(), maps ranks back to player IDs, applies fixed boards and
+// adds a game for every pre-assigned bye. The returned games are ordered by
+// board, with Round set to the round being paired (see Pair for the Result).
 //
 // Errors from the engine are returned as they are (see package engine). A
 // parse failure, including an unknown OutputFormat, is wrapped with
 // ErrTRFParsing, and a rank in the answer that is not in the TRF with
-// ErrUnknownEngineRank.
+// ErrUnknownEngineRank. An answer that pairs a player who has a pre-assigned
+// bye is wrapped with ErrTRFParsing.
 func (p *Prepared[ID]) Run(ctx context.Context, eng engine.PairingEngine) ([]round.Game[ID], error) {
 	output, err := eng.GeneratePairings(ctx, p.trf)
 	if err != nil {
@@ -150,7 +194,13 @@ func (p *Prepared[ID]) Run(ctx context.Context, eng engine.PairingEngine) ([]rou
 		return nil, fmt.Errorf("%w: %v", ErrTRFParsing, err)
 	}
 
-	boards := make([]round.Game[ID], 0, len(parsed))
+	hasBye := make(map[ID]bool, len(p.byes))
+	for _, b := range p.byes {
+		hasBye[b.player] = true
+	}
+
+	boards := make([]round.Game[ID], 0, len(parsed)+len(p.byes))
+	echoed := false
 	for _, pp := range parsed {
 		white, ok := p.mapping.RankToID[pp.WhiteRank]
 		if !ok {
@@ -164,11 +214,37 @@ func (p *Prepared[ID]) Run(ctx context.Context, eng engine.PairingEngine) ([]rou
 			}
 			black = &id
 		}
+		if hasBye[white] && black == nil {
+			// A TRF answer repeats the pre-assigned bye from its input; it is
+			// added below with its result.
+			echoed = true
+			continue
+		}
+		if hasBye[white] || (black != nil && hasBye[*black]) {
+			return nil, fmt.Errorf("%w: engine paired rank %d or %d, who has a pre-assigned bye", ErrTRFParsing, pp.WhiteRank, pp.BlackRank)
+		}
 		boards = append(boards, round.Game[ID]{Round: p.completed + 1, Board: pp.BoardNumber, White: white, Black: black})
+	}
+	if echoed {
+		// Close the gaps left by the skipped byes.
+		for i := range boards {
+			boards[i].Board = i + 1
+		}
 	}
 
 	if len(p.fixedBoards) > 0 {
 		boards = ApplyFixedBoards(boards, p.fixedBoards)
+	}
+
+	last := 0
+	for _, b := range boards {
+		if b.Board > last {
+			last = b.Board
+		}
+	}
+	for i, b := range p.byes {
+		r := b.result
+		boards = append(boards, round.Game[ID]{Round: p.completed + 1, Board: last + 1 + i, White: b.player, Result: &r})
 	}
 	return boards, nil
 }

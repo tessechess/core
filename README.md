@@ -44,7 +44,6 @@ Import paths are `github.com/tessechess/core/<package>`.
 | `result` | Game result codes (`1-0`, `0-1`, `0.5-0.5`, forfeits, byes, `*` for not yet played, `void`) and the points each side receives | `Code` |
 | `round` | The shared game and team match types: one game, match or bye of a round, with its board/table, colours and result | `Game`, `Match`, `Color` |
 | `player` | Player value types shared by the other packages: sex and FIDE title, including the title order used for the initial ranking | `Sex`, `Title` |
-<<<<<<< HEAD
 | `pairing` | Swiss pairing of the next round through an engine, round-robin schedules, team pairing and board game generation from lineups, fixed boards/tables, validation of the arbiter's settings, and starting ranks in FIDE initial-ranking order | `Pair`, `Prepare`, `PairRoundRobin`, `PairTeams`, `PrepareTeams`, `PairTeamRoundRobin`, `PairMatchBoards`, `RoundRobinTotalRounds`, `StartingOrder`, `TeamStartingOrder`, `Settings.Validate` |
 | `pairing` | Swiss pairing of the next round through an engine, round-robin schedules (single or multiple cycles, with a choice of round order), Varma restricted drawing of lots, fixed boards, validation of the arbiter's settings, and starting ranks in FIDE initial-ranking order | `Pair`, `Prepare`, `PairRoundRobin`, `RoundRobinTotalRounds`, `VarmaTable`, `VarmaOrder`, `StartingOrder`, `Settings.Validate` |
 >>>>>>> 277974e (feat: add FIDE Varma tables for restricted drawing of lots)

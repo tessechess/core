@@ -23,9 +23,7 @@ Core covers individual and team competitions. Details of each area are in the pa
 | Area | Status | Notes |
 |---|---|---|
 | Result codes and scoring | Implemented | Wins, draws, forfeits, byes, unplayed games and void games, with the points each side receives |
-<<<<<<< HEAD
 | Round-robin pairing | Implemented | Berger tables for any number of players or teams, any number of cycles, and three round orders for double round-robins (plain, FIDE C.05, Milvang). The caller assigns the pairing numbers. |
-=======
 | Round-robin pairing | Implemented | Berger tables for any number of players, any number of cycles, three round orders for double round-robins (plain, FIDE C.05, Milvang), and FIDE C.05 Varma tables for restricted drawing of lots (9–24 players). The caller assigns the pairing numbers. |
 >>>>>>> 277974e (feat: add FIDE Varma tables for restricted drawing of lots)
 | Swiss pairing | Implemented through external engines | Uses bbpPairings or JaVaFo, which you install yourself and point core to; they are not part of this module. There is no native Swiss pairing. |
@@ -48,7 +46,6 @@ Import paths are `github.com/tessechess/core/<package>`.
 | `player` | Player value types shared by the other packages: sex and FIDE title, including the title order used for the initial ranking | `Sex`, `Title` |
 <<<<<<< HEAD
 | `pairing` | Swiss pairing of the next round through an engine, round-robin schedules, team pairing and board game generation from lineups, fixed boards/tables, validation of the arbiter's settings, and starting ranks in FIDE initial-ranking order | `Pair`, `Prepare`, `PairRoundRobin`, `PairTeams`, `PrepareTeams`, `PairTeamRoundRobin`, `PairMatchBoards`, `RoundRobinTotalRounds`, `StartingOrder`, `TeamStartingOrder`, `Settings.Validate` |
-=======
 | `pairing` | Swiss pairing of the next round through an engine, round-robin schedules (single or multiple cycles, with a choice of round order), Varma restricted drawing of lots, fixed boards, validation of the arbiter's settings, and starting ranks in FIDE initial-ranking order | `Pair`, `Prepare`, `PairRoundRobin`, `RoundRobinTotalRounds`, `VarmaTable`, `VarmaOrder`, `StartingOrder`, `Settings.Validate` |
 >>>>>>> 277974e (feat: add FIDE Varma tables for restricted drawing of lots)
 | `engine` | Wrappers that run bbpPairings or JaVaFo (temporary files, timeout). You supply the paths to the programs. (licenses of external engines apply) | `PairingEngine`, `NewBBPPairings`, `NewJaVaFo` |

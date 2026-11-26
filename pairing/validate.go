@@ -20,10 +20,16 @@ func (s Settings[ID]) Validate() error {
 	}
 
 	// Validate forbidden pairings
+	type pairKey struct{ a, b ID }
+	seenPairs := make(map[pairKey]bool, len(s.ForbiddenPairings))
 	for _, fp := range s.ForbiddenPairings {
 		if fp.Player1 == fp.Player2 {
 			return fmt.Errorf("%w: forbidden pairing cannot have the same player on both sides", ErrInvalidSettings)
 		}
+		if seenPairs[pairKey{fp.Player1, fp.Player2}] || seenPairs[pairKey{fp.Player2, fp.Player1}] {
+			return fmt.Errorf("%w: duplicate forbidden pairing", ErrInvalidSettings)
+		}
+		seenPairs[pairKey{fp.Player1, fp.Player2}] = true
 	}
 
 	// Validate fixed boards

@@ -118,4 +118,43 @@ func pairWithRealEngine(t *testing.T, eng engine.PairingEngine) {
 			}
 		})
 	}
+
+	t.Run("forbidden pairings", func(t *testing.T) {
+		// Normally round 1 pairs 1 vs 3 (a vs c) and 4 vs 2 (d vs b).
+		// Forbidding a vs c must prevent rank 1 from being paired with rank 3.
+		input := &trf.GeneratorInput[string]{
+			TournamentName:  "Real engine forbidden test",
+			TotalRounds:     3,
+			Players:         players,
+			CompletedRounds: 0,
+			Settings: &trf.RoundSettings[string]{
+				FirstPlayerColor:  "white",
+				ForbiddenPairings: []trf.ForbiddenPair[string]{{Player1: "a", Player2: "c"}},
+			},
+		}
+		in, mapping, err := trf.Generate(input)
+		if err != nil {
+			t.Fatalf("Generate: %v", err)
+		}
+
+		out, err := eng.GeneratePairings(context.Background(), in)
+		if err != nil {
+			t.Fatalf("GeneratePairings: %v", err)
+		}
+
+		parsed, err := trf.ParseSimplePairs(out)
+		if err != nil {
+			t.Fatalf("ParseSimplePairs: %v\noutput:\n%s", err, out)
+		}
+		if len(parsed) != 2 {
+			t.Fatalf("got %d boards, want 2: %+v", len(parsed), parsed)
+		}
+		for _, p := range parsed {
+			w := mapping.RankToID[p.WhiteRank]
+			b := mapping.RankToID[p.BlackRank]
+			if (w == "a" && b == "c") || (w == "c" && b == "a") {
+				t.Fatalf("engine paired forbidden pair a vs c: %+v", parsed)
+			}
+		}
+	})
 }

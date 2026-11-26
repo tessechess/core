@@ -231,6 +231,9 @@ func (p *Prepared[ID]) Run(ctx context.Context, eng engine.PairingEngine) ([]rou
 			boards[i].Board = i + 1
 		}
 	}
+	if len(boards) == 0 && len(p.byes) < len(p.mapping.RankToID) {
+		return nil, fmt.Errorf("%w: engine produced no pairings", ErrTRFParsing)
+	}
 
 	if len(p.fixedBoards) > 0 {
 		boards = ApplyFixedBoards(boards, p.fixedBoards)

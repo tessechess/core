@@ -393,8 +393,11 @@ func TestGenerate_ForbiddenPairings(t *testing.T) {
 		t.Fatalf("Generate error: %v", err)
 	}
 
-	if !containsLine(out, "XXF 1 3") {
-		t.Errorf("missing XXF line, output:\n%s", out)
+	if !containsLine(out, "XXP 1 3") {
+		t.Errorf("missing XXP line, output:\n%s", out)
+	}
+	if containsLine(out, "XXF 1 3") {
+		t.Errorf("unexpected XXF line, output:\n%s", out)
 	}
 }
 

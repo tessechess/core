@@ -61,7 +61,7 @@ type RoundSettings[ID comparable] struct {
 	// FirstPlayerColor sets the XXC line (round.ColorWhite or round.ColorBlack;
 	// empty = no line). Round 1 only.
 	FirstPlayerColor round.Color
-	// ForbiddenPairings emits XXF lines preventing these players from being paired together.
+	// ForbiddenPairings emits XXP lines preventing these players from being paired together.
 	ForbiddenPairings []ForbiddenPair[ID]
 	// LateEntries are IDs of players joining late. The generator
 	// inserts zero-point byes (Z) for all rounds these players missed.

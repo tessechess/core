@@ -176,6 +176,7 @@ func TestParseSimplePairs_Errors(t *testing.T) {
 	}{
 		{"empty", ""},
 		{"bad count", "abc\n"},
+		{"negative count", "-1\n"},
 		{"too few lines", "3\n1 2\n"},
 		{"bad pairing", "1\nnot a number\n"},
 	}

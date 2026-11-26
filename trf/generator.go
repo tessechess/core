@@ -30,7 +30,7 @@ type roundResult struct {
 // players' round columns by their Round number; voided games are skipped, and
 // a game without a Black player is a bye for White. If Settings is set, the
 // withdrawn players and half-point byes of the upcoming round, the late
-// entries' missed rounds and the XXC and XXF extension lines are added.
+// entries' missed rounds and the XXC and XXP extension lines are added.
 //
 // It returns an error if there are no players, TotalRounds is 0, a player has
 // no StartingRank, or a game refers to a player that is not in input.Players.
@@ -198,12 +198,12 @@ func Generate[ID comparable](input *GeneratorInput[ID]) (string, *PlayerMapping[
 			sb.WriteString("XXC black1\n")
 		}
 
-		// XXF — forbidden pairings (one line per pair with starting rank numbers).
+		// XXP — forbidden pairings (one line per pair with starting rank numbers).
 		for _, fp := range input.Settings.ForbiddenPairings {
 			rank1, ok1 := mapping.IDToRank[fp.Player1]
 			rank2, ok2 := mapping.IDToRank[fp.Player2]
 			if ok1 && ok2 {
-				sb.WriteString("XXF " + strconv.Itoa(rank1) + " " + strconv.Itoa(rank2) + "\n")
+				sb.WriteString("XXP " + strconv.Itoa(rank1) + " " + strconv.Itoa(rank2) + "\n")
 			}
 		}
 	}

@@ -150,7 +150,7 @@ func TestPrepare_TRFContents(t *testing.T) {
 	got := p.TRF()
 	for _, want := range []string{
 		"012 Test Open", "022 Bratislava", "032 SVK", "042 2026/03/20", "052 2026/03/22",
-		"062 4", "122 90+30", "XXR 5", "XXC white1", "XXF 2 4",
+		"062 4", "122 90+30", "XXR 5", "XXC white1", "XXP 2 4",
 		"Alpha, Anna", "1990/11/30", "Delta, Dana",
 	} {
 		if !strings.Contains(got, want) {
@@ -306,6 +306,31 @@ func TestPrepare_MissingStartingRank(t *testing.T) {
 	if !errors.Is(err, pairing.ErrTRFGeneration) {
 		t.Fatalf("got %v, want ErrTRFGeneration", err)
 	}
+}
+
+func TestPair_ZeroEnginePairingsWithActivePlayersFails(t *testing.T) {
+	_, err := pairing.Pair(context.Background(), simplePairs("0\n"), fourPlayers())
+	if !errors.Is(err, pairing.ErrTRFParsing) {
+		t.Fatalf("got %v, want ErrTRFParsing", err)
+	}
+}
+
+func TestPair_ZeroEnginePairingsWhenAllPlayersHaveByes(t *testing.T) {
+	in := fourPlayers()
+	in.Settings = &pairing.Settings[string]{
+		FirstPlayerColor: round.ColorWhite,
+		WithdrawnPlayers: []string{"a", "b", "c", "d"},
+	}
+	boards, err := pairing.Pair(context.Background(), simplePairs("0\n"), in)
+	if err != nil {
+		t.Fatalf("Pair: %v", err)
+	}
+	assertBoards(t, boards,
+		board(1, "a", nil),
+		board(2, "b", nil),
+		board(3, "c", nil),
+		board(4, "d", nil),
+	)
 }
 
 // ── Fixed boards ────────────────────────────────────────────

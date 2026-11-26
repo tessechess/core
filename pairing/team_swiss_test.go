@@ -221,4 +221,8 @@ func TestPrepareTeams_Errors(t *testing.T) {
 	if _, err := pairing.PairTeams(context.Background(), engErr, fourTeamsInput()); !errors.Is(err, engine.ErrEngineTimeout) {
 		t.Errorf("engine timeout: got %v, want ErrEngineTimeout", err)
 	}
+
+	if _, err := pairing.PairTeams(context.Background(), simplePairs("0\n"), fourTeamsInput()); !errors.Is(err, pairing.ErrTRFParsing) {
+		t.Errorf("zero engine pairings: got %v, want ErrTRFParsing", err)
+	}
 }

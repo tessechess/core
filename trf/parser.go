@@ -101,6 +101,9 @@ func ParseSimplePairs(output string) ([]ParsedPairing, error) {
 	if err != nil {
 		return nil, fmt.Errorf("invalid pair count on line 1: %w", err)
 	}
+	if count < 0 {
+		return nil, fmt.Errorf("negative pair count on line 1: %d", count)
+	}
 
 	if len(lines) < count+1 {
 		return nil, fmt.Errorf("expected %d pairing lines, got %d", count, len(lines)-1)

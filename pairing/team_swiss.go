@@ -198,6 +198,10 @@ func (p *PreparedTeams[TeamID, PlayerID]) Run(
 		})
 	}
 
+	if len(matches) == 0 && len(p.mapping.RankToID) > 0 {
+		return nil, fmt.Errorf("%w: engine produced no pairings", ErrTRFParsing)
+	}
+
 	if len(p.fixedTables) > 0 {
 		matches = ApplyFixedTables(matches, p.fixedTables)
 	}
